@@ -9,7 +9,7 @@ use crate::{
     expression::{Column, Expression},
 };
 use arrow::datatypes::SchemaRef;
-use std::sync::Arc;
+use std::{sync::Arc, fmt, fmt::Display};
 
 pub enum LogicalPlan {
     /// Evaluates an arbitrary list of expressions (essentially a
@@ -39,6 +39,31 @@ pub enum LogicalPlan {
     /// Produces rows from a table provider by reference or from the context
     TableScan(TableScan),
 }
+
+impl LogicalPlan {
+    pub fn schema(&self) -> SchemaRef {
+        match self {
+            LogicalPlan::Projection(Projection { schema, .. }) => schema.clone(),
+            LogicalPlan::Filter(Filter {input, ..}) => input.schema().clone(),
+            LogicalPlan::Aggregate(Aggregate { schema, .. }) => schema.clone(),
+            LogicalPlan::Join(Join { schema, ..}) => schema.clone(),
+            LogicalPlan::Limit(Limit {  input, .. }) => input.schema().clone(),
+            LogicalPlan::TableScan(TableScan { source ,.. }) => source.schema().clone(),
+        }
+    }
+
+    pub fn children(&self) -> Vec<Arc<LogicalPlan>> {
+        match self {
+            LogicalPlan::Projection(Projection { input,.. }) => vec![input.clone()],
+            LogicalPlan::Filter(Filter {input, ..}) => vec![input.clone()],
+            LogicalPlan::Aggregate(Aggregate { input, .. }) => vec![input.clone()],
+            LogicalPlan::Join(Join { left, right, ..}) => vec![left.clone(), right.clone()],
+            LogicalPlan::Limit(Limit {  input, .. }) => vec![input.clone()],
+            LogicalPlan::TableScan(_) => vec![],
+        }
+    }
+}
+
 
 #[derive(Clone)]
 pub struct Projection {
