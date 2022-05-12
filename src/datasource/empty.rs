@@ -8,16 +8,18 @@ use super::TableSource;
 use crate::error::Result;
 use arrow::datatypes::SchemaRef;
 use arrow::record_batch::RecordBatch;
+use std::sync::Arc;
 
 /// Empty Table with schema but no data
+#[derive(Debug, Clone)]
 pub struct EmptyTable {
     schema: SchemaRef,
 }
 
 impl EmptyTable {
     #[allow(unused)]
-    pub fn try_create(schema: SchemaRef) -> Result<Self> {
-        Ok(Self { schema })
+    pub fn try_create(schema: SchemaRef) -> Result<Arc<dyn TableSource>> {
+        Ok(Arc::new(Self { schema }))
     }
 }
 

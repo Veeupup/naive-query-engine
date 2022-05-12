@@ -39,6 +39,7 @@ impl Default for CsvConfig {
     }
 }
 
+#[derive(Debug, Clone)]
 pub struct CsvTable {
     schema: SchemaRef,
     batches: Vec<RecordBatch>,
@@ -46,7 +47,7 @@ pub struct CsvTable {
 
 impl CsvTable {
     #[allow(unused, clippy::iter_next_loop)]
-    pub fn try_create(filename: &str, csv_config: CsvConfig) -> Result<Self> {
+    pub fn try_create(filename: &str, csv_config: CsvConfig) -> Result<Arc<dyn TableSource>> {
         let schema = Self::infer_schema_from_csv(filename, &csv_config)?;
 
         let mut file = File::open(env::current_dir()?.join(Path::new(filename)))?;
@@ -66,7 +67,7 @@ impl CsvTable {
             batches.push(record?);
         }
 
-        Ok(Self { schema, batches })
+        Ok(Arc::new(Self { schema, batches }))
     }
 
     fn infer_schema_from_csv(filename: &str, csv_config: &CsvConfig) -> Result<SchemaRef> {

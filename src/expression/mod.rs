@@ -55,8 +55,6 @@ pub enum Expression {
 /// A named reference to a qualified field in a schema.
 #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub struct Column {
-    /// relation/table name.
-    pub relation: Option<String>,
     /// field/column name.
     pub name: String,
 }

@@ -9,8 +9,13 @@ use crate::{
     expression::{Column, Expression},
 };
 use arrow::datatypes::SchemaRef;
-use std::{sync::Arc, fmt, fmt::Display};
+use std::{
+    fmt,
+    fmt::{Debug, Display},
+    sync::Arc,
+};
 
+#[derive(Clone)]
 pub enum LogicalPlan {
     /// Evaluates an arbitrary list of expressions (essentially a
     /// SELECT with an expression list) on its input.
@@ -44,26 +49,25 @@ impl LogicalPlan {
     pub fn schema(&self) -> SchemaRef {
         match self {
             LogicalPlan::Projection(Projection { schema, .. }) => schema.clone(),
-            LogicalPlan::Filter(Filter {input, ..}) => input.schema().clone(),
+            LogicalPlan::Filter(Filter { input, .. }) => input.schema().clone(),
             LogicalPlan::Aggregate(Aggregate { schema, .. }) => schema.clone(),
-            LogicalPlan::Join(Join { schema, ..}) => schema.clone(),
-            LogicalPlan::Limit(Limit {  input, .. }) => input.schema().clone(),
-            LogicalPlan::TableScan(TableScan { source ,.. }) => source.schema().clone(),
+            LogicalPlan::Join(Join { schema, .. }) => schema.clone(),
+            LogicalPlan::Limit(Limit { input, .. }) => input.schema().clone(),
+            LogicalPlan::TableScan(TableScan { source, .. }) => source.schema().clone(),
         }
     }
 
     pub fn children(&self) -> Vec<Arc<LogicalPlan>> {
         match self {
-            LogicalPlan::Projection(Projection { input,.. }) => vec![input.clone()],
-            LogicalPlan::Filter(Filter {input, ..}) => vec![input.clone()],
+            LogicalPlan::Projection(Projection { input, .. }) => vec![input.clone()],
+            LogicalPlan::Filter(Filter { input, .. }) => vec![input.clone()],
             LogicalPlan::Aggregate(Aggregate { input, .. }) => vec![input.clone()],
-            LogicalPlan::Join(Join { left, right, ..}) => vec![left.clone(), right.clone()],
-            LogicalPlan::Limit(Limit {  input, .. }) => vec![input.clone()],
+            LogicalPlan::Join(Join { left, right, .. }) => vec![left.clone(), right.clone()],
+            LogicalPlan::Limit(Limit { input, .. }) => vec![input.clone()],
             LogicalPlan::TableScan(_) => vec![],
         }
     }
 }
-
 
 #[derive(Clone)]
 pub struct Projection {
@@ -135,4 +139,61 @@ pub struct Limit {
     pub n: usize,
     /// The logical plan
     pub input: Arc<LogicalPlan>,
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::datasource::EmptyTable;
+    use crate::datasource::TableSource;
+    use crate::error::Result;
+    use crate::expression::*;
+    use arrow::datatypes::{DataType, Field, Schema};
+
+    /// Create LogicalPlan
+    #[test]
+    fn create_logical_plan() -> Result<()> {
+        let schema = Arc::new(Schema::new(vec![Field::new("a", DataType::Int32, false)]));
+        let source = EmptyTable::try_create(schema)?;
+
+        let scan = LogicalPlan::TableScan(TableScan {
+            source,
+            projection: None,
+        });
+
+        let filter_expr = Expression::BinaryExpr {
+            left: Box::new(Expression::Column(Column {
+                name: "state".to_string(),
+            })),
+            op: Operator::Eq,
+            right: Box::new(Expression::Literal(ScalarValue::Utf8(Some(
+                "CO".to_string(),
+            )))),
+        };
+
+        let selection = LogicalPlan::Filter(Filter {
+            predicate: filter_expr,
+            input: Arc::new(scan),
+        });
+
+        let projection = vec![
+            Expression::Column(Column {
+                name: "id".to_string(),
+            }),
+            Expression::Column(Column {
+                name: "first_name".to_string(),
+            }),
+            Expression::Column(Column {
+                name: "last_name".to_string(),
+            }),
+            Expression::Column(Column {
+                name: "state".to_string(),
+            }),
+            Expression::Column(Column {
+                name: "salary".to_string(),
+            }),
+        ];
+
+        Ok(())
+    }
 }
