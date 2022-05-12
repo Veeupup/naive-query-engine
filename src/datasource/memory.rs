@@ -7,7 +7,7 @@
 use arrow::datatypes::SchemaRef;
 use arrow::record_batch::RecordBatch;
 
-use super::datasource::TableSource;
+use super::TableSource;
 use crate::error::Result;
 pub struct MemTable {
     schema: SchemaRef,
@@ -15,6 +15,7 @@ pub struct MemTable {
 }
 
 impl MemTable {
+    #[allow(unused)]
     pub fn try_create(schema: SchemaRef, batches: Vec<RecordBatch>) -> Result<Self> {
         Ok(Self { schema, batches })
     }
@@ -38,11 +39,14 @@ impl TableSource for MemTable {
     }
 }
 
+#[cfg(test)]
 mod tests {
-    use super::*;
-    use crate::{datasource::datasource::TableSource, error::Result};
+    use super::MemTable;
+    use crate::datasource::TableSource;
+    use crate::error::Result;
     use arrow::array::Int32Array;
     use arrow::datatypes::{DataType, Field, Schema};
+    use arrow::record_batch::RecordBatch;
     use std::sync::Arc;
 
     #[test]

@@ -13,6 +13,7 @@ pub enum VeeError {
     /// Error return by arrow
     ArrowError(ArrowError),
 
+    #[allow(unused)]
     OtherError,
 }
 

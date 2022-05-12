@@ -4,7 +4,7 @@
  * @Email: code@tanweime.com
 */
 
-use super::datasource::TableSource;
+use super::TableSource;
 use crate::error::Result;
 use arrow::datatypes::SchemaRef;
 use arrow::record_batch::RecordBatch;
