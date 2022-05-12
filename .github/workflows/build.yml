@@ -1,0 +1,25 @@
+name: auto build and test
+on:
+  pull_request:
+    branches: [main]
+env:
+  RUST_TOOLCHAIN: nightly-2022-04-09
+  CARGO_TERM_COLOR: always
+jobs:
+  run-test:
+    name: normal check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Install rust toolchain@v1
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: ${{ env.RUST_TOOLCHAIN }}
+          components: rustfmt, clippy
+      - name: Run rust clippy check
+        run: |
+          # If new CI checks are added, the one with `--locked` must be run first.
+          cargo clippy --all-targets --locked -- -D warnings
+      - name: Run test
+        run: cargo test

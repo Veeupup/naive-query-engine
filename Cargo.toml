@@ -2,7 +2,6 @@
 name = "how-query-engine-work"
 version = "0.1.0"
 edition = "2021"
-author = "Veeupup"
 
 [dependencies]
 arrow = { version = "13", features = ["prettyprint"] }

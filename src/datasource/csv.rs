@@ -8,15 +8,16 @@ use crate::error::Result;
 
 use arrow::{datatypes::SchemaRef, record_batch::RecordBatch};
 
-use super::datasource::TableSource;
+use super::TableSource;
 
 pub struct CsvTable {
-    filename: String,
+    _filename: String,
     schema: SchemaRef,
     batches: Vec<RecordBatch>,
 }
 
 impl CsvTable {
+    #[allow(unused)]
     pub fn try_create(_filename: &str) -> Result<Self> {
         todo!()
     }
