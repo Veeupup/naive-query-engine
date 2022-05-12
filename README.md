@@ -7,6 +7,9 @@ And inspired by [arrow-datafusion](https://github.com/apache/arrow-datafusion)
 TODO:
 - [ ] type system
 - [ ] datasource
+    - [ ] mem source
+    - [ ] csv as datasource
+    - [ ] empty datasource
 - [ ] logical plan & expressions
 - [ ] build logical plans
 - [ ] physical plan & expressions
