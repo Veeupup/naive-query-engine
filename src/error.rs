@@ -3,8 +3,8 @@
  * @Date: 2022-05-12 16:45:51
  * @Email: code@tanweime.com
 */
-use std::io;
 use arrow::error::ArrowError;
+use std::io;
 
 pub type Result<T> = std::result::Result<T, VeeError>;
 
@@ -16,7 +16,7 @@ pub enum VeeError {
     IoError(io::Error),
 
     #[allow(unused)]
-    OtherError,
+    Others,
 }
 
 impl From<ArrowError> for VeeError {
@@ -26,7 +26,7 @@ impl From<ArrowError> for VeeError {
 }
 
 impl From<io::Error> for VeeError {
-  fn from(e: io::Error) -> Self {
-      VeeError::IoError(e)
-  }
+    fn from(e: io::Error) -> Self {
+        VeeError::IoError(e)
+    }
 }

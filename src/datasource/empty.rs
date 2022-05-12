@@ -14,6 +14,13 @@ pub struct EmptyTable {
     schema: SchemaRef,
 }
 
+impl EmptyTable {
+    #[allow(unused)]
+    pub fn try_create(schema: SchemaRef) -> Result<Self> {
+        Ok(Self { schema })
+    }
+}
+
 impl TableSource for EmptyTable {
     fn schema(&self) -> SchemaRef {
         self.schema.clone()
@@ -21,5 +28,27 @@ impl TableSource for EmptyTable {
 
     fn scan(&self, _projection: Option<Vec<usize>>) -> Result<Vec<RecordBatch>> {
         Ok(vec![])
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use arrow::datatypes::{DataType, Field, Schema};
+    use std::sync::Arc;
+
+    #[test]
+    fn test_empty_table() -> Result<()> {
+        let schema = Arc::new(Schema::new(vec![
+            Field::new("a", DataType::Int32, false),
+            Field::new("b", DataType::Int32, false),
+        ]));
+
+        let table = EmptyTable::try_create(schema)?;
+        let batches = table.scan(None)?;
+
+        assert!(batches.is_empty());
+
+        Ok(())
     }
 }
