@@ -4,12 +4,12 @@
  * @Email: code@tanweime.com
 */
 
-use arrow::datatypes::DataType;
+use arrow::datatypes::{DataType, Field, Int32Type};
 
 #[derive(Clone, Debug)]
-pub enum Expression {
+pub enum LogicalExpression {
     /// An expression with a specific name.
-    Alias(Box<Expression>, String),
+    Alias(Box<LogicalExpression>, String),
     /// A named reference to a qualified filed in a schema.
     Column(Column),
     /// A constant value.
@@ -17,19 +17,19 @@ pub enum Expression {
     /// A binary expression such as "age > 21"
     BinaryExpr {
         /// Left-hand side of the expression
-        left: Box<Expression>,
+        left: Box<LogicalExpression>,
         /// The comparison operator
         op: Operator,
         /// Right-hand side of the expression
-        right: Box<Expression>,
+        right: Box<LogicalExpression>,
     },
     /// Negation of an expression. The expression's type must be a boolean to make sense.
-    Not(Box<Expression>),
+    Not(Box<LogicalExpression>),
     /// Casts the expression to a given type and will return a runtime error if the expression cannot be cast.
     /// This expression is guaranteed to have a fixed type.
     Cast {
         /// The expression being cast
-        expr: Box<Expression>,
+        expr: Box<LogicalExpression>,
         /// The `DataType` the expression will yield
         data_type: DataType,
     },
@@ -38,18 +38,25 @@ pub enum Expression {
         /// The function
         fun: ScalarFunction,
         /// List of expressions to feed to the functions as arguments
-        args: Vec<Expression>,
+        args: Vec<LogicalExpression>,
     },
     /// Represents the call of an aggregate built-in function with arguments.
     AggregateFunction {
         /// Name of the function
         fun: AggregateFunction,
         /// List of expressions to feed to the functions as arguments
-        args: Vec<Expression>,
+        args: Vec<LogicalExpression>,
     },
     /// Represents a reference to all fields in a schema.
     Wildcard,
     // TODO(veeupup): add more expresssions
+}
+
+impl LogicalExpression {
+    pub fn data_field(&self) -> Field {
+        // todo!()
+        Field::new("a", DataType::Int32, false)
+    }
 }
 
 /// A named reference to a qualified field in a schema.

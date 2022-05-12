@@ -4,9 +4,12 @@
  * @Email: code@tanweime.com
 */
 
+mod dataframe;
+pub use dataframe::DataFrame;
+
 use crate::{
     datasource::TableSource,
-    expression::{Column, Expression},
+    expression::{Column, LogicalExpression},
 };
 use arrow::datatypes::SchemaRef;
 use std::{
@@ -72,7 +75,7 @@ impl LogicalPlan {
 #[derive(Clone)]
 pub struct Projection {
     /// The list of expressions
-    pub expr: Vec<Expression>,
+    pub exprs: Vec<LogicalExpression>,
     /// The incoming logical plan
     pub input: Arc<LogicalPlan>,
     /// The schema description of the output
@@ -82,7 +85,7 @@ pub struct Projection {
 #[derive(Clone)]
 pub struct Filter {
     /// The predicate expression, which must have Boolean type.
-    pub predicate: Expression,
+    pub predicate: LogicalExpression,
     /// The incoming logical plan
     pub input: Arc<LogicalPlan>,
 }
@@ -102,9 +105,9 @@ pub struct Aggregate {
     /// The incoming logical plan
     pub input: Arc<LogicalPlan>,
     /// Grouping expressions
-    pub group_expr: Vec<Expression>,
+    pub group_expr: Vec<LogicalExpression>,
     /// Aggregate expressions
-    pub aggr_expr: Vec<Expression>,
+    pub aggr_expr: Vec<LogicalExpression>,
     /// The schema description of the aggregate output
     pub schema: SchemaRef,
 }
@@ -161,12 +164,12 @@ mod tests {
             projection: None,
         });
 
-        let filter_expr = Expression::BinaryExpr {
-            left: Box::new(Expression::Column(Column {
+        let filter_expr = LogicalExpression::BinaryExpr {
+            left: Box::new(LogicalExpression::Column(Column {
                 name: "state".to_string(),
             })),
             op: Operator::Eq,
-            right: Box::new(Expression::Literal(ScalarValue::Utf8(Some(
+            right: Box::new(LogicalExpression::Literal(ScalarValue::Utf8(Some(
                 "CO".to_string(),
             )))),
         };
@@ -177,19 +180,19 @@ mod tests {
         });
 
         let projection = vec![
-            Expression::Column(Column {
+            LogicalExpression::Column(Column {
                 name: "id".to_string(),
             }),
-            Expression::Column(Column {
+            LogicalExpression::Column(Column {
                 name: "first_name".to_string(),
             }),
-            Expression::Column(Column {
+            LogicalExpression::Column(Column {
                 name: "last_name".to_string(),
             }),
-            Expression::Column(Column {
+            LogicalExpression::Column(Column {
                 name: "state".to_string(),
             }),
-            Expression::Column(Column {
+            LogicalExpression::Column(Column {
                 name: "salary".to_string(),
             }),
         ];
