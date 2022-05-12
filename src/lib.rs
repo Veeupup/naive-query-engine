@@ -6,3 +6,5 @@
 
 mod datasource;
 mod error;
+mod expression;
+mod logical_plan;
