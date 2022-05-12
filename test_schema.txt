@@ -1,0 +1,4 @@
+id,name,age,score
+1,veeupup,23,60.0
+2,alex,20,90.1
+4,lynne,18,99.99
