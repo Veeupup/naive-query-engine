@@ -160,7 +160,7 @@ mod tests {
         });
 
         let filter_expr = LogicalExpression::BinaryExpr(BinaryExpr {
-            left: Box::new(LogicalExpression::Column(Column("state".to_string()))),
+            left: Box::new(LogicalExpression::column("state".to_string())),
             op: Operator::Eq,
             right: Box::new(LogicalExpression::Literal(ScalarValue::Utf8(Some(
                 "CO".to_string(),
@@ -173,11 +173,11 @@ mod tests {
         });
 
         let projection = vec![
-            LogicalExpression::Column(Column("id".to_string())),
-            LogicalExpression::Column(Column("first_name".to_string())),
-            LogicalExpression::Column(Column("last_name".to_string())),
-            LogicalExpression::Column(Column("state".to_string())),
-            LogicalExpression::Column(Column("salary".to_string())),
+            LogicalExpression::column("id".to_string()),
+            LogicalExpression::column("first_name".to_string()),
+            LogicalExpression::column("last_name".to_string()),
+            LogicalExpression::column("state".to_string()),
+            LogicalExpression::column("salary".to_string()),
         ];
 
         Ok(())
