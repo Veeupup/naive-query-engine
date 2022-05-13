@@ -6,10 +6,10 @@
 use arrow::error::ArrowError;
 use std::io;
 
-pub type Result<T> = std::result::Result<T, VeeError>;
+pub type Result<T> = std::result::Result<T, ErrorCode>;
 
 #[derive(Debug)]
-pub enum VeeError {
+pub enum ErrorCode {
     /// Error return by arrow
     ArrowError(ArrowError),
 
@@ -17,18 +17,20 @@ pub enum VeeError {
 
     NoSuchField,
 
+    LogicalError,
+
     #[allow(unused)]
     Others,
 }
 
-impl From<ArrowError> for VeeError {
+impl From<ArrowError> for ErrorCode {
     fn from(e: ArrowError) -> Self {
-        VeeError::ArrowError(e)
+        ErrorCode::ArrowError(e)
     }
 }
 
-impl From<io::Error> for VeeError {
+impl From<io::Error> for ErrorCode {
     fn from(e: io::Error) -> Self {
-        VeeError::IoError(e)
+        ErrorCode::IoError(e)
     }
 }

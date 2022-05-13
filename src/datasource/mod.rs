@@ -8,10 +8,12 @@ mod csv;
 mod empty;
 mod memory;
 
+use std::fmt::Debug;
+
 use crate::error::Result;
 use arrow::{datatypes::SchemaRef, record_batch::RecordBatch};
 
-pub trait TableSource {
+pub trait TableSource: Debug {
     fn schema(&self) -> SchemaRef;
 
     // TODO(veeupup): return async stream record batch
