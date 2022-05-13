@@ -105,9 +105,9 @@ mod tests {
         let ctx = ExecutionContext::default();
         let source = ctx.csv("test_data.csv", None)?;
         let exprs = vec![
-            LogicalExpression::Column(Column("id".to_string())),
-            LogicalExpression::Column(Column("name".to_string())),
-            LogicalExpression::Column(Column("age".to_string())),
+            LogicalExpression::column("id".to_string()),
+            LogicalExpression::column("name".to_string()),
+            LogicalExpression::column("age".to_string()),
         ];
         let logical_plan = source.project(exprs).logical_plan();
         let physical_plan = QueryPlanner::create_physical_plan(&logical_plan)?;

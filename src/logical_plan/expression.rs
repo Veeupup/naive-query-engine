@@ -51,6 +51,10 @@ pub enum LogicalExpression {
 }
 
 impl LogicalExpression {
+    pub fn column(name: String) -> LogicalExpression {
+        LogicalExpression::Column(Column(name))
+    }
+
     /// TODO(veeupup): consider return Vec<Field>
     pub fn data_field(&self, input: &LogicalPlan) -> Result<Field> {
         match self {
