@@ -5,6 +5,7 @@
 */
 
 mod datasource;
+mod datatype;
 mod error;
 mod execution;
 mod logical_plan;

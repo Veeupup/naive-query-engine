@@ -7,4 +7,5 @@
 mod expression;
 mod plan;
 
+mod projection;
 mod scan;

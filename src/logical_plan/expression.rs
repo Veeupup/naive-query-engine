@@ -4,12 +4,20 @@
  * @Email: code@tanweime.com
 */
 
+use std::iter::repeat;
+
+use arrow::array::Float32Array;
+use arrow::array::StringArray;
+use arrow::array::{
+    new_null_array, ArrayRef, BooleanArray, Float64Array, Int16Array, Int32Array, Int64Array,
+    Int8Array, UInt16Array, UInt32Array, UInt64Array, UInt8Array,
+};
 use arrow::compute::kernels::aggregate;
 use arrow::datatypes::{DataType, Field, Int32Type};
 use std::sync::Arc;
 
+use crate::error::ErrorCode;
 use crate::error::Result;
-use crate::error::VeeError;
 
 use crate::logical_plan::plan::LogicalPlan;
 
@@ -60,7 +68,7 @@ impl LogicalExpression {
                         return Ok(field.clone());
                     }
                 }
-                Err(VeeError::NoSuchField)
+                Err(ErrorCode::NoSuchField)
             }
             LogicalExpression::Literal(scalar_val) => Ok(scalar_val.data_field()),
             LogicalExpression::BinaryExpr(expr) => expr.data_field(input),
@@ -119,6 +127,15 @@ pub enum ScalarValue {
     Utf8(Option<String>),
 }
 
+macro_rules! build_array_from_option {
+    ($DATA_TYPE:ident, $ARRAY_TYPE:ident, $EXPR:expr, $SIZE:expr) => {{
+        match $EXPR {
+            Some(value) => Arc::new($ARRAY_TYPE::from_value(*value, $SIZE)),
+            None => new_null_array(&DataType::$DATA_TYPE, $SIZE),
+        }
+    }};
+}
+
 impl ScalarValue {
     pub fn data_field(&self) -> Field {
         match self {
@@ -135,6 +152,27 @@ impl ScalarValue {
             ScalarValue::UInt32(_) => Field::new("u32", DataType::UInt32, true),
             ScalarValue::UInt64(_) => Field::new("u64", DataType::UInt64, true),
             ScalarValue::Utf8(_) => Field::new("string", DataType::Utf8, true),
+        }
+    }
+
+    pub fn into_array(&self, size: usize) -> ArrayRef {
+        match self {
+            ScalarValue::Null => new_null_array(&DataType::Null, size),
+            ScalarValue::Boolean(e) => Arc::new(BooleanArray::from(vec![*e; size])) as ArrayRef,
+            ScalarValue::Float32(e) => build_array_from_option!(Float32, Float32Array, e, size),
+            ScalarValue::Float64(e) => build_array_from_option!(Float64, Float64Array, e, size),
+            ScalarValue::Int8(e) => build_array_from_option!(Int8, Int8Array, e, size),
+            ScalarValue::Int16(e) => build_array_from_option!(Int16, Int16Array, e, size),
+            ScalarValue::Int32(e) => build_array_from_option!(Int32, Int32Array, e, size),
+            ScalarValue::Int64(e) => build_array_from_option!(Int64, Int64Array, e, size),
+            ScalarValue::UInt8(e) => build_array_from_option!(UInt8, UInt8Array, e, size),
+            ScalarValue::UInt16(e) => build_array_from_option!(UInt16, UInt16Array, e, size),
+            ScalarValue::UInt32(e) => build_array_from_option!(UInt32, UInt32Array, e, size),
+            ScalarValue::UInt64(e) => build_array_from_option!(UInt64, UInt64Array, e, size),
+            ScalarValue::Utf8(e) => match e {
+                Some(value) => Arc::new(StringArray::from_iter_values(repeat(value).take(size))),
+                None => new_null_array(&DataType::Utf8, size),
+            },
         }
     }
 }
