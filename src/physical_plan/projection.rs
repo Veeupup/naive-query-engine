@@ -67,8 +67,8 @@ impl PhysicalPlan for ProjectionPlan {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::physical_plan::expression::{PhysicalExpression, ColumnExpression};
     use crate::datasource::{CsvConfig, CsvTable, TableSource};
+    use crate::physical_plan::expression::{ColumnExpression, PhysicalExpression};
     use crate::physical_plan::scan::ScanPlan;
     use arrow::{
         array::{Array, Float64Array, Int64Array, StringArray},
@@ -77,8 +77,11 @@ mod tests {
 
     #[test]
     fn test_projection() -> Result<()> {
-        let source = CsvTable::try_create("test_schema.txt", CsvConfig::default())?;
-        let schema = Arc::new(Schema::new(vec![source.schema().field(0).clone(), source.schema().field(1).clone()]));
+        let source = CsvTable::try_create("test_data.csv", CsvConfig::default())?;
+        let schema = Arc::new(Schema::new(vec![
+            source.schema().field(0).clone(),
+            source.schema().field(1).clone(),
+        ]));
         let scan_plan = ScanPlan::create(source, None);
 
         let expr = vec![

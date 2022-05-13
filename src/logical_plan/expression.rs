@@ -64,7 +64,7 @@ impl LogicalExpression {
             }
             LogicalExpression::Column(col) => {
                 for field in input.schema().fields() {
-                    if field.name() == col.name.as_str() {
+                    if field.name() == col.0.as_str() {
                         return Ok(field.clone());
                     }
                 }
@@ -91,10 +91,7 @@ impl LogicalExpression {
 
 /// A named reference to a qualified field in a schema.
 #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
-pub struct Column {
-    /// field/column name.
-    pub name: String,
-}
+pub struct Column(pub String);
 
 #[derive(Debug, Clone)]
 

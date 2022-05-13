@@ -10,3 +10,4 @@ mod error;
 mod execution;
 mod logical_plan;
 mod physical_plan;
+mod planner;

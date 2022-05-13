@@ -9,3 +9,8 @@ mod plan;
 
 mod projection;
 mod scan;
+
+pub use expression::*;
+pub use plan::*;
+pub use projection::*;
+pub use scan::*;

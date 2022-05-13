@@ -17,6 +17,8 @@ pub enum ErrorCode {
 
     NoSuchField,
 
+    ColumnNotExists(String),
+
     LogicalError,
 
     #[allow(unused)]
