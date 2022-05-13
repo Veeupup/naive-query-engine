@@ -11,7 +11,7 @@ use std::sync::Arc;
 use crate::error::Result;
 use crate::error::VeeError;
 
-use super::LogicalPlan;
+use crate::logical_plan::plan::LogicalPlan;
 
 #[derive(Clone, Debug)]
 pub enum LogicalExpression {

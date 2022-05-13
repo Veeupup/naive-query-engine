@@ -8,7 +8,7 @@ use std::sync::Arc;
 
 use arrow::datatypes::{Schema, SchemaRef};
 
-use super::{Aggregate, Filter, LogicalPlan, Projection};
+use crate::logical_plan::plan::{Aggregate, Filter, LogicalPlan, Projection};
 use crate::logical_plan::expression::LogicalExpression;
 
 pub struct DataFrame {
