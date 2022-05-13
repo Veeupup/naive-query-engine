@@ -53,7 +53,7 @@ mod tests {
 
     #[test]
     fn test_physical_scan() -> Result<()> {
-        let source = CsvTable::try_create("test_schema.txt", CsvConfig::default())?;
+        let source = CsvTable::try_create("test_data.csv", CsvConfig::default())?;
 
         let scan_plan = ScanPlan::create(source, None);
 

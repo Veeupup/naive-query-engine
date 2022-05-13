@@ -69,7 +69,7 @@ impl DataFrame {
         self.plan.schema()
     }
 
-    pub fn logical_plan(&self) -> Arc<LogicalPlan> {
+    pub fn logical_plan(self) -> Arc<LogicalPlan> {
         self.plan.clone()
     }
 }
@@ -99,30 +99,18 @@ mod tests {
         let plan = ctx
             .empty(schema)?
             .filter(LogicalExpression::BinaryExpr(BinaryExpr {
-                left: Box::new(LogicalExpression::Column(Column {
-                    name: "state".to_string(),
-                })),
+                left: Box::new(LogicalExpression::Column(Column("state".to_string()))),
                 op: Operator::Eq,
                 right: Box::new(LogicalExpression::Literal(ScalarValue::Utf8(Some(
                     "CO".to_string(),
                 )))),
             }))
             .project(vec![
-                LogicalExpression::Column(Column {
-                    name: "id".to_string(),
-                }),
-                LogicalExpression::Column(Column {
-                    name: "first_name".to_string(),
-                }),
-                LogicalExpression::Column(Column {
-                    name: "last_name".to_string(),
-                }),
-                LogicalExpression::Column(Column {
-                    name: "state".to_string(),
-                }),
-                LogicalExpression::Column(Column {
-                    name: "salary".to_string(),
-                }),
+                LogicalExpression::Column(Column("id".to_string())),
+                LogicalExpression::Column(Column("first_name".to_string())),
+                LogicalExpression::Column(Column("last_name".to_string())),
+                LogicalExpression::Column(Column("state".to_string())),
+                LogicalExpression::Column(Column("salary".to_string())),
             ]);
 
         Ok(())
