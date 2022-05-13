@@ -51,11 +51,11 @@ impl LogicalPlan {
     pub fn schema(&self) -> SchemaRef {
         match self {
             LogicalPlan::Projection(Projection { schema, .. }) => schema.clone(),
-            LogicalPlan::Filter(Filter { input, .. }) => input.schema().clone(),
+            LogicalPlan::Filter(Filter { input, .. }) => input.schema(),
             LogicalPlan::Aggregate(Aggregate { schema, .. }) => schema.clone(),
             LogicalPlan::Join(Join { schema, .. }) => schema.clone(),
-            LogicalPlan::Limit(Limit { input, .. }) => input.schema().clone(),
-            LogicalPlan::TableScan(TableScan { source, .. }) => source.schema().clone(),
+            LogicalPlan::Limit(Limit { input, .. }) => input.schema(),
+            LogicalPlan::TableScan(TableScan { source, .. }) => source.schema(),
         }
     }
 

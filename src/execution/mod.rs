@@ -15,16 +15,10 @@ use crate::{
     logical_plan::{DataFrame, LogicalPlan, TableScan},
 };
 
+#[derive(Default)]
 pub struct ExecutionContext {
+    #[allow(unused)]
     tables: HashMap<String, DataFrame>,
-}
-
-impl Default for ExecutionContext {
-    fn default() -> Self {
-        Self {
-            tables: HashMap::new(),
-        }
-    }
 }
 
 impl ExecutionContext {

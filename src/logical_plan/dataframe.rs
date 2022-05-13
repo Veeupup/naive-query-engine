@@ -66,7 +66,7 @@ impl DataFrame {
     }
 
     pub fn schema(&self) -> SchemaRef {
-        self.plan.schema().clone()
+        self.plan.schema()
     }
 
     pub fn logical_plan(&self) -> Arc<LogicalPlan> {
