@@ -1,12 +1,12 @@
 /*
-  * @Author: Veeupup  
-  * @Date: 2022-05-13 14:09:04  
-  * @Email: code@tanweime.com  
+ * @Author: Veeupup
+ * @Date: 2022-05-13 14:09:04
+ * @Email: code@tanweime.com
 */
 
 use crate::datasource::TableSource;
-use arrow::datatypes::SchemaRef;
 use crate::logical_plan::expression::{Column, LogicalExpression};
+use arrow::datatypes::SchemaRef;
 use std::{
     fmt,
     fmt::{Debug, Display},

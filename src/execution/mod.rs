@@ -12,8 +12,8 @@ use std::collections::HashMap;
 
 use crate::{
     datasource::{CsvConfig, CsvTable},
-    logical_plan::{DataFrame},
     logical_plan::plan::{LogicalPlan, TableScan},
+    logical_plan::DataFrame,
 };
 
 #[derive(Default)]
