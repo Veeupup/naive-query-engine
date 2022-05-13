@@ -9,5 +9,6 @@ mod datatype;
 mod error;
 mod execution;
 mod logical_plan;
+mod optimizer;
 mod physical_plan;
 mod planner;
