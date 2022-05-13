@@ -5,13 +5,12 @@
 */
 
 mod dataframe;
+mod expression;
 pub use dataframe::DataFrame;
 
-use crate::{
-    datasource::TableSource,
-    expression::{Column, LogicalExpression},
-};
+use crate::datasource::TableSource;
 use arrow::datatypes::SchemaRef;
+use expression::{Column, LogicalExpression};
 use std::{
     fmt,
     fmt::{Debug, Display},
@@ -150,7 +149,7 @@ mod tests {
     use crate::datasource::EmptyTable;
     use crate::datasource::TableSource;
     use crate::error::Result;
-    use crate::expression::*;
+    use crate::logical_plan::expression::*;
     use arrow::datatypes::{DataType, Field, Schema};
 
     /// Create LogicalPlan
@@ -164,7 +163,7 @@ mod tests {
             projection: None,
         });
 
-        let filter_expr = LogicalExpression::BinaryExpr {
+        let filter_expr = LogicalExpression::BinaryExpr(BinaryExpr {
             left: Box::new(LogicalExpression::Column(Column {
                 name: "state".to_string(),
             })),
@@ -172,7 +171,7 @@ mod tests {
             right: Box::new(LogicalExpression::Literal(ScalarValue::Utf8(Some(
                 "CO".to_string(),
             )))),
-        };
+        });
 
         let selection = LogicalPlan::Filter(Filter {
             predicate: filter_expr,

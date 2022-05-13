@@ -15,6 +15,8 @@ pub enum VeeError {
 
     IoError(io::Error),
 
+    NoSuchField,
+
     #[allow(unused)]
     Others,
 }

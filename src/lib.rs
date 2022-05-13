@@ -7,5 +7,4 @@
 mod datasource;
 mod error;
 mod execution;
-mod expression;
 mod logical_plan;

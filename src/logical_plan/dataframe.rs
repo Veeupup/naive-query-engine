@@ -9,7 +9,7 @@ use std::sync::Arc;
 use arrow::datatypes::{Schema, SchemaRef};
 
 use super::{Aggregate, Filter, LogicalPlan, Projection};
-use crate::expression::LogicalExpression;
+use crate::logical_plan::expression::LogicalExpression;
 
 pub struct DataFrame {
     pub plan: Arc<LogicalPlan>,
@@ -19,7 +19,7 @@ impl DataFrame {
     pub fn project(self, exprs: Vec<LogicalExpression>) -> Self {
         let fields = exprs
             .iter()
-            .map(|expr| expr.data_field())
+            .map(|expr| expr.data_field(self.plan.as_ref()).unwrap())
             .collect::<Vec<_>>();
         let schema = Arc::new(Schema::new(fields));
         Self {
@@ -47,11 +47,11 @@ impl DataFrame {
     ) -> Self {
         let mut group_fields = group_expr
             .iter()
-            .map(|expr| expr.data_field())
+            .map(|expr| expr.data_field(self.plan.as_ref()).unwrap())
             .collect::<Vec<_>>();
         let mut aggr_fields = aggr_expr
             .iter()
-            .map(|expr| expr.data_field())
+            .map(|expr| expr.data_field(self.plan.as_ref()).unwrap())
             .collect::<Vec<_>>();
         group_fields.append(&mut aggr_fields);
         let schema = Arc::new(Schema::new(group_fields));
@@ -82,17 +82,23 @@ mod tests {
     use crate::datasource::TableSource;
     use crate::error::Result;
     use crate::execution::ExecutionContext;
-    use crate::expression::*;
+    use crate::logical_plan::expression::*;
     use arrow::datatypes::{DataType, Field, Schema};
 
     #[test]
     fn create_logical_plan() -> Result<()> {
+        let schema = Arc::new(Schema::new(vec![
+            Field::new("state", DataType::Int64, true),
+            Field::new("id", DataType::Int64, true),
+            Field::new("first_name", DataType::Utf8, true),
+            Field::new("last_name", DataType::Utf8, true),
+            Field::new("salary", DataType::Int64, true),
+        ]));
         let ctx = ExecutionContext::default();
 
-        let schema = Arc::new(Schema::new(vec![]));
         let plan = ctx
             .empty(schema)?
-            .filter(LogicalExpression::BinaryExpr {
+            .filter(LogicalExpression::BinaryExpr(BinaryExpr {
                 left: Box::new(LogicalExpression::Column(Column {
                     name: "state".to_string(),
                 })),
@@ -100,7 +106,7 @@ mod tests {
                 right: Box::new(LogicalExpression::Literal(ScalarValue::Utf8(Some(
                     "CO".to_string(),
                 )))),
-            })
+            }))
             .project(vec![
                 LogicalExpression::Column(Column {
                     name: "id".to_string(),
