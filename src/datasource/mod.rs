@@ -18,3 +18,8 @@ pub trait TableSource {
     /// for scan
     fn scan(&self, projection: Option<Vec<usize>>) -> Result<Vec<RecordBatch>>;
 }
+
+pub use csv::CsvConfig;
+pub use csv::CsvTable;
+pub use empty::EmptyTable;
+pub use memory::MemTable;

@@ -6,9 +6,12 @@
 
 use arrow::datatypes::SchemaRef;
 use arrow::record_batch::RecordBatch;
+use std::sync::Arc;
 
 use super::TableSource;
 use crate::error::Result;
+
+#[derive(Debug, Clone)]
 pub struct MemTable {
     schema: SchemaRef,
     batches: Vec<RecordBatch>,
@@ -16,8 +19,11 @@ pub struct MemTable {
 
 impl MemTable {
     #[allow(unused)]
-    pub fn try_create(schema: SchemaRef, batches: Vec<RecordBatch>) -> Result<Self> {
-        Ok(Self { schema, batches })
+    pub fn try_create(
+        schema: SchemaRef,
+        batches: Vec<RecordBatch>,
+    ) -> Result<Arc<dyn TableSource>> {
+        Ok(Arc::new(Self { schema, batches }))
     }
 }
 
