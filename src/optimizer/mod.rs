@@ -9,18 +9,13 @@ mod projection_push_down;
 use crate::logical_plan::plan::LogicalPlan;
 use std::sync::Arc;
 
+#[derive(Default)]
 pub struct Optimizer {
     rules: Vec<Arc<dyn OptimizerRule>>,
 }
 
 pub trait OptimizerRule {
     fn optimize(&self, plan: &LogicalPlan) -> LogicalPlan;
-}
-
-impl Default for Optimizer {
-    fn default() -> Self {
-        Self { rules: vec![] }
-    }
 }
 
 impl Optimizer {

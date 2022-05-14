@@ -13,6 +13,7 @@ use arrow::{
 
 use crate::logical_plan::expression::ScalarValue;
 
+#[derive(Debug, Clone)]
 pub enum ColumnValue {
     /// Array of values
     Array(ArrayRef),
@@ -28,10 +29,10 @@ impl ColumnValue {
         }
     }
 
-    pub fn into_array(&self) -> ArrayRef {
+    pub fn into_array(self) -> ArrayRef {
         match self {
-            ColumnValue::Array(array) => array.clone(),
-            ColumnValue::Const(scalar, num_rows) => scalar.into_array(*num_rows),
+            ColumnValue::Array(array) => array,
+            ColumnValue::Const(scalar, num_rows) => scalar.into_array(num_rows),
         }
     }
 }

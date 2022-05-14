@@ -167,7 +167,7 @@ mod tests {
             )))),
         });
 
-        let selection = LogicalPlan::Filter(Filter {
+        let _selection = LogicalPlan::Filter(Filter {
             predicate: filter_expr,
             input: Arc::new(scan),
         });

@@ -55,7 +55,7 @@ impl Catalog {
         self.tables
             .get(table)
             .cloned()
-            .ok_or(ErrorCode::NoSuchTable(format!("No table name: {}", table)))
+            .ok_or_else(|| ErrorCode::NoSuchTable(format!("No table name: {}", table)))
     }
 
     /// get dataframe by table name
@@ -64,7 +64,7 @@ impl Catalog {
             .tables
             .get(table)
             .cloned()
-            .ok_or(ErrorCode::NoSuchTable(format!("No table name: {}", table)))?;
+            .ok_or_else(|| ErrorCode::NoSuchTable(format!("No table name: {}", table)))?;
         let plan = LogicalPlan::TableScan(TableScan {
             source,
             projection: None,

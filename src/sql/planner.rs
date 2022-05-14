@@ -57,7 +57,7 @@ impl<'a> SQLPlanner<'a> {
 
                 // TODO(veeupup): group by
 
-                Ok(df.logical_plan().to_owned())
+                Ok(df.logical_plan())
             }
             _ => todo!(),
         }
@@ -76,7 +76,7 @@ impl<'a> SQLPlanner<'a> {
     fn plan_from_tables(&self, from: Vec<TableWithJoins>) -> Result<DataFrame> {
         // TODO(veeupup): support select with no from
         // TODO(veeupup): support select with join, multi table
-        debug_assert!(from.len() > 0);
+        debug_assert!(!from.is_empty());
         match &from[0].relation {
             TableFactor::Table { name, alias, .. } => {
                 let table_name = Self::normalize_sql_object_name(name);

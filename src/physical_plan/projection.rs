@@ -50,7 +50,7 @@ impl PhysicalPlan for ProjectionPlan {
                     .collect::<Vec<_>>();
                 let columns = columns
                     .iter()
-                    .map(|column| column.into_array())
+                    .map(|column| column.clone().into_array())
                     .collect::<Vec<_>>();
                 // TODO(veeupup): remove unwrap
                 RecordBatch::try_new(self.schema.clone(), columns).unwrap()

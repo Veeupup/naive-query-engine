@@ -98,7 +98,7 @@ mod tests {
         let mut catalog = Catalog::default();
         catalog.add_empty_table("empty", schema)?;
 
-        let plan = catalog
+        let _plan = catalog
             .get_table_df("empty")?
             .filter(LogicalExpression::BinaryExpr(BinaryExpr {
                 left: Box::new(LogicalExpression::column("state".to_string())),
