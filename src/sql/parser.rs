@@ -4,8 +4,6 @@
  * @Email: code@tanweime.com
 */
 
-use std::string::ParseError;
-
 use sqlparser::{
     ast::Statement,
     dialect::GenericDialect,

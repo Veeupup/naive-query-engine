@@ -44,16 +44,16 @@ impl QueryPlanner {
                 let proj_schema = Arc::new(Schema::new(fields));
                 Ok(ProjectionPlan::create(input, proj_schema, proj_expr))
             }
-            LogicalPlan::Limit(limit) => {
+            LogicalPlan::Limit(_limit) => {
                 todo!()
             }
-            LogicalPlan::Join(join) => {
+            LogicalPlan::Join(_join) => {
                 todo!()
             }
-            LogicalPlan::Filter(filter) => {
+            LogicalPlan::Filter(_filter) => {
                 todo!()
             }
-            LogicalPlan::Aggregate(aggr) => {
+            LogicalPlan::Aggregate(_aggr) => {
                 todo!()
             }
         }
@@ -97,7 +97,6 @@ mod tests {
     use arrow::array::StringArray;
 
     use crate::catalog::Catalog;
-    use crate::{datasource::CsvTable, logical_plan::plan::TableScan};
 
     use super::*;
 

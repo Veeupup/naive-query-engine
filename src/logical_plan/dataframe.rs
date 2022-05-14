@@ -80,8 +80,7 @@ mod tests {
 
     use super::*;
     use crate::catalog::Catalog;
-    use crate::datasource::EmptyTable;
-    use crate::datasource::TableSource;
+
     use crate::error::Result;
     use crate::logical_plan::expression::*;
     use arrow::datatypes::{DataType, Field, Schema};

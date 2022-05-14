@@ -4,8 +4,6 @@
  * @Email: code@tanweime.com
 */
 
-use std::sync::Arc;
-
 use arrow::{
     array::{Array, ArrayRef},
     datatypes::DataType,

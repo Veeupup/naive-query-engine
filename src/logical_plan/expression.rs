@@ -12,8 +12,8 @@ use arrow::array::{
     new_null_array, ArrayRef, BooleanArray, Float64Array, Int16Array, Int32Array, Int64Array,
     Int8Array, UInt16Array, UInt32Array, UInt64Array, UInt8Array,
 };
-use arrow::compute::kernels::aggregate;
-use arrow::datatypes::{DataType, Field, Int32Type};
+
+use arrow::datatypes::{DataType, Field};
 use std::sync::Arc;
 
 use crate::error::ErrorCode;

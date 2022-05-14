@@ -10,14 +10,12 @@
 use log::debug;
 use sqlparser::ast::{Expr, OrderByExpr, SetExpr, Statement, TableWithJoins};
 use sqlparser::ast::{Ident, ObjectName, SelectItem, TableFactor, Value};
-use std::sync::Arc;
 
 use crate::logical_plan::expression::{LogicalExpression, ScalarValue};
 use crate::logical_plan::plan::TableScan;
 use crate::{
     catalog::Catalog,
-    datasource::TableRef,
-    error::{ErrorCode, Result},
+    error::Result,
     logical_plan::{plan::LogicalPlan, DataFrame},
 };
 
@@ -63,12 +61,12 @@ impl<'a> SQLPlanner<'a> {
         }
     }
 
-    fn order_by(&self, plan: LogicalPlan, order_by: Vec<OrderByExpr>) -> Result<LogicalPlan> {
+    fn order_by(&self, plan: LogicalPlan, _order_by: Vec<OrderByExpr>) -> Result<LogicalPlan> {
         // TODO(veeupup): order by
         Ok(plan)
     }
 
-    fn limit(&self, plan: LogicalPlan, limit: Option<Expr>) -> Result<LogicalPlan> {
+    fn limit(&self, plan: LogicalPlan, _limit: Option<Expr>) -> Result<LogicalPlan> {
         // TODO(veeupup): limit
         Ok(plan)
     }
@@ -78,7 +76,7 @@ impl<'a> SQLPlanner<'a> {
         // TODO(veeupup): support select with join, multi table
         debug_assert!(!from.is_empty());
         match &from[0].relation {
-            TableFactor::Table { name, alias, .. } => {
+            TableFactor::Table { name, alias: _, .. } => {
                 let table_name = Self::normalize_sql_object_name(name);
                 let source = self.catalog.get_table(&table_name)?;
                 let plan = LogicalPlan::TableScan(TableScan {

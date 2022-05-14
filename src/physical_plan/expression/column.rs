@@ -4,7 +4,6 @@
  * @Email: code@tanweime.com
 */
 
-use std::process::id;
 use std::sync::Arc;
 
 use arrow::record_batch::RecordBatch;
