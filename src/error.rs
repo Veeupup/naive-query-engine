@@ -4,6 +4,7 @@
  * @Email: code@tanweime.com
 */
 use arrow::error::ArrowError;
+use sqlparser::parser::ParserError;
 use std::io;
 
 pub type Result<T> = std::result::Result<T, ErrorCode>;
@@ -21,6 +22,10 @@ pub enum ErrorCode {
 
     LogicalError,
 
+    NoSuchTable(String),
+
+    ParserError(ParserError),
+
     #[allow(unused)]
     Others,
 }
@@ -34,5 +39,10 @@ impl From<ArrowError> for ErrorCode {
 impl From<io::Error> for ErrorCode {
     fn from(e: io::Error) -> Self {
         ErrorCode::IoError(e)
+    }
+}
+impl From<ParserError> for ErrorCode {
+    fn from(e: ParserError) -> Self {
+        ErrorCode::ParserError(e)
     }
 }

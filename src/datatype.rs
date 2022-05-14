@@ -4,7 +4,12 @@
  * @Email: code@tanweime.com
 */
 
-use arrow::{array::ArrayRef, datatypes::DataType};
+use std::sync::Arc;
+
+use arrow::{
+    array::{Array, ArrayRef},
+    datatypes::DataType,
+};
 
 use crate::logical_plan::expression::ScalarValue;
 

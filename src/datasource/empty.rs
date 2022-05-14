@@ -5,6 +5,7 @@
 */
 
 use super::TableSource;
+use crate::datasource::TableRef;
 use crate::error::Result;
 use arrow::datatypes::SchemaRef;
 use arrow::record_batch::RecordBatch;
@@ -18,7 +19,7 @@ pub struct EmptyTable {
 
 impl EmptyTable {
     #[allow(unused)]
-    pub fn try_create(schema: SchemaRef) -> Result<Arc<dyn TableSource>> {
+    pub fn try_create(schema: SchemaRef) -> Result<TableRef> {
         Ok(Arc::new(Self { schema }))
     }
 }

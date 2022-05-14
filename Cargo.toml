@@ -6,4 +6,5 @@ edition = "2021"
 [dependencies]
 arrow = { version = "13", features = ["prettyprint"] }
 async-trait = "0.1.41"
-
+sqlparser = "0.17"
+log = "0.4"

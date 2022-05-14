@@ -9,9 +9,12 @@ mod empty;
 mod memory;
 
 use std::fmt::Debug;
+use std::sync::Arc;
 
 use crate::error::Result;
 use arrow::{datatypes::SchemaRef, record_batch::RecordBatch};
+
+pub type TableRef = Arc<dyn TableSource>;
 
 pub trait TableSource: Debug {
     fn schema(&self) -> SchemaRef;

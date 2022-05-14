@@ -11,32 +11,33 @@ use arrow::datatypes::{Schema, SchemaRef};
 use crate::logical_plan::expression::LogicalExpression;
 use crate::logical_plan::plan::{Aggregate, Filter, LogicalPlan, Projection};
 
+#[derive(Clone)]
 pub struct DataFrame {
-    pub plan: Arc<LogicalPlan>,
+    pub plan: LogicalPlan,
 }
 
 impl DataFrame {
     pub fn project(self, exprs: Vec<LogicalExpression>) -> Self {
         let fields = exprs
             .iter()
-            .map(|expr| expr.data_field(self.plan.as_ref()).unwrap())
+            .map(|expr| expr.data_field(&self.plan).unwrap())
             .collect::<Vec<_>>();
         let schema = Arc::new(Schema::new(fields));
         Self {
-            plan: Arc::new(LogicalPlan::Projection(Projection {
-                input: self.plan,
+            plan: LogicalPlan::Projection(Projection {
+                input: Arc::new(self.plan),
                 exprs,
                 schema,
-            })),
+            }),
         }
     }
 
     pub fn filter(self, expr: LogicalExpression) -> Self {
         Self {
-            plan: Arc::new(LogicalPlan::Filter(Filter {
-                input: self.plan,
+            plan: LogicalPlan::Filter(Filter {
+                input: Arc::new(self.plan),
                 predicate: expr,
-            })),
+            }),
         }
     }
 
@@ -47,21 +48,21 @@ impl DataFrame {
     ) -> Self {
         let mut group_fields = group_expr
             .iter()
-            .map(|expr| expr.data_field(self.plan.as_ref()).unwrap())
+            .map(|expr| expr.data_field(&self.plan).unwrap())
             .collect::<Vec<_>>();
         let mut aggr_fields = aggr_expr
             .iter()
-            .map(|expr| expr.data_field(self.plan.as_ref()).unwrap())
+            .map(|expr| expr.data_field(&self.plan).unwrap())
             .collect::<Vec<_>>();
         group_fields.append(&mut aggr_fields);
         let schema = Arc::new(Schema::new(group_fields));
         Self {
-            plan: Arc::new(LogicalPlan::Aggregate(Aggregate {
-                input: self.plan,
+            plan: LogicalPlan::Aggregate(Aggregate {
+                input: Arc::new(self.plan),
                 group_expr,
                 aggr_expr,
                 schema,
-            })),
+            }),
         }
     }
 
@@ -69,8 +70,8 @@ impl DataFrame {
         self.plan.schema()
     }
 
-    pub fn logical_plan(self) -> Arc<LogicalPlan> {
-        self.plan.clone()
+    pub fn logical_plan(self) -> LogicalPlan {
+        self.plan
     }
 }
 

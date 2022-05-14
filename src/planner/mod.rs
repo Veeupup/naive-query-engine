@@ -92,6 +92,7 @@ impl QueryPlanner {
 #[cfg(test)]
 mod tests {
     use arrow::array::Array;
+    use arrow::array::ArrayRef;
     use arrow::array::Int64Array;
     use arrow::array::StringArray;
 
@@ -118,10 +119,9 @@ mod tests {
         assert_eq!(batches.len(), 1);
         let batch = &batches[0];
 
-        let id_excepted: Arc<dyn Array> = Arc::new(Int64Array::from(vec![1, 2, 4]));
-        let name_excepted: Arc<dyn Array> =
-            Arc::new(StringArray::from(vec!["veeupup", "alex", "lynne"]));
-        let age_excepted: Arc<dyn Array> = Arc::new(Int64Array::from(vec![23, 20, 18]));
+        let id_excepted: ArrayRef = Arc::new(Int64Array::from(vec![1, 2, 4]));
+        let name_excepted: ArrayRef = Arc::new(StringArray::from(vec!["veeupup", "alex", "lynne"]));
+        let age_excepted: ArrayRef = Arc::new(Int64Array::from(vec![23, 20, 18]));
 
         assert_eq!(batch.column(0), &id_excepted);
         assert_eq!(batch.column(1), &name_excepted);

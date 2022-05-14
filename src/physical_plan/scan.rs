@@ -6,7 +6,7 @@
 
 use std::sync::Arc;
 
-use crate::datasource::TableSource;
+use crate::datasource::{TableRef, TableSource};
 use crate::error::Result;
 use arrow::{datatypes::SchemaRef, record_batch::RecordBatch};
 
@@ -14,15 +14,12 @@ use super::plan::PhysicalPlan;
 
 #[derive(Debug, Clone)]
 pub struct ScanPlan {
-    source: Arc<dyn TableSource>,
+    source: TableRef,
     projection: Option<Vec<usize>>,
 }
 
 impl ScanPlan {
-    pub fn create(
-        source: Arc<dyn TableSource>,
-        projection: Option<Vec<usize>>,
-    ) -> Arc<dyn PhysicalPlan> {
+    pub fn create(source: TableRef, projection: Option<Vec<usize>>) -> Arc<dyn PhysicalPlan> {
         Arc::new(Self { source, projection })
     }
 }
@@ -45,7 +42,7 @@ impl PhysicalPlan for ScanPlan {
 mod tests {
     use crate::datasource::{CsvConfig, CsvTable, TableSource};
     use arrow::{
-        array::{Array, Float64Array, Int64Array, StringArray},
+        array::{Array, ArrayRef, Float64Array, Int64Array, StringArray},
         datatypes::{DataType, Field, Schema},
     };
 
@@ -63,11 +60,10 @@ mod tests {
         let record_batch = &result[0];
         assert_eq!(record_batch.columns().len(), 4);
 
-        let id_excepted: Arc<dyn Array> = Arc::new(Int64Array::from(vec![1, 2, 4]));
-        let name_excepted: Arc<dyn Array> =
-            Arc::new(StringArray::from(vec!["veeupup", "alex", "lynne"]));
-        let age_excepted: Arc<dyn Array> = Arc::new(Int64Array::from(vec![23, 20, 18]));
-        let score_excepted: Arc<dyn Array> = Arc::new(Float64Array::from(vec![60.0, 90.1, 99.99]));
+        let id_excepted: ArrayRef = Arc::new(Int64Array::from(vec![1, 2, 4]));
+        let name_excepted: ArrayRef = Arc::new(StringArray::from(vec!["veeupup", "alex", "lynne"]));
+        let age_excepted: ArrayRef = Arc::new(Int64Array::from(vec![23, 20, 18]));
+        let score_excepted: ArrayRef = Arc::new(Float64Array::from(vec![60.0, 90.1, 99.99]));
 
         assert_eq!(record_batch.column(0), &id_excepted);
         assert_eq!(record_batch.column(1), &name_excepted);

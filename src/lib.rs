@@ -4,11 +4,17 @@
  * @Email: code@tanweime.com
 */
 
+mod catalog;
 mod datasource;
 mod datatype;
+mod db;
 mod error;
 mod execution;
 mod logical_plan;
 mod optimizer;
 mod physical_plan;
 mod planner;
+mod sql;
+
+pub use db::NaiveDB;
+pub use error::Result;
