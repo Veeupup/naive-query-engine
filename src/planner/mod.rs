@@ -11,19 +11,21 @@ use std::sync::Arc;
 
 use arrow::datatypes::Schema;
 
+use crate::physical_plan::PhysicalExprRef;
+use crate::physical_plan::PhysicalPlanRef;
 use crate::{
     error::{ErrorCode, Result},
     logical_plan::{
-        expression::{Column, LogicalExpression},
+        expression::{Column, LogicalExpr},
         plan::LogicalPlan,
     },
-    physical_plan::{ColumnExpression, PhysicalExpression, PhysicalPlan, ProjectionPlan, ScanPlan},
+    physical_plan::{ColumnExpr, PhysicalPlan, ProjectionPlan, ScanPlan},
 };
 
 pub struct QueryPlanner;
 
 impl QueryPlanner {
-    pub fn create_physical_plan(plan: &LogicalPlan) -> Result<Arc<dyn PhysicalPlan>> {
+    pub fn create_physical_plan(plan: &LogicalPlan) -> Result<PhysicalPlanRef> {
         match plan {
             LogicalPlan::TableScan(table_scan) => Ok(ScanPlan::create(
                 table_scan.source.clone(),
@@ -60,15 +62,15 @@ impl QueryPlanner {
     }
 
     pub fn create_physical_expression(
-        expr: &LogicalExpression,
+        expr: &LogicalExpr,
         input: &LogicalPlan,
-    ) -> Result<Arc<dyn PhysicalExpression>> {
+    ) -> Result<PhysicalExprRef> {
         match expr {
-            LogicalExpression::Alias(_, _) => todo!(),
-            LogicalExpression::Column(Column(name)) => {
+            LogicalExpr::Alias(_, _) => todo!(),
+            LogicalExpr::Column(Column(name)) => {
                 for (idx, field) in input.schema().fields().iter().enumerate() {
                     if field.name() == name {
-                        return ColumnExpression::try_create(None, Some(idx));
+                        return ColumnExpr::try_create(None, Some(idx));
                     }
                 }
                 Err(ErrorCode::ColumnNotExists(format!(
@@ -76,15 +78,15 @@ impl QueryPlanner {
                     name
                 )))
             }
-            LogicalExpression::Literal(_) => todo!(),
-            LogicalExpression::BinaryExpr(_) => todo!(),
-            LogicalExpression::Not(_) => todo!(),
-            LogicalExpression::Cast {
+            LogicalExpr::Literal(_) => todo!(),
+            LogicalExpr::BinaryExpr(_) => todo!(),
+            LogicalExpr::Not(_) => todo!(),
+            LogicalExpr::Cast {
                 expr: _,
                 data_type: _,
             } => todo!(),
-            LogicalExpression::ScalarFunction(_) => todo!(),
-            LogicalExpression::AggregateFunction(_) => todo!(),
+            LogicalExpr::ScalarFunction(_) => todo!(),
+            LogicalExpr::AggregateFunction(_) => todo!(),
         }
     }
 }
@@ -107,9 +109,9 @@ mod tests {
         catalog.add_csv_table("t1", "test_data.csv")?;
         let source = catalog.get_table_df("t1")?;
         let exprs = vec![
-            LogicalExpression::column("id".to_string()),
-            LogicalExpression::column("name".to_string()),
-            LogicalExpression::column("age".to_string()),
+            LogicalExpr::column("id".to_string()),
+            LogicalExpr::column("name".to_string()),
+            LogicalExpr::column("age".to_string()),
         ];
         let logical_plan = source.project(exprs).logical_plan();
         let physical_plan = QueryPlanner::create_physical_plan(&logical_plan)?;

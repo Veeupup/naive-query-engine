@@ -10,7 +10,8 @@ use crate::datasource::TableRef;
 use crate::error::Result;
 use arrow::{datatypes::SchemaRef, record_batch::RecordBatch};
 
-use super::plan::PhysicalPlan;
+use crate::physical_plan::PhysicalPlan;
+use crate::physical_plan::PhysicalPlanRef;
 
 #[derive(Debug, Clone)]
 pub struct ScanPlan {
@@ -19,7 +20,7 @@ pub struct ScanPlan {
 }
 
 impl ScanPlan {
-    pub fn create(source: TableRef, projection: Option<Vec<usize>>) -> Arc<dyn PhysicalPlan> {
+    pub fn create(source: TableRef, projection: Option<Vec<usize>>) -> PhysicalPlanRef {
         Arc::new(Self { source, projection })
     }
 }
@@ -33,7 +34,7 @@ impl PhysicalPlan for ScanPlan {
         self.source.scan(self.projection.clone())
     }
 
-    fn children(&self) -> Result<Vec<Arc<dyn PhysicalPlan>>> {
+    fn children(&self) -> Result<Vec<PhysicalPlanRef>> {
         Ok(vec![])
     }
 }

@@ -5,7 +5,7 @@
 */
 
 use crate::datasource::TableRef;
-use crate::logical_plan::expression::{Column, LogicalExpression};
+use crate::logical_plan::expression::{Column, LogicalExpr};
 use arrow::datatypes::SchemaRef;
 use std::sync::Arc;
 
@@ -66,7 +66,7 @@ impl LogicalPlan {
 #[derive(Clone)]
 pub struct Projection {
     /// The list of expressions
-    pub exprs: Vec<LogicalExpression>,
+    pub exprs: Vec<LogicalExpr>,
     /// The incoming logical plan
     pub input: Arc<LogicalPlan>,
     /// The schema description of the output
@@ -76,7 +76,7 @@ pub struct Projection {
 #[derive(Clone)]
 pub struct Filter {
     /// The predicate expression, which must have Boolean type.
-    pub predicate: LogicalExpression,
+    pub predicate: LogicalExpr,
     /// The incoming logical plan
     pub input: Arc<LogicalPlan>,
 }
@@ -96,9 +96,9 @@ pub struct Aggregate {
     /// The incoming logical plan
     pub input: Arc<LogicalPlan>,
     /// Grouping expressions
-    pub group_expr: Vec<LogicalExpression>,
+    pub group_expr: Vec<LogicalExpr>,
     /// Aggregate expressions
-    pub aggr_expr: Vec<LogicalExpression>,
+    pub aggr_expr: Vec<LogicalExpr>,
     /// The schema description of the aggregate output
     pub schema: SchemaRef,
 }
@@ -155,10 +155,10 @@ mod tests {
             projection: None,
         });
 
-        let filter_expr = LogicalExpression::BinaryExpr(BinaryExpr {
-            left: Box::new(LogicalExpression::column("state".to_string())),
+        let filter_expr = LogicalExpr::BinaryExpr(BinaryExpr {
+            left: Box::new(LogicalExpr::column("state".to_string())),
             op: Operator::Eq,
-            right: Box::new(LogicalExpression::Literal(ScalarValue::Utf8(Some(
+            right: Box::new(LogicalExpr::Literal(ScalarValue::Utf8(Some(
                 "CO".to_string(),
             )))),
         });
@@ -169,11 +169,11 @@ mod tests {
         });
 
         let _projection = vec![
-            LogicalExpression::column("id".to_string()),
-            LogicalExpression::column("first_name".to_string()),
-            LogicalExpression::column("last_name".to_string()),
-            LogicalExpression::column("state".to_string()),
-            LogicalExpression::column("salary".to_string()),
+            LogicalExpr::column("id".to_string()),
+            LogicalExpr::column("first_name".to_string()),
+            LogicalExpr::column("last_name".to_string()),
+            LogicalExpr::column("state".to_string()),
+            LogicalExpr::column("salary".to_string()),
         ];
 
         Ok(())

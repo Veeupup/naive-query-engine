@@ -11,7 +11,7 @@ use log::debug;
 use sqlparser::ast::{Expr, OrderByExpr, SetExpr, Statement, TableWithJoins};
 use sqlparser::ast::{Ident, ObjectName, SelectItem, TableFactor, Value};
 
-use crate::logical_plan::expression::{LogicalExpression, ScalarValue};
+use crate::logical_plan::expression::{LogicalExpr, ScalarValue};
 use crate::logical_plan::plan::TableScan;
 use crate::{
     catalog::Catalog,
@@ -122,12 +122,12 @@ impl<'a> SQLPlanner<'a> {
             .join(".")
     }
 
-    fn sql_to_expr(&self, sql: &Expr) -> Result<LogicalExpression> {
+    fn sql_to_expr(&self, sql: &Expr) -> Result<LogicalExpr> {
         match sql {
-            Expr::Value(Value::Number(n, _)) => Ok(LogicalExpression::Literal(ScalarValue::Utf8(
-                Some(n.clone()),
-            ))),
-            Expr::Identifier(id) => Ok(LogicalExpression::column(normalize_ident(id))),
+            Expr::Value(Value::Number(n, _)) => {
+                Ok(LogicalExpr::Literal(ScalarValue::Utf8(Some(n.clone()))))
+            }
+            Expr::Identifier(id) => Ok(LogicalExpr::column(normalize_ident(id))),
             _ => todo!(),
         }
     }

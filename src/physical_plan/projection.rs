@@ -7,23 +7,24 @@
 use std::iter::Iterator;
 use std::sync::Arc;
 
-use super::{expression::PhysicalExpression, plan::PhysicalPlan};
+use super::{expression::PhysicalExpr, plan::PhysicalPlan};
 use crate::error::Result;
+use crate::physical_plan::PhysicalExprRef;
+use crate::physical_plan::PhysicalPlanRef;
 use arrow::{datatypes::SchemaRef, record_batch::RecordBatch};
-
 #[derive(Debug, Clone)]
 pub struct ProjectionPlan {
-    input: Arc<dyn PhysicalPlan>,
+    input: PhysicalPlanRef,
     schema: SchemaRef,
-    expr: Vec<Arc<dyn PhysicalExpression>>,
+    expr: Vec<PhysicalExprRef>,
 }
 
 impl ProjectionPlan {
     pub fn create(
-        input: Arc<dyn PhysicalPlan>,
+        input: PhysicalPlanRef,
         schema: SchemaRef,
-        expr: Vec<Arc<dyn PhysicalExpression>>,
-    ) -> Arc<dyn PhysicalPlan> {
+        expr: Vec<PhysicalExprRef>,
+    ) -> PhysicalPlanRef {
         Arc::new(Self {
             input,
             schema,
@@ -59,7 +60,7 @@ impl PhysicalPlan for ProjectionPlan {
         Ok(batches)
     }
 
-    fn children(&self) -> Result<Vec<Arc<dyn PhysicalPlan>>> {
+    fn children(&self) -> Result<Vec<PhysicalPlanRef>> {
         Ok(vec![self.input.clone()])
     }
 }
@@ -68,7 +69,7 @@ impl PhysicalPlan for ProjectionPlan {
 mod tests {
     use super::*;
     use crate::datasource::{CsvConfig, CsvTable, TableSource};
-    use crate::physical_plan::expression::ColumnExpression;
+    use crate::physical_plan::expression::ColumnExpr;
     use crate::physical_plan::scan::ScanPlan;
     use arrow::{
         array::{Array, ArrayRef, Int64Array, StringArray},
@@ -85,8 +86,8 @@ mod tests {
         let scan_plan = ScanPlan::create(source, None);
 
         let expr = vec![
-            ColumnExpression::try_create(None, Some(0))?,
-            ColumnExpression::try_create(Some("name".to_string()), None)?,
+            ColumnExpr::try_create(None, Some(0))?,
+            ColumnExpr::try_create(Some("name".to_string()), None)?,
         ];
         let proj_plan = ProjectionPlan::create(scan_plan, schema, expr);
 
