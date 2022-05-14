@@ -17,5 +17,7 @@ pub trait PhysicalPlan: Debug {
     // TODO(veeupup): return by using streaming mode
     fn execute(&self) -> Result<Vec<RecordBatch>>;
 
-    fn children(&self) -> Result<Vec<Arc<dyn PhysicalPlan>>>;
+    fn children(&self) -> Result<Vec<PhysicalPlanRef>>;
 }
+
+pub type PhysicalPlanRef = Arc<dyn PhysicalPlan>;

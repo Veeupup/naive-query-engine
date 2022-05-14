@@ -8,21 +8,19 @@ use std::sync::Arc;
 
 use arrow::record_batch::RecordBatch;
 
-use super::PhysicalExpression;
+use super::PhysicalExpr;
 use crate::datatype::ColumnValue;
 use crate::error::{ErrorCode, Result};
+use crate::physical_plan::PhysicalExprRef;
 
 #[derive(Debug, Clone)]
-pub struct ColumnExpression {
+pub struct ColumnExpr {
     name: Option<String>,
     idx: Option<usize>,
 }
 
-impl ColumnExpression {
-    pub fn try_create(
-        name: Option<String>,
-        idx: Option<usize>,
-    ) -> Result<Arc<dyn PhysicalExpression>> {
+impl ColumnExpr {
+    pub fn try_create(name: Option<String>, idx: Option<usize>) -> Result<PhysicalExprRef> {
         if name.is_none() && idx.is_none() {
             return Err(ErrorCode::LogicalError);
         }
@@ -30,7 +28,7 @@ impl ColumnExpression {
     }
 }
 
-impl PhysicalExpression for ColumnExpression {
+impl PhysicalExpr for ColumnExpr {
     fn evaluate(&self, input: &RecordBatch) -> Result<ColumnValue> {
         // prefer idx first
         if let Some(idx) = self.idx {

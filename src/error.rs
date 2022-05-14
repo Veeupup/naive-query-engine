@@ -26,6 +26,8 @@ pub enum ErrorCode {
 
     ParserError(ParserError),
 
+    IntervalError(String),
+
     #[allow(unused)]
     Others,
 }
