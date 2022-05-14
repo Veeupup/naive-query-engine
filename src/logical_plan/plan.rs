@@ -4,14 +4,10 @@
  * @Email: code@tanweime.com
 */
 
-use crate::datasource::{TableRef, TableSource};
+use crate::datasource::TableRef;
 use crate::logical_plan::expression::{Column, LogicalExpression};
 use arrow::datatypes::SchemaRef;
-use std::{
-    fmt,
-    fmt::{Debug, Display},
-    sync::Arc,
-};
+use std::sync::Arc;
 
 #[derive(Clone)]
 pub enum LogicalPlan {
@@ -143,7 +139,7 @@ pub struct Limit {
 mod tests {
     use super::*;
     use crate::datasource::EmptyTable;
-    use crate::datasource::TableSource;
+
     use crate::error::Result;
     use crate::logical_plan::expression::*;
     use arrow::datatypes::{DataType, Field, Schema};
@@ -167,12 +163,12 @@ mod tests {
             )))),
         });
 
-        let selection = LogicalPlan::Filter(Filter {
+        let _selection = LogicalPlan::Filter(Filter {
             predicate: filter_expr,
             input: Arc::new(scan),
         });
 
-        let projection = vec![
+        let _projection = vec![
             LogicalExpression::column("id".to_string()),
             LogicalExpression::column("first_name".to_string()),
             LogicalExpression::column("last_name".to_string()),

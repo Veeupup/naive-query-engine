@@ -12,8 +12,8 @@ use arrow::array::{
     new_null_array, ArrayRef, BooleanArray, Float64Array, Int16Array, Int32Array, Int64Array,
     Int8Array, UInt16Array, UInt32Array, UInt64Array, UInt8Array,
 };
-use arrow::compute::kernels::aggregate;
-use arrow::datatypes::{DataType, Field, Int32Type};
+
+use arrow::datatypes::{DataType, Field};
 use std::sync::Arc;
 
 use crate::error::ErrorCode;
@@ -131,7 +131,7 @@ pub enum ScalarValue {
 macro_rules! build_array_from_option {
     ($DATA_TYPE:ident, $ARRAY_TYPE:ident, $EXPR:expr, $SIZE:expr) => {{
         match $EXPR {
-            Some(value) => Arc::new($ARRAY_TYPE::from_value(*value, $SIZE)),
+            Some(value) => Arc::new($ARRAY_TYPE::from_value(value, $SIZE)),
             None => new_null_array(&DataType::$DATA_TYPE, $SIZE),
         }
     }};
@@ -156,10 +156,10 @@ impl ScalarValue {
         }
     }
 
-    pub fn into_array(&self, size: usize) -> ArrayRef {
+    pub fn into_array(self, size: usize) -> ArrayRef {
         match self {
             ScalarValue::Null => new_null_array(&DataType::Null, size),
-            ScalarValue::Boolean(e) => Arc::new(BooleanArray::from(vec![*e; size])) as ArrayRef,
+            ScalarValue::Boolean(e) => Arc::new(BooleanArray::from(vec![e; size])) as ArrayRef,
             ScalarValue::Float32(e) => build_array_from_option!(Float32, Float32Array, e, size),
             ScalarValue::Float64(e) => build_array_from_option!(Float64, Float64Array, e, size),
             ScalarValue::Int8(e) => build_array_from_option!(Int8, Int8Array, e, size),

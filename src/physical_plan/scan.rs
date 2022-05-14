@@ -6,7 +6,7 @@
 
 use std::sync::Arc;
 
-use crate::datasource::{TableRef, TableSource};
+use crate::datasource::TableRef;
 use crate::error::Result;
 use arrow::{datatypes::SchemaRef, record_batch::RecordBatch};
 
@@ -40,11 +40,8 @@ impl PhysicalPlan for ScanPlan {
 
 #[cfg(test)]
 mod tests {
-    use crate::datasource::{CsvConfig, CsvTable, TableSource};
-    use arrow::{
-        array::{Array, ArrayRef, Float64Array, Int64Array, StringArray},
-        datatypes::{DataType, Field, Schema},
-    };
+    use crate::datasource::{CsvConfig, CsvTable};
+    use arrow::array::{Array, ArrayRef, Float64Array, Int64Array, StringArray};
 
     use super::*;
 

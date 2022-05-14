@@ -79,10 +79,9 @@ impl DataFrame {
 mod tests {
 
     use super::*;
-    use crate::datasource::EmptyTable;
-    use crate::datasource::TableSource;
+    use crate::catalog::Catalog;
+
     use crate::error::Result;
-    use crate::execution::ExecutionContext;
     use crate::logical_plan::expression::*;
     use arrow::datatypes::{DataType, Field, Schema};
 
@@ -95,10 +94,11 @@ mod tests {
             Field::new("last_name", DataType::Utf8, true),
             Field::new("salary", DataType::Int64, true),
         ]));
-        let ctx = ExecutionContext::default();
+        let mut catalog = Catalog::default();
+        catalog.add_empty_table("empty", schema)?;
 
-        let plan = ctx
-            .empty(schema)?
+        let _plan = catalog
+            .get_table_df("empty")?
             .filter(LogicalExpression::BinaryExpr(BinaryExpr {
                 left: Box::new(LogicalExpression::column("state".to_string())),
                 op: Operator::Eq,

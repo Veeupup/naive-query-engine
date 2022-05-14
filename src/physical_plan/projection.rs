@@ -50,7 +50,7 @@ impl PhysicalPlan for ProjectionPlan {
                     .collect::<Vec<_>>();
                 let columns = columns
                     .iter()
-                    .map(|column| column.into_array())
+                    .map(|column| column.clone().into_array())
                     .collect::<Vec<_>>();
                 // TODO(veeupup): remove unwrap
                 RecordBatch::try_new(self.schema.clone(), columns).unwrap()
@@ -68,11 +68,11 @@ impl PhysicalPlan for ProjectionPlan {
 mod tests {
     use super::*;
     use crate::datasource::{CsvConfig, CsvTable, TableSource};
-    use crate::physical_plan::expression::{ColumnExpression, PhysicalExpression};
+    use crate::physical_plan::expression::ColumnExpression;
     use crate::physical_plan::scan::ScanPlan;
     use arrow::{
-        array::{Array, ArrayRef, Float64Array, Int64Array, StringArray},
-        datatypes::{DataType, Field, Schema},
+        array::{Array, ArrayRef, Int64Array, StringArray},
+        datatypes::Schema,
     };
 
     #[test]

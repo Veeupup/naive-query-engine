@@ -8,7 +8,7 @@ use arrow::record_batch::RecordBatch;
 
 use crate::catalog::Catalog;
 use crate::error::Result;
-use crate::logical_plan;
+
 use crate::optimizer::Optimizer;
 use crate::planner::QueryPlanner;
 use crate::sql::parser::SQLParser;

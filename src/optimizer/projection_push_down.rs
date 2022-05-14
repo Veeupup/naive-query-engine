@@ -11,6 +11,7 @@ pub struct ProjectionPushDown;
 
 impl OptimizerRule for ProjectionPushDown {
     fn optimize(&self, plan: &LogicalPlan) -> LogicalPlan {
+        // TODO(veeupup): do projection push down
         plan.clone()
     }
 }

@@ -9,12 +9,13 @@ mod datasource;
 mod datatype;
 mod db;
 mod error;
-mod execution;
 mod logical_plan;
 mod optimizer;
 mod physical_plan;
 mod planner;
 mod sql;
+mod utils;
 
 pub use db::NaiveDB;
 pub use error::Result;
+pub use utils::*;
