@@ -13,9 +13,9 @@ Use [arrow](https://github.com/apache/arrow-rs) to express in-memory columnar fo
 for now, we can use `NaiveDB` like below, we can use csv as table storage.
 
 ```rust
-use how_query_engine_work::print_result;
-use how_query_engine_work::NaiveDB;
-use how_query_engine_work::Result;
+use naive_db::print_result;
+use naive_db::NaiveDB;
+use naive_db::Result;
 
 fn main() -> Result<()> {
     let mut db = NaiveDB::default();
@@ -24,7 +24,7 @@ fn main() -> Result<()> {
 
     let ret = db.run_sql("select id, name from t1")?;
 
-    print_result(&ret);
+    print_result(&ret)?;
 
     Ok(())
 }

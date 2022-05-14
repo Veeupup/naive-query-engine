@@ -1,6 +1,6 @@
-use how_query_engine_work::print_result;
-use how_query_engine_work::NaiveDB;
-use how_query_engine_work::Result;
+use naive_db::print_result;
+use naive_db::NaiveDB;
+use naive_db::Result;
 
 fn main() -> Result<()> {
     let mut db = NaiveDB::default();
