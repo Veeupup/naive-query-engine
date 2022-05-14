@@ -16,6 +16,7 @@ use arrow::csv;
 use arrow::{datatypes::SchemaRef, record_batch::RecordBatch};
 
 use super::TableSource;
+use crate::datasource::TableRef;
 
 pub struct CsvConfig {
     has_header: bool,
@@ -47,7 +48,7 @@ pub struct CsvTable {
 
 impl CsvTable {
     #[allow(unused, clippy::iter_next_loop)]
-    pub fn try_create(filename: &str, csv_config: CsvConfig) -> Result<Arc<dyn TableSource>> {
+    pub fn try_create(filename: &str, csv_config: CsvConfig) -> Result<TableRef> {
         let schema = Self::infer_schema_from_csv(filename, &csv_config)?;
 
         let mut file = File::open(env::current_dir()?.join(Path::new(filename)))?;
@@ -96,7 +97,7 @@ impl TableSource for CsvTable {
 mod tests {
     use super::*;
     use arrow::{
-        array::{Array, Float64Array, Int64Array, StringArray},
+        array::{Array, ArrayRef, Float64Array, Int64Array, StringArray},
         datatypes::{DataType, Field, Schema},
     };
 
@@ -134,11 +135,10 @@ mod tests {
         let record_batch = &batches[0];
         assert_eq!(record_batch.columns().len(), 4);
 
-        let id_excepted: Arc<dyn Array> = Arc::new(Int64Array::from(vec![1, 2, 4]));
-        let name_excepted: Arc<dyn Array> =
-            Arc::new(StringArray::from(vec!["veeupup", "alex", "lynne"]));
-        let age_excepted: Arc<dyn Array> = Arc::new(Int64Array::from(vec![23, 20, 18]));
-        let score_excepted: Arc<dyn Array> = Arc::new(Float64Array::from(vec![60.0, 90.1, 99.99]));
+        let id_excepted: ArrayRef = Arc::new(Int64Array::from(vec![1, 2, 4]));
+        let name_excepted: ArrayRef = Arc::new(StringArray::from(vec!["veeupup", "alex", "lynne"]));
+        let age_excepted: ArrayRef = Arc::new(Int64Array::from(vec![23, 20, 18]));
+        let score_excepted: ArrayRef = Arc::new(Float64Array::from(vec![60.0, 90.1, 99.99]));
 
         assert_eq!(record_batch.column(0), &id_excepted);
         assert_eq!(record_batch.column(1), &name_excepted);

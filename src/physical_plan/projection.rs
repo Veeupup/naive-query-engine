@@ -71,7 +71,7 @@ mod tests {
     use crate::physical_plan::expression::{ColumnExpression, PhysicalExpression};
     use crate::physical_plan::scan::ScanPlan;
     use arrow::{
-        array::{Array, Float64Array, Int64Array, StringArray},
+        array::{Array, ArrayRef, Float64Array, Int64Array, StringArray},
         datatypes::{DataType, Field, Schema},
     };
 
@@ -95,9 +95,8 @@ mod tests {
         assert_eq!(res.len(), 1);
         let batch = &res[0];
 
-        let id_excepted: Arc<dyn Array> = Arc::new(Int64Array::from(vec![1, 2, 4]));
-        let name_excepted: Arc<dyn Array> =
-            Arc::new(StringArray::from(vec!["veeupup", "alex", "lynne"]));
+        let id_excepted: ArrayRef = Arc::new(Int64Array::from(vec![1, 2, 4]));
+        let name_excepted: ArrayRef = Arc::new(StringArray::from(vec!["veeupup", "alex", "lynne"]));
 
         assert_eq!(batch.column(0), &id_excepted);
         assert_eq!(batch.column(1), &name_excepted);

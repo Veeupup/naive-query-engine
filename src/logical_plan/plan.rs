@@ -4,7 +4,7 @@
  * @Email: code@tanweime.com
 */
 
-use crate::datasource::TableSource;
+use crate::datasource::{TableRef, TableSource};
 use crate::logical_plan::expression::{Column, LogicalExpression};
 use arrow::datatypes::SchemaRef;
 use std::{
@@ -88,7 +88,7 @@ pub struct Filter {
 #[derive(Clone)]
 pub struct TableScan {
     /// The source of the table
-    pub source: Arc<dyn TableSource>,
+    pub source: TableRef,
     /// Optional column indices to use as a projection
     pub projection: Option<Vec<usize>>,
 }

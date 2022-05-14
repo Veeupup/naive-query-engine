@@ -11,6 +11,7 @@ use arrow::datatypes::{Schema, SchemaRef};
 use crate::logical_plan::expression::LogicalExpression;
 use crate::logical_plan::plan::{Aggregate, Filter, LogicalPlan, Projection};
 
+#[derive(Clone)]
 pub struct DataFrame {
     pub plan: Arc<LogicalPlan>,
 }
