@@ -9,7 +9,6 @@ mod datasource;
 mod datatype;
 mod db;
 mod error;
-mod execution;
 mod logical_plan;
 mod optimizer;
 mod physical_plan;

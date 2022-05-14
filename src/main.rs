@@ -1,5 +1,5 @@
-use how_query_engine_work::Result;
 use how_query_engine_work::NaiveDB;
+use how_query_engine_work::Result;
 
 fn main() -> Result<()> {
     let mut db = NaiveDB::default();
