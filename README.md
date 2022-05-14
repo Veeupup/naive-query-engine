@@ -1,8 +1,8 @@
-# Navie Query Engine (Toy for Learning)
+# Navie Query Engine (Toy for Learning) 😄
 
-This is a Query Engine which support `SQL` interface. And it is only a Toy for learn query engine only. 
+This is a Query Engine which support `SQL` interface. And it is only a Toy for learn query engine only. You can check [TODO](https://github.com/Veeupup/naive-query-engine#todo) to check the progress now.
 
-Simple enough to learn and Now it only has a basic architecture and most operators and planners have not implemented (will be done in the future).
+Simple enough to learn (Although it is simple...but with so much work to finish.. TAT 😭) and Now it only has a basic architecture and most operators and planners have not implemented (will be done in the future).
 
 This is inspired(and most ideas come) by [how-query-engines-work](https://github.com/andygrove/how-query-engines-work) and it is just for learning purpose. And many ideas inspired by [arrow-datafusion](https://github.com/apache/arrow-datafusion).
 
@@ -75,12 +75,30 @@ impl NaiveDB {
     - [x] empty datasource
 - [x] logical plan & expressions
 - [ ] build logical plans
-- [ ] physical plan & expressions
-    - [ ] many task need to implement
+    - [x] projection
+    - [x] filter
+    - [x] aggregate
+    - [ ] join and more...
+- [x] physical plan & expressions
+    - [x] physical scan
+    - [x] physical projection
+    - [x] physical filter
+    - [ ] physical expression
+        - [x] column expr
+        - [x] binary operation expr(add/sub/mul/div/and/or...)
+        - [x] literal expr
+    - [ ] so many work to do... TAT
 - [ ] query planner
-    - [ ] many task need to implement
+    - [x] scan
+    - [ ] aggregate
+    - [ ] join
+    - [ ] ...
 - [ ] query optimization
     - [ ] more rules needed
-- [ ] query execution
 - [ ] sql support
-    - [ ] SQL planner support more sqls
+    - [x] parser
+    - [ ] SQL planner: statement -> logical plan
+        - [x] scan
+        - [x] projection
+        - [ ] selection
+        - [ ] join and more...
