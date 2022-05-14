@@ -143,25 +143,32 @@ mod tests {
         let proj_plan = ProjectionPlan::create(scan_plan, schema, expr);
 
         // TODO(veeupup): selection expression
-        let expr = PhysicalBinaryExpr::new(
-            ColumnExpr::try_create(Some("id".to_string()), None)?,
-            Operator::Gt,
-            PhysicalLiteralExpr::new(ScalarValue::Int64(Some(1))),
-        );
-        let selection_plan = SelectionPlan::create(proj_plan, expr);
 
-        let res = selection_plan.execute()?;
+        {
+            let expr = PhysicalBinaryExpr::new(
+                ColumnExpr::try_create(Some("id".to_string()), None)?,
+                Operator::Gt,
+                PhysicalLiteralExpr::new(ScalarValue::Int64(Some(1))),
+            );
+    
+            
+            let selection_plan = SelectionPlan::create(proj_plan, expr);
+    
+            let res = selection_plan.execute()?;
+    
+            assert_eq!(res.len(), 1);
+            let batch = &res[0];
+    
+            print_result(&res)?;
+    
+            let id_excepted: ArrayRef = Arc::new(Int64Array::from(vec![2, 4]));
+            let name_excepted: ArrayRef = Arc::new(StringArray::from(vec!["alex", "lynne"]));
+    
+            assert_eq!(batch.column(0), &id_excepted);
+            assert_eq!(batch.column(1), &name_excepted);
+        }
 
-        assert_eq!(res.len(), 1);
-        let batch = &res[0];
-
-        print_result(&res)?;
-
-        let id_excepted: ArrayRef = Arc::new(Int64Array::from(vec![2, 4]));
-        let name_excepted: ArrayRef = Arc::new(StringArray::from(vec!["alex", "lynne"]));
-
-        assert_eq!(batch.column(0), &id_excepted);
-        assert_eq!(batch.column(1), &name_excepted);
+        // TODO(veeupup): add more test about binary expression
 
         Ok(())
     }

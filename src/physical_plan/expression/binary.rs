@@ -5,11 +5,12 @@
 */
 
 use arrow::{
-    array::BooleanArray,
+    array::{BooleanArray, PrimitiveArray},
     compute::{
         and_kleene, eq_dyn, gt_dyn, gt_eq_dyn, lt_dyn, lt_eq_bool, lt_eq_dyn, neq_dyn, or_kleene,
+        kernels::arithmetic::{add, subtract, multiply, divide, modulus},
     },
-    datatypes::{BooleanType, DataType},
+    datatypes::{BooleanType, DataType, Int64Type, UInt64Type, Float64Type},
     record_batch::RecordBatch,
 };
 use std::sync::Arc;
@@ -37,6 +38,32 @@ macro_rules! binary_op {
                 "Cannot evaluate binary expression {:?} with types {:?} and {:?}",
                 $SELF_OP, $LEFT_DT, $RIGHT_DT
             )))
+        }
+    }};
+}
+
+macro_rules! arithemic_op {
+    ($OP:expr, $LEFT_DT: expr, $LEFT: expr, $RIGHT: expr) => {{
+        match $LEFT_DT {
+            DataType::Int64 => {
+                let left = $LEFT.as_any().downcast_ref::<PrimitiveArray<Int64Type>>().unwrap();
+                let right = $RIGHT.as_any().downcast_ref::<PrimitiveArray<Int64Type>>().unwrap();
+                let x = $OP(left, right)?;
+                Ok(ColumnValue::Array(Arc::new(x)))
+            },
+            DataType::UInt64 => {
+                let left = $LEFT.as_any().downcast_ref::<PrimitiveArray<UInt64Type>>().unwrap();
+                let right = $RIGHT.as_any().downcast_ref::<PrimitiveArray<UInt64Type>>().unwrap();
+                let x = $OP(left, right)?;
+                Ok(ColumnValue::Array(Arc::new(x)))
+            },
+            DataType::Float64 => {
+                let left = $LEFT.as_any().downcast_ref::<PrimitiveArray<Float64Type>>().unwrap();
+                let right = $RIGHT.as_any().downcast_ref::<PrimitiveArray<Float64Type>>().unwrap();
+                let x = $OP(left, right)?;
+                Ok(ColumnValue::Array(Arc::new(x)))
+            }
+            _ => unimplemented!()
         }
     }};
 }
@@ -82,15 +109,11 @@ impl PhysicalExpr for PhysicalBinaryExpr {
             Operator::GtEq => compare_bin!(gt_eq_dyn, &left_array, &right_array),
             Operator::And => binary_op!(and_kleene, left_data_type, right_data_type, left_array, right_array, Operator::And),
             Operator::Or => binary_op!(or_kleene, left_data_type, right_data_type, left_array, right_array, Operator::Or),
-            Operator::Plus => todo!(),
-            /// Subtraction
-            Operator::Minus => todo!(),
-            /// Multiplication operator, like `*`
-            Operator::Multiply => todo!(),
-            /// Division operator, like `/`
-            Operator::Divide => todo!(),
-            /// Remainder operator, like `%`
-            Operator::Modulo => todo!(),
+            Operator::Plus => arithemic_op!(add, left_data_type, left_array, right_array),
+            Operator::Minus => arithemic_op!(subtract, left_data_type, left_array, right_array),
+            Operator::Multiply => arithemic_op!(multiply, left_data_type, left_array, right_array),
+            Operator::Divide => arithemic_op!(divide, left_data_type, left_array, right_array),
+            Operator::Modulo => arithemic_op!(modulus, left_data_type, left_array, right_array),
         }
     }
 }
