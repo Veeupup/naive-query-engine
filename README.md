@@ -1,4 +1,4 @@
-# How Query Engine Work (Toy for Learning)
+# Navie Query Engine (Toy for Learning)
 
 This is a Query Engine which support `SQL` interface. And it is only a Toy for learn query engine only. 
 
@@ -42,7 +42,7 @@ output will be:
 +----+---------+
 ```
 
-## architure
+## architecture
 
 The NaiveDB is just simple and has clear progress just like:
 
