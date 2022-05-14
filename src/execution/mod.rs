@@ -32,10 +32,10 @@ impl ExecutionContext {
         self.tables.insert(
             table.to_string(),
             DataFrame {
-                plan: Arc::new(LogicalPlan::TableScan(TableScan {
+                plan: LogicalPlan::TableScan(TableScan {
                     source,
                     projection: None,
-                })),
+                }),
             },
         );
         Ok(())
@@ -53,17 +53,17 @@ impl ExecutionContext {
     pub fn csv(&self, filename: &str, projection: Option<Vec<usize>>) -> Result<DataFrame> {
         let source = CsvTable::try_create(filename, CsvConfig::default())?;
         Ok(DataFrame {
-            plan: Arc::new(LogicalPlan::TableScan(TableScan { source, projection })),
+            plan: LogicalPlan::TableScan(TableScan { source, projection }),
         })
     }
 
     pub fn empty(&self, schema: SchemaRef) -> Result<DataFrame> {
         let source = EmptyTable::try_create(schema)?;
         Ok(DataFrame {
-            plan: Arc::new(LogicalPlan::TableScan(TableScan {
+            plan: LogicalPlan::TableScan(TableScan {
                 source,
                 projection: None,
-            })),
+            }),
         })
     }
 }

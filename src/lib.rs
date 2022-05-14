@@ -15,3 +15,6 @@ mod optimizer;
 mod physical_plan;
 mod planner;
 mod sql;
+
+pub use db::NaiveDB;
+pub use error::Result;

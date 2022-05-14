@@ -1,3 +1,14 @@
-fn main() {
-    println!("Query Engine");
+use how_query_engine_work::Result;
+use how_query_engine_work::NaiveDB;
+
+fn main() -> Result<()> {
+    let mut db = NaiveDB::default();
+
+    db.create_csv_table("t1", "test_data.csv")?;
+
+    let ret = db.run_sql("select id, name from t1")?;
+
+    println!("ret: {:?}", ret);
+
+    Ok(())
 }
