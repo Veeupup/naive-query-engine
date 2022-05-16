@@ -145,13 +145,18 @@ mod tests {
         // TODO(veeupup): selection expression
 
         {
-            let expr = PhysicalBinaryExpr::new(
+            let add_expr = PhysicalBinaryExpr::new(
                 ColumnExpr::try_create(Some("id".to_string()), None)?,
+                Operator::Plus,
+                PhysicalLiteralExpr::new(ScalarValue::Int64(Some(1))),
+            );
+
+            let expr = PhysicalBinaryExpr::new(
+                add_expr,
                 Operator::Gt,
                 PhysicalLiteralExpr::new(ScalarValue::Int64(Some(1))),
             );
     
-            
             let selection_plan = SelectionPlan::create(proj_plan, expr);
     
             let res = selection_plan.execute()?;
@@ -161,8 +166,8 @@ mod tests {
     
             print_result(&res)?;
     
-            let id_excepted: ArrayRef = Arc::new(Int64Array::from(vec![2, 4]));
-            let name_excepted: ArrayRef = Arc::new(StringArray::from(vec!["alex", "lynne"]));
+            let id_excepted: ArrayRef = Arc::new(Int64Array::from(vec![1, 2, 4]));
+            let name_excepted: ArrayRef = Arc::new(StringArray::from(vec!["veeupup", "alex", "lynne"]));
     
             assert_eq!(batch.column(0), &id_excepted);
             assert_eq!(batch.column(1), &name_excepted);

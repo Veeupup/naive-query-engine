@@ -11,15 +11,18 @@ use std::sync::Arc;
 
 use arrow::datatypes::Schema;
 
+use crate::physical_plan::PhysicalBinaryExpr;
 use crate::physical_plan::PhysicalExprRef;
+use crate::physical_plan::PhysicalLiteralExpr;
 use crate::physical_plan::PhysicalPlanRef;
+use crate::physical_plan::SelectionPlan;
 use crate::{
     error::{ErrorCode, Result},
     logical_plan::{
         expression::{Column, LogicalExpr},
         plan::LogicalPlan,
     },
-    physical_plan::{ColumnExpr, PhysicalPlan, ProjectionPlan, ScanPlan},
+    physical_plan::{ColumnExpr,  ProjectionPlan, ScanPlan},
 };
 
 pub struct QueryPlanner;
@@ -52,8 +55,10 @@ impl QueryPlanner {
             LogicalPlan::Join(_join) => {
                 todo!()
             }
-            LogicalPlan::Filter(_filter) => {
-                todo!()
+            LogicalPlan::Filter(filter) => {
+                let predicate = Self::create_physical_expression(&filter.predicate, plan)?;
+                let input = Self::create_physical_plan(&filter.input)?;
+                Ok(SelectionPlan::create(input, predicate))
             }
             LogicalPlan::Aggregate(_aggr) => {
                 todo!()
@@ -78,8 +83,15 @@ impl QueryPlanner {
                     name
                 )))
             }
-            LogicalExpr::Literal(_) => todo!(),
-            LogicalExpr::BinaryExpr(_) => todo!(),
+            LogicalExpr::Literal(scalar_val) => {
+                Ok(PhysicalLiteralExpr::new(scalar_val.clone()))
+            },
+            LogicalExpr::BinaryExpr(bin_expr) => {
+                let left = Self::create_physical_expression(bin_expr.left.as_ref(), input)?;
+                let right = Self::create_physical_expression(bin_expr.right.as_ref(), input)?;
+                let phy_bin_expr = PhysicalBinaryExpr::new(left, bin_expr.op.clone(), right);
+                Ok(phy_bin_expr)
+            },
             LogicalExpr::Not(_) => todo!(),
             LogicalExpr::Cast {
                 expr: _,
@@ -93,7 +105,6 @@ impl QueryPlanner {
 
 #[cfg(test)]
 mod tests {
-    use arrow::array::Array;
     use arrow::array::ArrayRef;
     use arrow::array::Int64Array;
     use arrow::array::StringArray;
