@@ -128,7 +128,6 @@ mod tests {
         let physical_plan = QueryPlanner::create_physical_plan(&logical_plan)?;
         let batches = physical_plan.execute()?;
 
-        println!("{:?}", batches);
         // test
         assert_eq!(batches.len(), 1);
         let batch = &batches[0];

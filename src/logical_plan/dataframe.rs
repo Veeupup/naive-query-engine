@@ -118,7 +118,6 @@ impl DataFrame {
         let right_fields = right_schema.fields().iter();
         let fields = left_fields.chain(right_fields).cloned().collect();
         let join_schema = Arc::new(Schema::new(fields));
-
         Ok(Self::new(LogicalPlan::Join(Join {
             left: Arc::new(self.plan.clone()),
             right: Arc::new(right.clone()),

@@ -9,7 +9,7 @@ use crate::logical_plan::expression::{Column, LogicalExpr};
 use arrow::datatypes::SchemaRef;
 use std::sync::Arc;
 
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 pub enum LogicalPlan {
     /// Evaluates an arbitrary list of expressions (essentially a
     /// SELECT with an expression list) on its input.
@@ -63,7 +63,7 @@ impl LogicalPlan {
     }
 }
 
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 pub struct Projection {
     /// The list of expressions
     pub exprs: Vec<LogicalExpr>,
@@ -73,7 +73,7 @@ pub struct Projection {
     pub schema: SchemaRef,
 }
 
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 pub struct Filter {
     /// The predicate expression, which must have Boolean type.
     pub predicate: LogicalExpr,
@@ -81,7 +81,7 @@ pub struct Filter {
     pub input: Arc<LogicalPlan>,
 }
 
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 pub struct TableScan {
     /// The source of the table
     pub source: TableRef,
@@ -91,7 +91,7 @@ pub struct TableScan {
 
 /// Aggregates its input based on a set of grouping and aggregate
 /// expressions (e.g. SUM).
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 pub struct Aggregate {
     /// The incoming logical plan
     pub input: Arc<LogicalPlan>,
@@ -103,7 +103,7 @@ pub struct Aggregate {
     pub schema: SchemaRef,
 }
 
-#[derive(Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum JoinType {
     Inner,
     Left,
@@ -111,7 +111,7 @@ pub enum JoinType {
 }
 
 /// Join two logical plans on one or more join columns
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 pub struct Join {
     /// Left input
     pub left: Arc<LogicalPlan>,
@@ -125,7 +125,7 @@ pub struct Join {
     pub schema: SchemaRef,
 }
 
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 
 /// Produces the first `n` tuples from its input and discards the rest.
 pub struct Limit {
