@@ -74,7 +74,7 @@ impl QueryPlanner {
     ) -> Result<PhysicalExprRef> {
         match expr {
             LogicalExpr::Alias(_, _) => todo!(),
-            LogicalExpr::Column(Column(name)) => {
+            LogicalExpr::Column(Column { name, .. }) => {
                 for (idx, field) in input.schema().fields().iter().enumerate() {
                     if field.name() == name {
                         return ColumnExpr::try_create(None, Some(idx));
@@ -120,9 +120,9 @@ mod tests {
         catalog.add_csv_table("t1", "data/test_data.csv")?;
         let source = catalog.get_table_df("t1")?;
         let exprs = vec![
-            LogicalExpr::column("id".to_string()),
-            LogicalExpr::column("name".to_string()),
-            LogicalExpr::column("age".to_string()),
+            LogicalExpr::column(None, "id".to_string()),
+            LogicalExpr::column(None, "name".to_string()),
+            LogicalExpr::column(None, "age".to_string()),
         ];
         let logical_plan = source.project(exprs).logical_plan();
         let physical_plan = QueryPlanner::create_physical_plan(&logical_plan)?;

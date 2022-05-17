@@ -47,8 +47,8 @@ pub enum LogicalExpr {
 }
 
 impl LogicalExpr {
-    pub fn column(name: String) -> LogicalExpr {
-        LogicalExpr::Column(Column(name))
+    pub fn column(table: Option<String>, name: String) -> LogicalExpr {
+        LogicalExpr::Column(Column { table, name })
     }
 
     /// TODO(veeupup): consider return Vec<Field>
@@ -62,9 +62,9 @@ impl LogicalExpr {
                     field.is_nullable(),
                 ))
             }
-            LogicalExpr::Column(col) => {
+            LogicalExpr::Column(Column { name, .. }) => {
                 for field in input.schema().fields() {
-                    if field.name() == col.0.as_str() {
+                    if field.name() == name.as_str() {
                         return Ok(field.clone());
                     }
                 }
@@ -91,7 +91,10 @@ impl LogicalExpr {
 
 /// A named reference to a qualified field in a schema.
 #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
-pub struct Column(pub String);
+pub struct Column {
+    pub table: Option<String>,
+    pub name: String,
+}
 
 #[derive(Debug, Clone)]
 

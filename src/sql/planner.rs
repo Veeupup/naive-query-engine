@@ -156,7 +156,7 @@ impl<'a> SQLPlanner<'a> {
             }
             Expr::Value(Value::SingleQuotedString(ref s)) => Ok(lit(s.clone())),
             Expr::Value(Value::Null) => Ok(LogicalExpr::Literal(ScalarValue::Null)),
-            Expr::Identifier(id) => Ok(LogicalExpr::column(normalize_ident(id))),
+            Expr::Identifier(id) => Ok(LogicalExpr::column(None, normalize_ident(id))),
             // TODO(veeupup): cast func
             Expr::BinaryOp { left, op, right } => self.parse_sql_binary_op(left, op, right),
             _ => todo!(),

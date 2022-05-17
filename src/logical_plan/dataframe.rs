@@ -107,18 +107,18 @@ mod tests {
         let _plan = catalog
             .get_table_df("empty")?
             .filter(LogicalExpr::BinaryExpr(BinaryExpr {
-                left: Box::new(LogicalExpr::column("state".to_string())),
+                left: Box::new(LogicalExpr::column(None, "state".to_string())),
                 op: Operator::Eq,
                 right: Box::new(LogicalExpr::Literal(ScalarValue::Utf8(Some(
                     "CO".to_string(),
                 )))),
             }))
             .project(vec![
-                LogicalExpr::column("id".to_string()),
-                LogicalExpr::column("first_name".to_string()),
-                LogicalExpr::column("last_name".to_string()),
-                LogicalExpr::column("state".to_string()),
-                LogicalExpr::column("salary".to_string()),
+                LogicalExpr::column(None, "id".to_string()),
+                LogicalExpr::column(None, "first_name".to_string()),
+                LogicalExpr::column(None, "last_name".to_string()),
+                LogicalExpr::column(None, "state".to_string()),
+                LogicalExpr::column(None, "salary".to_string()),
             ]);
 
         Ok(())
