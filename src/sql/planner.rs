@@ -7,9 +7,9 @@
  *
 */
 
+use std::collections::HashSet;
 
-
-
+use arrow::datatypes::SchemaRef;
 use sqlparser::ast::{
     BinaryOperator, Expr, Join, JoinConstraint, JoinOperator, OrderByExpr, SetExpr, Statement,
     TableWithJoins,
@@ -209,16 +209,75 @@ impl<'a> SQLPlanner<'a> {
         plans: Vec<LogicalPlan>,
     ) -> Result<DataFrame> {
         // TODO(veeupup): handle joins
-        let df = DataFrame {
-            plan: plans[0].clone(),
-        };
+        // let df = DataFrame {
+        //     plan: plans[0].clone(),
+        // };
+        // match selection {
+        //     Some(predicate_expr) => {
+        //         let filter_expr = self.sql_to_expr(&predicate_expr)?;
+        //         let df = df.filter(filter_expr);
+        //         Ok(df)
+        //     }
+        //     None => Ok(df),
+        // }
         match selection {
-            Some(predicate_expr) => {
-                let filter_expr = self.sql_to_expr(&predicate_expr)?;
-                let df = df.filter(filter_expr);
-                Ok(df)
+            Some(expr) => {
+                let mut fields = vec![];
+                for plan in &plans {
+                    fields.extend_from_slice(plan.schema().fields());
+                }
+                let filter_expr = self.sql_to_expr(&expr)?;
+
+                // look for expressions of the form `<column> = <column>`
+                let mut possible_join_keys = vec![];
+                extract_possible_join_keys(&filter_expr, &mut possible_join_keys)?;
+
+                let mut all_join_keys = HashSet::new();
+                let mut left = plans[0].clone();
+                for right in plans.iter().skip(1) {
+                    let left_schema = left.schema();
+                    let right_schema = right.schema();
+                    let mut join_keys = vec![];
+                    for (l, r) in &possible_join_keys {
+                        if find_column_in_schema(&left_schema, l).is_ok()
+                            && find_column_in_schema(&right_schema, r).is_ok()
+                        {
+                            join_keys.push((l.clone(), r.clone()));
+                        } else if find_column_in_schema(&left_schema, r).is_ok()
+                            && find_column_in_schema(&right_schema, l).is_ok()
+                        {
+                            join_keys.push((r.clone(), l.clone()));
+                        }
+                    }
+                    if !join_keys.is_empty() {
+                        let left_keys: Vec<Column> =
+                            join_keys.iter().map(|(l, _)| l.clone()).collect();
+                        let right_keys: Vec<Column> =
+                            join_keys.iter().map(|(_, r)| r.clone()).collect();
+                        let df = DataFrame::new(left);
+                        left = df
+                            .join(right, JoinType::Inner, (left_keys, right_keys))?
+                            .logical_plan();
+                    } else {
+                        return Err(ErrorCode::NotImplemented);
+                    }
+
+                    all_join_keys.extend(join_keys);
+                }
+                // remove join expressions from filter
+                match remove_join_expressions(&filter_expr, &all_join_keys)? {
+                    Some(filter_expr) => Ok(DataFrame::new(left).filter(filter_expr)),
+                    _ => Ok(DataFrame::new(left)),
+                }
             }
-            None => Ok(df),
+            None => {
+                if plans.len() == 1 {
+                    Ok(DataFrame::new(plans[0].clone()))
+                } else {
+                    // CROSS JOIN NOT SUPPORTED YET
+                    Err(ErrorCode::NotImplemented)
+                }
+            }
         }
     }
 
@@ -248,20 +307,18 @@ impl<'a> SQLPlanner<'a> {
             // TODO(veeupup): cast func
             Expr::BinaryOp { left, op, right } => self.parse_sql_binary_op(left, op, right),
             Expr::CompoundIdentifier(ids) => {
-                let mut var_names =
-                    ids.iter().map(|id| id.value.clone()).collect::<Vec<_>>();
+                let mut var_names = ids.iter().map(|id| id.value.clone()).collect::<Vec<_>>();
 
-                    match (var_names.pop(), var_names.pop()) {
-                        (Some(name), Some(table)) if var_names.is_empty() => {
-                            // table.column identifier
-                            Ok(LogicalExpr::Column(Column {
-                                table: Some(table),
-                                name,
-                            }))
-                        }
-                        _ => Err(ErrorCode::NotImplemented),
+                match (var_names.pop(), var_names.pop()) {
+                    (Some(name), Some(table)) if var_names.is_empty() => {
+                        // table.column identifier
+                        Ok(LogicalExpr::Column(Column {
+                            table: Some(table),
+                            name,
+                        }))
                     }
-                
+                    _ => Err(ErrorCode::NotImplemented),
+                }
             }
             _ => todo!(),
         }
@@ -351,10 +408,76 @@ fn extract_join_keys(
     }
 }
 
+/// Extract join keys from a WHERE clause
+fn extract_possible_join_keys(expr: &LogicalExpr, accum: &mut Vec<(Column, Column)>) -> Result<()> {
+    match expr {
+        LogicalExpr::BinaryExpr(BinaryExpr { left, op, right }) => match op {
+            Operator::Eq => match (left.as_ref(), right.as_ref()) {
+                (LogicalExpr::Column(l), LogicalExpr::Column(r)) => {
+                    accum.push((l.clone(), r.clone()));
+                    Ok(())
+                }
+                _ => Ok(()),
+            },
+            Operator::And => {
+                extract_possible_join_keys(left, accum)?;
+                extract_possible_join_keys(right, accum)
+            }
+            _ => Ok(()),
+        },
+        _ => Ok(()),
+    }
+}
+
+fn find_column_in_schema(schema: &SchemaRef, col: &Column) -> Result<()> {
+    let fields = schema.fields();
+    for field in fields {
+        if field.name() == &col.name {
+            return Ok(());
+        }
+    }
+    Err(ErrorCode::NoSuchField)
+}
+
+/// Remove join expressions from a filter expression
+fn remove_join_expressions(
+    expr: &LogicalExpr,
+    join_columns: &HashSet<(Column, Column)>,
+) -> Result<Option<LogicalExpr>> {
+    match expr {
+        LogicalExpr::BinaryExpr(BinaryExpr { left, op, right }) => match op {
+            Operator::Eq => match (left.as_ref(), right.as_ref()) {
+                (LogicalExpr::Column(l), LogicalExpr::Column(r)) => {
+                    if join_columns.contains(&(l.clone(), r.clone()))
+                        || join_columns.contains(&(r.clone(), l.clone()))
+                    {
+                        Ok(None)
+                    } else {
+                        Ok(Some(expr.clone()))
+                    }
+                }
+                _ => Ok(Some(expr.clone())),
+            },
+            Operator::And => {
+                let l = remove_join_expressions(left, join_columns)?;
+                let r = remove_join_expressions(right, join_columns)?;
+                match (l, r) {
+                    (Some(ll), Some(rr)) => Ok(Some(LogicalExpr::and(ll, rr))),
+                    (Some(ll), _) => Ok(Some(ll)),
+                    (_, Some(rr)) => Ok(Some(rr)),
+                    _ => Ok(None),
+                }
+            }
+            _ => Ok(Some(expr.clone())),
+        },
+        _ => Ok(Some(expr.clone())),
+    }
+}
+
 #[cfg(test)]
 mod tests {
-    use crate::{db::NaiveDB, print_result};
     use crate::error::Result;
+    use crate::{db::NaiveDB, print_result};
     use arrow::array::{Array, ArrayRef, Int64Array, StringArray};
     use std::sync::Arc;
 
@@ -400,7 +523,8 @@ mod tests {
             db.create_csv_table("employee", "data/employee.csv");
             db.create_csv_table("rank", "data/rank.csv");
 
-            let ret = db.run_sql("select id, name from employee innner join rank on employee.id = rank.id");
+            let ret = db
+                .run_sql("select id, name from employee innner join rank on employee.id = rank.id");
 
             print_result(&ret?);
         }

@@ -12,8 +12,8 @@ use crate::logical_plan::expression::LogicalExpr;
 use crate::logical_plan::plan::{Aggregate, Filter, LogicalPlan, Projection};
 
 use super::expression::Column;
-use super::plan::{JoinType, Limit, Join};
-use crate::error::{Result, ErrorCode};
+use super::plan::{Join, JoinType, Limit};
+use crate::error::{ErrorCode, Result};
 
 #[derive(Clone)]
 pub struct DataFrame {
@@ -86,9 +86,11 @@ impl DataFrame {
         join_keys: (Vec<Column>, Vec<Column>),
     ) -> Result<DataFrame> {
         if join_keys.0.len() != join_keys.1.len() {
-            return Err(ErrorCode::PlanError("left_keys length must be equal to right_keys length".to_string()));
+            return Err(ErrorCode::PlanError(
+                "left_keys length must be equal to right_keys length".to_string(),
+            ));
         }
-        
+
         // TODO(veeupup): we need judge which side os conditions on
         // let (left_keys, right_keys) =
         //     join_keys
