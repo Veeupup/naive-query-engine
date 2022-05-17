@@ -164,8 +164,17 @@ impl BinaryExpr {
     pub fn data_field(&self, input: &LogicalPlan) -> Result<Field> {
         let left = self.left.data_field(input)?;
         let left = left.name();
-        let right = self.right.data_field(input)?;
-        let right = right.name();
+        let right = match &*self.right {
+            LogicalExpr::Literal(scalar_val) => match scalar_val {
+                ScalarValue::Boolean(Some(val)) => format!("{}", val),
+                ScalarValue::Int64(Some(val)) => format!("{}", val),
+                ScalarValue::UInt64(Some(val)) => format!("{}", val),
+                ScalarValue::Float64(Some(val)) => format!("{}", val),
+                ScalarValue::Utf8(Some(val)) => format!("{}", val),
+                _ => "null".to_string(),
+            },
+            _ => self.right.data_field(input)?.name().clone(),
+        };
         let field = match self.op {
             Operator::Eq => Field::new(
                 format!("{} = {}", left, right).as_str(),

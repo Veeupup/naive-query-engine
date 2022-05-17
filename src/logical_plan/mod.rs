@@ -11,7 +11,7 @@
 
 mod dataframe;
 pub mod expression;
-pub mod plan;
 pub mod literal;
+pub mod plan;
 
 pub use dataframe::DataFrame;

@@ -8,11 +8,11 @@
 */
 
 use log::debug;
-use sqlparser::ast::{Expr, OrderByExpr, SetExpr, Statement, TableWithJoins, BinaryOperator};
+use sqlparser::ast::{BinaryOperator, Expr, OrderByExpr, SetExpr, Statement, TableWithJoins};
 use sqlparser::ast::{Ident, ObjectName, SelectItem, TableFactor, Value};
 
+use crate::logical_plan::expression::{BinaryExpr, LogicalExpr, Operator, ScalarValue};
 use crate::logical_plan::literal::lit;
-use crate::logical_plan::expression::{LogicalExpr, ScalarValue, Operator, BinaryExpr};
 use crate::logical_plan::plan::TableScan;
 use crate::{
     catalog::Catalog,
@@ -120,8 +120,8 @@ impl<'a> SQLPlanner<'a> {
                 let filter_expr = self.sql_to_expr(&predicate_expr)?;
                 let df = df.filter(filter_expr);
                 Ok(df)
-            },
-            None => Ok(df)
+            }
+            None => Ok(df),
         }
     }
 
@@ -139,7 +139,7 @@ impl<'a> SQLPlanner<'a> {
         match sql {
             Expr::Value(Value::Boolean(n)) => Ok(lit(*n)),
             Expr::Value(Value::Number(n, _)) => {
-                let num =  match n.parse::<i64>() {
+                let num = match n.parse::<i64>() {
                     Ok(n) => Ok(lit(n)),
                     Err(_) => Ok(lit(n.parse::<f64>().unwrap())),
                 };
@@ -154,7 +154,12 @@ impl<'a> SQLPlanner<'a> {
         }
     }
 
-    fn parse_sql_binary_op(&self, left: &Box<Expr>, op: &BinaryOperator, right: &Box<Expr>) -> Result<LogicalExpr> {
+    fn parse_sql_binary_op(
+        &self,
+        left: &Box<Expr>,
+        op: &BinaryOperator,
+        right: &Box<Expr>,
+    ) -> Result<LogicalExpr> {
         let op = match op {
             BinaryOperator::Eq => Operator::Eq,
             BinaryOperator::NotEq => Operator::NotEq,
@@ -169,10 +174,12 @@ impl<'a> SQLPlanner<'a> {
             BinaryOperator::Modulo => Operator::Modulo,
             BinaryOperator::And => Operator::And,
             BinaryOperator::Or => Operator::Or,
-            _ => unimplemented!()
+            _ => unimplemented!(),
         };
         Ok(LogicalExpr::BinaryExpr(BinaryExpr {
-            left: Box::new(self.sql_to_expr(&left)?), op, right: Box::new(self.sql_to_expr(&right)?)
+            left: Box::new(self.sql_to_expr(&left)?),
+            op,
+            right: Box::new(self.sql_to_expr(&right)?),
         }))
     }
 }
@@ -187,13 +194,11 @@ fn normalize_ident(id: &Ident) -> String {
 
 #[cfg(test)]
 mod tests {
-    use std::sync::Arc;
     use crate::db::NaiveDB;
     use crate::error::Result;
-    use arrow::{
-        array::{Array, ArrayRef, Float64Array, Int64Array, StringArray},
-    };
-    
+    use arrow::array::{Array, ArrayRef, Float64Array, Int64Array, StringArray};
+    use std::sync::Arc;
+
     #[test]
     fn select_with_projection_filter() -> Result<()> {
         let mut db = NaiveDB::default();
@@ -201,22 +206,23 @@ mod tests {
 
         {
             let ret = db.run_sql("select id, name from t1")?;
-            
+
             assert_eq!(ret.len(), 1);
-            
+
             let batch = &ret[0];
             let id_excepted: ArrayRef = Arc::new(Int64Array::from(vec![1, 2, 4]));
-            let name_excepted: ArrayRef = Arc::new(StringArray::from(vec!["veeupup", "alex", "lynne"]));
-            
+            let name_excepted: ArrayRef =
+                Arc::new(StringArray::from(vec!["veeupup", "alex", "lynne"]));
+
             assert_eq!(batch.column(0), &id_excepted);
             assert_eq!(batch.column(1), &name_excepted);
         }
 
         {
             let ret = db.run_sql("select id, name, age from t1 where id > 1")?;
-            
+
             assert_eq!(ret.len(), 1);
-            
+
             let batch = &ret[0];
             let id_excepted: ArrayRef = Arc::new(Int64Array::from(vec![2, 4]));
             let name_excepted: ArrayRef = Arc::new(StringArray::from(vec!["alex", "lynne"]));
@@ -226,8 +232,6 @@ mod tests {
             assert_eq!(batch.column(1), &name_excepted);
             assert_eq!(batch.column(2), &age_excepted);
         }
-
-
 
         Ok(())
     }

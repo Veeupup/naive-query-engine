@@ -22,7 +22,7 @@ use crate::{
         expression::{Column, LogicalExpr},
         plan::LogicalPlan,
     },
-    physical_plan::{ColumnExpr,  ProjectionPlan, ScanPlan},
+    physical_plan::{ColumnExpr, ProjectionPlan, ScanPlan},
 };
 
 pub struct QueryPlanner;
@@ -83,15 +83,13 @@ impl QueryPlanner {
                     name
                 )))
             }
-            LogicalExpr::Literal(scalar_val) => {
-                Ok(PhysicalLiteralExpr::new(scalar_val.clone()))
-            },
+            LogicalExpr::Literal(scalar_val) => Ok(PhysicalLiteralExpr::new(scalar_val.clone())),
             LogicalExpr::BinaryExpr(bin_expr) => {
                 let left = Self::create_physical_expression(bin_expr.left.as_ref(), input)?;
                 let right = Self::create_physical_expression(bin_expr.right.as_ref(), input)?;
                 let phy_bin_expr = PhysicalBinaryExpr::new(left, bin_expr.op.clone(), right);
                 Ok(phy_bin_expr)
-            },
+            }
             LogicalExpr::Not(_) => todo!(),
             LogicalExpr::Cast {
                 expr: _,

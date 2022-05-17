@@ -7,7 +7,7 @@ fn main() -> Result<()> {
 
     db.create_csv_table("t1", "test_data.csv")?;
 
-    let ret = db.run_sql("select id, name, age + 100 from t1 where id > 1")?;
+    let ret = db.run_sql("select id, name, age + 100 from t1 where id != 2")?;
 
     print_result(&ret)?;
 

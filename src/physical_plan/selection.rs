@@ -156,19 +156,20 @@ mod tests {
                 Operator::Gt,
                 PhysicalLiteralExpr::new(ScalarValue::Int64(Some(1))),
             );
-    
+
             let selection_plan = SelectionPlan::create(proj_plan, expr);
-    
+
             let res = selection_plan.execute()?;
-    
+
             assert_eq!(res.len(), 1);
             let batch = &res[0];
-    
+
             print_result(&res)?;
-    
+
             let id_excepted: ArrayRef = Arc::new(Int64Array::from(vec![1, 2, 4]));
-            let name_excepted: ArrayRef = Arc::new(StringArray::from(vec!["veeupup", "alex", "lynne"]));
-    
+            let name_excepted: ArrayRef =
+                Arc::new(StringArray::from(vec!["veeupup", "alex", "lynne"]));
+
             assert_eq!(batch.column(0), &id_excepted);
             assert_eq!(batch.column(1), &name_excepted);
         }
