@@ -1,6 +1,6 @@
 /*
- * @Author: Veeupup 
- * @Date: 2022-05-16 23:36:56 
+ * @Author: Veeupup
+ * @Date: 2022-05-16 23:36:56
  * @Last Modified by: Veeupup
  * @Last Modified time: 2022-05-16 23:45:02
  */
@@ -41,4 +41,3 @@ impl_literal!(bool, Boolean);
 impl_literal!(i64, Int64);
 impl_literal!(u64, UInt64);
 impl_literal!(f64, Float64);
-

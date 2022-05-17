@@ -22,7 +22,7 @@ fn main() -> Result<()> {
 
     db.create_csv_table("t1", "test_data.csv")?;
 
-    let ret = db.run_sql("select id, name from t1")?;
+    let ret = db.run_sql("select id, name, age + 100 from t1 where id != 2")?;
 
     print_result(&ret)?;
 
@@ -33,13 +33,12 @@ fn main() -> Result<()> {
 output will be:
 
 ```
-+----+---------+
-| id | name    |
-+----+---------+
-| 1  | veeupup |
-| 2  | alex    |
-| 4  | lynne   |
-+----+---------+
++----+---------+-----------+
+| id | name    | age + 100 |
++----+---------+-----------+
+| 1  | veeupup | 123       |
+| 4  | lynne   | 118       |
++----+---------+-----------+
 ```
 
 ## architecture

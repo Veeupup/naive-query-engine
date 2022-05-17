@@ -7,10 +7,11 @@
 use arrow::{
     array::{BooleanArray, PrimitiveArray},
     compute::{
-        and_kleene, eq_dyn, gt_dyn, gt_eq_dyn, lt_dyn, lt_eq_bool, lt_eq_dyn, neq_dyn, or_kleene,
-        kernels::arithmetic::{add, subtract, multiply, divide, modulus},
+        and_kleene, eq_dyn, gt_dyn, gt_eq_dyn,
+        kernels::arithmetic::{add, divide, modulus, multiply, subtract},
+        lt_dyn, lt_eq_bool, lt_eq_dyn, neq_dyn, or_kleene,
     },
-    datatypes::{BooleanType, DataType, Int64Type, UInt64Type, Float64Type},
+    datatypes::{BooleanType, DataType, Float64Type, Int64Type, UInt64Type},
     record_batch::RecordBatch,
 };
 use std::sync::Arc;
@@ -46,24 +47,42 @@ macro_rules! arithemic_op {
     ($OP:expr, $LEFT_DT: expr, $LEFT: expr, $RIGHT: expr) => {{
         match $LEFT_DT {
             DataType::Int64 => {
-                let left = $LEFT.as_any().downcast_ref::<PrimitiveArray<Int64Type>>().unwrap();
-                let right = $RIGHT.as_any().downcast_ref::<PrimitiveArray<Int64Type>>().unwrap();
-                let x = $OP(left, right)?;
-                Ok(ColumnValue::Array(Arc::new(x)))
-            },
-            DataType::UInt64 => {
-                let left = $LEFT.as_any().downcast_ref::<PrimitiveArray<UInt64Type>>().unwrap();
-                let right = $RIGHT.as_any().downcast_ref::<PrimitiveArray<UInt64Type>>().unwrap();
-                let x = $OP(left, right)?;
-                Ok(ColumnValue::Array(Arc::new(x)))
-            },
-            DataType::Float64 => {
-                let left = $LEFT.as_any().downcast_ref::<PrimitiveArray<Float64Type>>().unwrap();
-                let right = $RIGHT.as_any().downcast_ref::<PrimitiveArray<Float64Type>>().unwrap();
+                let left = $LEFT
+                    .as_any()
+                    .downcast_ref::<PrimitiveArray<Int64Type>>()
+                    .unwrap();
+                let right = $RIGHT
+                    .as_any()
+                    .downcast_ref::<PrimitiveArray<Int64Type>>()
+                    .unwrap();
                 let x = $OP(left, right)?;
                 Ok(ColumnValue::Array(Arc::new(x)))
             }
-            _ => unimplemented!()
+            DataType::UInt64 => {
+                let left = $LEFT
+                    .as_any()
+                    .downcast_ref::<PrimitiveArray<UInt64Type>>()
+                    .unwrap();
+                let right = $RIGHT
+                    .as_any()
+                    .downcast_ref::<PrimitiveArray<UInt64Type>>()
+                    .unwrap();
+                let x = $OP(left, right)?;
+                Ok(ColumnValue::Array(Arc::new(x)))
+            }
+            DataType::Float64 => {
+                let left = $LEFT
+                    .as_any()
+                    .downcast_ref::<PrimitiveArray<Float64Type>>()
+                    .unwrap();
+                let right = $RIGHT
+                    .as_any()
+                    .downcast_ref::<PrimitiveArray<Float64Type>>()
+                    .unwrap();
+                let x = $OP(left, right)?;
+                Ok(ColumnValue::Array(Arc::new(x)))
+            }
+            _ => unimplemented!(),
         }
     }};
 }
@@ -107,8 +126,22 @@ impl PhysicalExpr for PhysicalBinaryExpr {
             Operator::LtEq => compare_bin!(lt_eq_dyn, &left_array, &right_array),
             Operator::Gt => compare_bin!(gt_dyn, &left_array, &right_array),
             Operator::GtEq => compare_bin!(gt_eq_dyn, &left_array, &right_array),
-            Operator::And => binary_op!(and_kleene, left_data_type, right_data_type, left_array, right_array, Operator::And),
-            Operator::Or => binary_op!(or_kleene, left_data_type, right_data_type, left_array, right_array, Operator::Or),
+            Operator::And => binary_op!(
+                and_kleene,
+                left_data_type,
+                right_data_type,
+                left_array,
+                right_array,
+                Operator::And
+            ),
+            Operator::Or => binary_op!(
+                or_kleene,
+                left_data_type,
+                right_data_type,
+                left_array,
+                right_array,
+                Operator::Or
+            ),
             Operator::Plus => arithemic_op!(add, left_data_type, left_array, right_array),
             Operator::Minus => arithemic_op!(subtract, left_data_type, left_array, right_array),
             Operator::Multiply => arithemic_op!(multiply, left_data_type, left_array, right_array),
