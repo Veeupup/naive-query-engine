@@ -1,4 +1,4 @@
-# Navie Query Engine (Toy for Learning) 😄
+# Naive Query Engine (Toy for Learning) 😄
 
 This is a Query Engine which support `SQL` interface. And it is only a Toy for learn query engine only. You can check [TODO](https://github.com/Veeupup/naive-query-engine#todo) to check the progress now.
 
