@@ -28,6 +28,8 @@ pub enum ErrorCode {
 
     IntervalError(String),
 
+    PlanError(String),
+
     #[allow(unused)]
     Others,
 }

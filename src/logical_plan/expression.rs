@@ -6,12 +6,8 @@
 
 use std::iter::repeat;
 
-use arrow::array::Float32Array;
 use arrow::array::StringArray;
-use arrow::array::{
-    new_null_array, ArrayRef, BooleanArray, Float64Array, Int16Array, Int32Array, Int64Array,
-    Int8Array, UInt16Array, UInt32Array, UInt64Array, UInt8Array,
-};
+use arrow::array::{new_null_array, ArrayRef, BooleanArray, Float64Array, Int64Array, UInt64Array};
 
 use arrow::datatypes::{DataType, Field};
 use std::sync::Arc;

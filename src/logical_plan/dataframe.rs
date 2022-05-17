@@ -11,6 +11,8 @@ use arrow::datatypes::{Schema, SchemaRef};
 use crate::logical_plan::expression::LogicalExpr;
 use crate::logical_plan::plan::{Aggregate, Filter, LogicalPlan, Projection};
 
+use super::plan::Limit;
+
 #[derive(Clone)]
 pub struct DataFrame {
     pub plan: LogicalPlan,
@@ -58,6 +60,15 @@ impl DataFrame {
                 group_expr,
                 aggr_expr,
                 schema,
+            }),
+        }
+    }
+
+    pub fn limit(self, n: usize) -> DataFrame {
+        Self {
+            plan: LogicalPlan::Limit(Limit {
+                input: Arc::new(self.plan),
+                n,
             }),
         }
     }
