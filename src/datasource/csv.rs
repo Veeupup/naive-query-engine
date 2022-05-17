@@ -103,7 +103,7 @@ mod tests {
 
     #[test]
     fn test_infer_schema() -> Result<()> {
-        let table = CsvTable::try_create("test_data.csv", CsvConfig::default())?;
+        let table = CsvTable::try_create("data/test_data.csv", CsvConfig::default())?;
         let schema = table.schema();
 
         let excepted = Arc::new(Schema::new(vec![
@@ -127,7 +127,7 @@ mod tests {
 
     #[test]
     fn test_read_from_csv() -> Result<()> {
-        let table = CsvTable::try_create("test_data.csv", CsvConfig::default())?;
+        let table = CsvTable::try_create("data/test_data.csv", CsvConfig::default())?;
 
         let batches = table.scan(None)?;
 

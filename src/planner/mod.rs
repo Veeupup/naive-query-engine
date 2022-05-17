@@ -117,7 +117,7 @@ mod tests {
     fn test_scan_projection() -> Result<()> {
         // construct
         let mut catalog = Catalog::default();
-        catalog.add_csv_table("t1", "test_data.csv")?;
+        catalog.add_csv_table("t1", "data/test_data.csv")?;
         let source = catalog.get_table_df("t1")?;
         let exprs = vec![
             LogicalExpr::column("id".to_string()),

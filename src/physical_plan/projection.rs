@@ -78,7 +78,7 @@ mod tests {
 
     #[test]
     fn test_projection() -> Result<()> {
-        let source = CsvTable::try_create("test_data.csv", CsvConfig::default())?;
+        let source = CsvTable::try_create("data/test_data.csv", CsvConfig::default())?;
         let schema = Arc::new(Schema::new(vec![
             source.schema().field(0).clone(),
             source.schema().field(1).clone(),

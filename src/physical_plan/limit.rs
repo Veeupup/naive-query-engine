@@ -64,7 +64,7 @@ mod tests {
 
     #[test]
     fn test_physical_scan() -> Result<()> {
-        let source = CsvTable::try_create("test_data.csv", CsvConfig::default())?;
+        let source = CsvTable::try_create("data/test_data.csv", CsvConfig::default())?;
 
         let scan_plan = ScanPlan::create(source, None);
         let limit_plan = PhysicalLimitPlan::create(scan_plan, 2);
