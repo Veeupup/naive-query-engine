@@ -7,14 +7,19 @@
  *
 */
 
-use log::debug;
-use sqlparser::ast::{BinaryOperator, Expr, OrderByExpr, SetExpr, Statement, TableWithJoins};
+
+
+
+use sqlparser::ast::{
+    BinaryOperator, Expr, Join, JoinConstraint, JoinOperator, OrderByExpr, SetExpr, Statement,
+    TableWithJoins,
+};
 use sqlparser::ast::{Ident, ObjectName, SelectItem, TableFactor, Value};
 
 use crate::error::ErrorCode;
-use crate::logical_plan::expression::{BinaryExpr, LogicalExpr, Operator, ScalarValue};
+use crate::logical_plan::expression::{BinaryExpr, Column, LogicalExpr, Operator, ScalarValue};
 use crate::logical_plan::literal::lit;
-use crate::logical_plan::plan::TableScan;
+use crate::logical_plan::plan::{JoinType, TableScan};
 use crate::{
     catalog::Catalog,
     error::Result,
@@ -45,9 +50,9 @@ impl<'a> SQLPlanner<'a> {
     fn set_expr_to_plan(&self, set_expr: SetExpr) -> Result<LogicalPlan> {
         match set_expr {
             SetExpr::Select(select) => {
-                let df = self.plan_from_tables(select.from)?;
+                let plans = self.plan_from_tables(select.from)?;
 
-                let df = self.plan_selection(select.selection, df)?;
+                let df = self.plan_selection(select.selection, plans)?;
 
                 // process the SELECT expressions, with wildcards expanded
                 let df = self.plan_from_projection(df, select.projection)?;
@@ -82,21 +87,97 @@ impl<'a> SQLPlanner<'a> {
         }
     }
 
-    fn plan_from_tables(&self, from: Vec<TableWithJoins>) -> Result<DataFrame> {
-        // TODO(veeupup): support select with no from
-        // TODO(veeupup): support select with join, multi table
-        debug_assert!(!from.is_empty());
-        match &from[0].relation {
-            TableFactor::Table { name, alias: _, .. } => {
+    fn plan_from_tables(&self, from: Vec<TableWithJoins>) -> Result<Vec<LogicalPlan>> {
+        match from.len() {
+            0 => todo!("support select with no from"),
+            _ => from
+                .iter()
+                .map(|t| self.plan_table_with_joins(t))
+                .collect::<Result<Vec<_>>>(),
+        }
+    }
+
+    fn plan_table_with_joins(&self, t: &TableWithJoins) -> Result<LogicalPlan> {
+        let left = self.parse_table(&t.relation)?;
+        match t.joins.len() {
+            0 => Ok(left),
+            n => {
+                let mut left = self.parse_table_join(left, &t.joins[0])?;
+                for i in 1..n {
+                    left = self.parse_table_join(left, &t.joins[i])?;
+                }
+                Ok(left)
+            }
+        }
+    }
+
+    fn parse_table_join(&self, left: LogicalPlan, join: &Join) -> Result<LogicalPlan> {
+        let right = self.parse_table(&join.relation)?;
+        match &join.join_operator {
+            JoinOperator::LeftOuter(constraint) => {
+                self.parse_join(left, right, constraint, JoinType::Left)
+            }
+            JoinOperator::RightOuter(constraint) => {
+                self.parse_join(left, right, constraint, JoinType::Right)
+            }
+            JoinOperator::Inner(constraint) => {
+                self.parse_join(left, right, constraint, JoinType::Inner)
+            }
+            // TODO(veeupup): cross join
+            _other => Err(ErrorCode::NotImplemented),
+        }
+    }
+
+    fn parse_join(
+        &self,
+        left: LogicalPlan,
+        right: LogicalPlan,
+        constraint: &JoinConstraint,
+        join_type: JoinType,
+    ) -> Result<LogicalPlan> {
+        match constraint {
+            JoinConstraint::On(sql_expr) => {
+                let mut keys: Vec<(Column, Column)> = vec![];
+                let expr = self.sql_to_expr(sql_expr)?;
+
+                let mut filters = vec![];
+                extract_join_keys(&expr, &mut keys, &mut filters);
+
+                let (left_keys, right_keys): (Vec<Column>, Vec<Column>) = keys.into_iter().unzip();
+
+                if filters.is_empty() {
+                    let join =
+                        DataFrame::new(left).join(&right, join_type, (left_keys, right_keys))?;
+                    Ok(join.logical_plan())
+                } else if join_type == JoinType::Inner {
+                    let join =
+                        DataFrame::new(left).join(&right, join_type, (left_keys, right_keys))?;
+                    let join = join.filter(
+                        filters
+                            .iter()
+                            .skip(1)
+                            .fold(filters[0].clone(), |acc, e| acc.and(e.clone())),
+                    );
+                    Ok(join.logical_plan())
+                } else {
+                    Err(ErrorCode::NotImplemented)
+                }
+            }
+            _ => Err(ErrorCode::NotImplemented),
+        }
+    }
+
+    fn parse_table(&self, relation: &TableFactor) -> Result<LogicalPlan> {
+        match &relation {
+            TableFactor::Table { name, .. } => {
                 let table_name = Self::normalize_sql_object_name(name);
                 let source = self.catalog.get_table(&table_name)?;
-                let plan = LogicalPlan::TableScan(TableScan {
+                Ok(LogicalPlan::TableScan(TableScan {
                     source,
                     projection: None,
-                });
-                Ok(DataFrame { plan })
+                }))
             }
-            _ => todo!(),
+            _ => unimplemented!(),
         }
     }
 
@@ -119,11 +200,18 @@ impl<'a> SQLPlanner<'a> {
                 Err(err) => Err(err),
             })
             .collect::<Vec<_>>();
-        debug!("projection: {:?}", proj);
         Ok(df.project(proj))
     }
 
-    fn plan_selection(&self, selection: Option<Expr>, df: DataFrame) -> Result<DataFrame> {
+    fn plan_selection(
+        &self,
+        selection: Option<Expr>,
+        plans: Vec<LogicalPlan>,
+    ) -> Result<DataFrame> {
+        // TODO(veeupup): handle joins
+        let df = DataFrame {
+            plan: plans[0].clone(),
+        };
         match selection {
             Some(predicate_expr) => {
                 let filter_expr = self.sql_to_expr(&predicate_expr)?;
@@ -198,6 +286,52 @@ fn normalize_ident(id: &Ident) -> String {
     match id.quote_style {
         Some(_) => id.value.clone(),
         None => id.value.to_ascii_lowercase(),
+    }
+}
+
+/// Come from apache/arrow-datafusion
+/// Extracts equijoin ON condition be a single Eq or multiple conjunctive Eqs
+/// Filters matching this pattern are added to `accum`
+/// Filters that don't match this pattern are added to `accum_filter`
+/// Examples:
+///
+/// foo = bar => accum=[(foo, bar)] accum_filter=[]
+/// foo = bar AND bar = baz => accum=[(foo, bar), (bar, baz)] accum_filter=[]
+/// foo = bar AND baz > 1 => accum=[(foo, bar)] accum_filter=[baz > 1]
+///
+fn extract_join_keys(
+    expr: &LogicalExpr,
+    accum: &mut Vec<(Column, Column)>,
+    accum_filter: &mut Vec<LogicalExpr>,
+) {
+    match expr {
+        LogicalExpr::BinaryExpr(BinaryExpr { left, op, right }) => match op {
+            Operator::Eq => match (left.as_ref(), right.as_ref()) {
+                (LogicalExpr::Column(l), LogicalExpr::Column(r)) => {
+                    accum.push((l.clone(), r.clone()));
+                }
+                _other => {
+                    accum_filter.push(expr.clone());
+                }
+            },
+            Operator::And => {
+                extract_join_keys(left, accum, accum_filter);
+                extract_join_keys(right, accum, accum_filter);
+            }
+            _other
+                if matches!(**left, LogicalExpr::Column(_))
+                    || matches!(**right, LogicalExpr::Column(_)) =>
+            {
+                accum_filter.push(expr.clone());
+            }
+            _other => {
+                extract_join_keys(left, accum, accum_filter);
+                extract_join_keys(right, accum, accum_filter);
+            }
+        },
+        _other => {
+            accum_filter.push(expr.clone());
+        }
     }
 }
 

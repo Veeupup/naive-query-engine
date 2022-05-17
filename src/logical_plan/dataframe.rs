@@ -11,7 +11,9 @@ use arrow::datatypes::{Schema, SchemaRef};
 use crate::logical_plan::expression::LogicalExpr;
 use crate::logical_plan::plan::{Aggregate, Filter, LogicalPlan, Projection};
 
-use super::plan::Limit;
+use super::expression::Column;
+use super::plan::{JoinType, Limit};
+use crate::error::Result;
 
 #[derive(Clone)]
 pub struct DataFrame {
@@ -19,6 +21,10 @@ pub struct DataFrame {
 }
 
 impl DataFrame {
+    pub fn new(plan: LogicalPlan) -> Self {
+        Self { plan }
+    }
+
     pub fn project(self, exprs: Vec<LogicalExpr>) -> Self {
         let fields = exprs
             .iter()
@@ -71,6 +77,15 @@ impl DataFrame {
                 n,
             }),
         }
+    }
+
+    pub fn join(
+        &self,
+        _right: &LogicalPlan,
+        _join_type: JoinType,
+        _join_keys: (Vec<Column>, Vec<Column>),
+    ) -> Result<DataFrame> {
+        todo!()
     }
 
     pub fn schema(&self) -> SchemaRef {

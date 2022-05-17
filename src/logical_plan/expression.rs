@@ -87,6 +87,19 @@ impl LogicalExpr {
             // LogicalExpression::Wildcard => ,
         }
     }
+
+    pub fn and(self, other: LogicalExpr) -> LogicalExpr {
+        binary_expr(self, Operator::And, other)
+    }
+}
+
+/// return a new expression l <op> r
+pub fn binary_expr(l: LogicalExpr, op: Operator, r: LogicalExpr) -> LogicalExpr {
+    LogicalExpr::BinaryExpr(BinaryExpr {
+        left: Box::new(l),
+        op,
+        right: Box::new(r),
+    })
 }
 
 /// A named reference to a qualified field in a schema.

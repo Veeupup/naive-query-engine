@@ -30,6 +30,7 @@ pub enum ErrorCode {
 
     PlanError(String),
 
+    NotImplemented,
     #[allow(unused)]
     Others,
 }

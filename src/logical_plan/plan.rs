@@ -103,7 +103,7 @@ pub struct Aggregate {
     pub schema: SchemaRef,
 }
 
-#[derive(Clone)]
+#[derive(Clone, PartialEq)]
 pub enum JoinType {
     Inner,
     Left,
