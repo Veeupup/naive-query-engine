@@ -9,7 +9,7 @@ use std::iter::repeat;
 use arrow::array::StringArray;
 use arrow::array::{new_null_array, ArrayRef, BooleanArray, Float64Array, Int64Array, UInt64Array};
 
-use arrow::datatypes::{DataType, Field};
+use arrow::datatypes::{DataType, Field, SchemaRef};
 use std::sync::Arc;
 
 use crate::error::ErrorCode;

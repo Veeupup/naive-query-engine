@@ -247,6 +247,22 @@ impl<'a> SQLPlanner<'a> {
             Expr::Identifier(id) => Ok(LogicalExpr::column(None, normalize_ident(id))),
             // TODO(veeupup): cast func
             Expr::BinaryOp { left, op, right } => self.parse_sql_binary_op(left, op, right),
+            Expr::CompoundIdentifier(ids) => {
+                let mut var_names =
+                    ids.iter().map(|id| id.value.clone()).collect::<Vec<_>>();
+
+                    match (var_names.pop(), var_names.pop()) {
+                        (Some(name), Some(table)) if var_names.is_empty() => {
+                            // table.column identifier
+                            Ok(LogicalExpr::Column(Column {
+                                table: Some(table),
+                                name,
+                            }))
+                        }
+                        _ => Err(ErrorCode::NotImplemented),
+                    }
+                
+            }
             _ => todo!(),
         }
     }
@@ -337,7 +353,7 @@ fn extract_join_keys(
 
 #[cfg(test)]
 mod tests {
-    use crate::db::NaiveDB;
+    use crate::{db::NaiveDB, print_result};
     use crate::error::Result;
     use arrow::array::{Array, ArrayRef, Int64Array, StringArray};
     use std::sync::Arc;
@@ -378,6 +394,15 @@ mod tests {
             assert_eq!(batch.column(0), &id_excepted);
             assert_eq!(batch.column(1), &name_excepted);
             assert_eq!(batch.column(2), &age_excepted);
+        }
+
+        {
+            db.create_csv_table("employee", "data/employee.csv");
+            db.create_csv_table("rank", "data/rank.csv");
+
+            let ret = db.run_sql("select id, name from employee innner join rank on employee.id = rank.id");
+
+            print_result(&ret?);
         }
 
         Ok(())

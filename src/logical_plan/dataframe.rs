@@ -12,8 +12,8 @@ use crate::logical_plan::expression::LogicalExpr;
 use crate::logical_plan::plan::{Aggregate, Filter, LogicalPlan, Projection};
 
 use super::expression::Column;
-use super::plan::{JoinType, Limit};
-use crate::error::Result;
+use super::plan::{JoinType, Limit, Join};
+use crate::error::{Result, ErrorCode};
 
 #[derive(Clone)]
 pub struct DataFrame {
@@ -81,11 +81,49 @@ impl DataFrame {
 
     pub fn join(
         &self,
-        _right: &LogicalPlan,
-        _join_type: JoinType,
-        _join_keys: (Vec<Column>, Vec<Column>),
+        right: &LogicalPlan,
+        join_type: JoinType,
+        join_keys: (Vec<Column>, Vec<Column>),
     ) -> Result<DataFrame> {
-        todo!()
+        if join_keys.0.len() != join_keys.1.len() {
+            return Err(ErrorCode::PlanError("left_keys length must be equal to right_keys length".to_string()));
+        }
+        
+        // TODO(veeupup): we need judge which side os conditions on
+        // let (left_keys, right_keys) =
+        //     join_keys
+        //         .0
+        //         .into_iter()
+        //         .zip(join_keys.1.into_iter())
+        //         .map(|(l, r)| {
+        //             match (&l.table, &r.table) {
+        //                 (Some(l), Some(r)) => {
+        //                     (Ok(l), Ok(r))
+        //                 },
+        //                 _ => unimplemented!()
+        //             }
+        //         }).collect::<Vec<_>>();
+        // let left_keys = left_keys.into_iter().collect::<Result<Vec<_>>>()?;
+        // let right_keys = right_keys.into_iter().collect::<Result<Vec<_>>>()?;
+        let left_keys = join_keys.0.clone();
+        let right_keys = join_keys.1.clone();
+
+        let on: Vec<(_, _)> = left_keys.into_iter().zip(right_keys.into_iter()).collect();
+        // join schema
+        let left_schema = self.plan.schema();
+        let left_fields = left_schema.fields().iter();
+        let right_schema = right.schema();
+        let right_fields = right_schema.fields().iter();
+        let fields = left_fields.chain(right_fields).cloned().collect();
+        let join_schema = Arc::new(Schema::new(fields));
+
+        Ok(Self::new(LogicalPlan::Join(Join {
+            left: Arc::new(self.plan.clone()),
+            right: Arc::new(right.clone()),
+            on,
+            join_type,
+            schema: join_schema,
+        })))
     }
 
     pub fn schema(&self) -> SchemaRef {
