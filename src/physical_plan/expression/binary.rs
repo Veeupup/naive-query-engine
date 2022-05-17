@@ -9,9 +9,9 @@ use arrow::{
     compute::{
         and_kleene, eq_dyn, gt_dyn, gt_eq_dyn,
         kernels::arithmetic::{add, divide, modulus, multiply, subtract},
-        lt_dyn, lt_eq_bool, lt_eq_dyn, neq_dyn, or_kleene,
+        lt_dyn, lt_eq_dyn, neq_dyn, or_kleene,
     },
-    datatypes::{BooleanType, DataType, Float64Type, Int64Type, UInt64Type},
+    datatypes::{DataType, Float64Type, Int64Type, UInt64Type},
     record_batch::RecordBatch,
 };
 use std::sync::Arc;

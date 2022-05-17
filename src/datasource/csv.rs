@@ -135,10 +135,15 @@ mod tests {
         let record_batch = &batches[0];
         assert_eq!(record_batch.columns().len(), 4);
 
-        let id_excepted: ArrayRef = Arc::new(Int64Array::from(vec![1, 2, 4]));
-        let name_excepted: ArrayRef = Arc::new(StringArray::from(vec!["veeupup", "alex", "lynne"]));
-        let age_excepted: ArrayRef = Arc::new(Int64Array::from(vec![23, 20, 18]));
-        let score_excepted: ArrayRef = Arc::new(Float64Array::from(vec![60.0, 90.1, 99.99]));
+        let id_excepted: ArrayRef = Arc::new(Int64Array::from(vec![1, 2, 4, 5, 6, 7, 8, 9]));
+        let name_excepted: ArrayRef = Arc::new(StringArray::from(vec![
+            "veeupup", "alex", "lynne", "alice", "bob", "jack", "cock", "primer",
+        ]));
+        let age_excepted: ArrayRef =
+            Arc::new(Int64Array::from(vec![23, 20, 18, 19, 20, 21, 22, 23]));
+        let score_excepted: ArrayRef = Arc::new(Float64Array::from(vec![
+            60.0, 90.1, 99.99, 81.1, 82.2, 83.3, 84.4, 85.5,
+        ]));
 
         assert_eq!(record_batch.column(0), &id_excepted);
         assert_eq!(record_batch.column(1), &name_excepted);

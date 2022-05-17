@@ -13,6 +13,7 @@ use arrow::datatypes::Schema;
 
 use crate::physical_plan::PhysicalBinaryExpr;
 use crate::physical_plan::PhysicalExprRef;
+use crate::physical_plan::PhysicalLimitPlan;
 use crate::physical_plan::PhysicalLiteralExpr;
 use crate::physical_plan::PhysicalPlanRef;
 use crate::physical_plan::SelectionPlan;
@@ -49,8 +50,9 @@ impl QueryPlanner {
                 let proj_schema = Arc::new(Schema::new(fields));
                 Ok(ProjectionPlan::create(input, proj_schema, proj_expr))
             }
-            LogicalPlan::Limit(_limit) => {
-                todo!()
+            LogicalPlan::Limit(limit) => {
+                let plan = Self::create_physical_plan(&limit.input)?;
+                Ok(PhysicalLimitPlan::create(plan, limit.n))
             }
             LogicalPlan::Join(_join) => {
                 todo!()
@@ -131,9 +133,12 @@ mod tests {
         assert_eq!(batches.len(), 1);
         let batch = &batches[0];
 
-        let id_excepted: ArrayRef = Arc::new(Int64Array::from(vec![1, 2, 4]));
-        let name_excepted: ArrayRef = Arc::new(StringArray::from(vec!["veeupup", "alex", "lynne"]));
-        let age_excepted: ArrayRef = Arc::new(Int64Array::from(vec![23, 20, 18]));
+        let id_excepted: ArrayRef = Arc::new(Int64Array::from(vec![1, 2, 4, 5, 6, 7, 8, 9]));
+        let name_excepted: ArrayRef = Arc::new(StringArray::from(vec![
+            "veeupup", "alex", "lynne", "alice", "bob", "jack", "cock", "primer",
+        ]));
+        let age_excepted: ArrayRef =
+            Arc::new(Int64Array::from(vec![23, 20, 18, 19, 20, 21, 22, 23]));
 
         assert_eq!(batch.column(0), &id_excepted);
         assert_eq!(batch.column(1), &name_excepted);

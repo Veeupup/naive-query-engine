@@ -96,8 +96,10 @@ mod tests {
         assert_eq!(res.len(), 1);
         let batch = &res[0];
 
-        let id_excepted: ArrayRef = Arc::new(Int64Array::from(vec![1, 2, 4]));
-        let name_excepted: ArrayRef = Arc::new(StringArray::from(vec!["veeupup", "alex", "lynne"]));
+        let id_excepted: ArrayRef = Arc::new(Int64Array::from(vec![1, 2, 4, 5, 6, 7, 8, 9]));
+        let name_excepted: ArrayRef = Arc::new(StringArray::from(vec![
+            "veeupup", "alex", "lynne", "alice", "bob", "jack", "cock", "primer",
+        ]));
 
         assert_eq!(batch.column(0), &id_excepted);
         assert_eq!(batch.column(1), &name_excepted);

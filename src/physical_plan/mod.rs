@@ -7,11 +7,13 @@
 mod expression;
 mod plan;
 
+mod limit;
 mod projection;
 mod scan;
 mod selection;
 
 pub use expression::*;
+pub use limit::*;
 pub use plan::*;
 pub use projection::*;
 pub use scan::*;

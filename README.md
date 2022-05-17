@@ -22,7 +22,7 @@ fn main() -> Result<()> {
 
     db.create_csv_table("t1", "test_data.csv")?;
 
-    let ret = db.run_sql("select id, name, age + 100 from t1 where id != 2")?;
+    let ret = db.run_sql("select id, name, age + 100 from t1 where id < 6 limit 3")?;
 
     print_result(&ret)?;
 
@@ -37,6 +37,7 @@ output will be:
 | id | name    | age + 100 |
 +----+---------+-----------+
 | 1  | veeupup | 123       |
+| 2  | alex    | 120       |
 | 4  | lynne   | 118       |
 +----+---------+-----------+
 ```
@@ -77,18 +78,21 @@ impl NaiveDB {
     - [x] projection
     - [x] filter
     - [x] aggregate
+    - [x] limit
     - [ ] join and more...
 - [x] physical plan & expressions
     - [x] physical scan
     - [x] physical projection
     - [x] physical filter
+    - [x] physical limit
     - [ ] physical expression
         - [x] column expr
         - [x] binary operation expr(add/sub/mul/div/and/or...)
         - [x] literal expr
-    - [ ] so many work to do... TAT
+        - [ ] so many work to do... TAT
 - [ ] query planner
     - [x] scan
+    - [x] limit
     - [ ] aggregate
     - [ ] join
     - [ ] ...
@@ -99,5 +103,6 @@ impl NaiveDB {
     - [ ] SQL planner: statement -> logical plan
         - [x] scan
         - [x] projection
-        - [ ] selection
+        - [x] selection
+        - [x] limit
         - [ ] join and more...

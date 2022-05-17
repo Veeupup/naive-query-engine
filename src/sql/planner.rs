@@ -11,6 +11,7 @@ use log::debug;
 use sqlparser::ast::{BinaryOperator, Expr, OrderByExpr, SetExpr, Statement, TableWithJoins};
 use sqlparser::ast::{Ident, ObjectName, SelectItem, TableFactor, Value};
 
+use crate::error::ErrorCode;
 use crate::logical_plan::expression::{BinaryExpr, LogicalExpr, Operator, ScalarValue};
 use crate::logical_plan::literal::lit;
 use crate::logical_plan::plan::TableScan;
@@ -44,10 +45,8 @@ impl<'a> SQLPlanner<'a> {
     fn set_expr_to_plan(&self, set_expr: SetExpr) -> Result<LogicalPlan> {
         match set_expr {
             SetExpr::Select(select) => {
-                // get table source
                 let df = self.plan_from_tables(select.from)?;
 
-                // TODO(veeupup): process where filter here
                 let df = self.plan_selection(select.selection, df)?;
 
                 // process the SELECT expressions, with wildcards expanded
@@ -68,9 +67,19 @@ impl<'a> SQLPlanner<'a> {
         Ok(plan)
     }
 
-    fn limit(&self, plan: LogicalPlan, _limit: Option<Expr>) -> Result<LogicalPlan> {
-        // TODO(veeupup): limit
-        Ok(plan)
+    fn limit(&self, plan: LogicalPlan, limit: Option<Expr>) -> Result<LogicalPlan> {
+        match limit {
+            Some(limit_expr) => {
+                let n = match self.sql_to_expr(&limit_expr)? {
+                    LogicalExpr::Literal(ScalarValue::Int64(Some(n))) => Ok(n as usize),
+                    _ => Err(ErrorCode::PlanError(format!(
+                        "Unexpected expression for LIMIT clause"
+                    ))),
+                }?;
+                Ok(DataFrame { plan }.limit(n).logical_plan())
+            }
+            None => Ok(plan),
+        }
     }
 
     fn plan_from_tables(&self, from: Vec<TableWithJoins>) -> Result<DataFrame> {
@@ -196,7 +205,7 @@ fn normalize_ident(id: &Ident) -> String {
 mod tests {
     use crate::db::NaiveDB;
     use crate::error::Result;
-    use arrow::array::{Array, ArrayRef, Float64Array, Int64Array, StringArray};
+    use arrow::array::{Array, ArrayRef, Int64Array, StringArray};
     use std::sync::Arc;
 
     #[test]
@@ -210,9 +219,10 @@ mod tests {
             assert_eq!(ret.len(), 1);
 
             let batch = &ret[0];
-            let id_excepted: ArrayRef = Arc::new(Int64Array::from(vec![1, 2, 4]));
-            let name_excepted: ArrayRef =
-                Arc::new(StringArray::from(vec!["veeupup", "alex", "lynne"]));
+            let id_excepted: ArrayRef = Arc::new(Int64Array::from(vec![1, 2, 4, 5, 6, 7, 8, 9]));
+            let name_excepted: ArrayRef = Arc::new(StringArray::from(vec![
+                "veeupup", "alex", "lynne", "alice", "bob", "jack", "cock", "primer",
+            ]));
 
             assert_eq!(batch.column(0), &id_excepted);
             assert_eq!(batch.column(1), &name_excepted);
@@ -224,9 +234,12 @@ mod tests {
             assert_eq!(ret.len(), 1);
 
             let batch = &ret[0];
-            let id_excepted: ArrayRef = Arc::new(Int64Array::from(vec![2, 4]));
-            let name_excepted: ArrayRef = Arc::new(StringArray::from(vec!["alex", "lynne"]));
-            let age_excepted: ArrayRef = Arc::new(Int64Array::from(vec![20, 18]));
+            let id_excepted: ArrayRef = Arc::new(Int64Array::from(vec![2, 4, 5, 6, 7, 8, 9]));
+            let name_excepted: ArrayRef = Arc::new(StringArray::from(vec![
+                "alex", "lynne", "alice", "bob", "jack", "cock", "primer",
+            ]));
+            let age_excepted: ArrayRef =
+                Arc::new(Int64Array::from(vec![20, 18, 19, 20, 21, 22, 23]));
 
             assert_eq!(batch.column(0), &id_excepted);
             assert_eq!(batch.column(1), &name_excepted);

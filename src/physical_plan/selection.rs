@@ -14,7 +14,7 @@ use arrow::array::{
 };
 use arrow::record_batch::RecordBatch;
 use arrow::{
-    array::{Array, BooleanArray, BooleanBufferBuilder, BooleanBuilder},
+    array::{Array, BooleanArray, BooleanBuilder},
     datatypes::{DataType, SchemaRef},
 };
 
@@ -113,12 +113,10 @@ impl PhysicalPlan for SelectionPlan {
 mod tests {
     use super::*;
     use crate::datasource::{CsvConfig, CsvTable, TableSource};
-    use crate::logical_plan::expression::{BinaryExpr, Operator, ScalarValue};
+    use crate::logical_plan::expression::{Operator, ScalarValue};
     use crate::physical_plan::expression::ColumnExpr;
     use crate::physical_plan::scan::ScanPlan;
-    use crate::physical_plan::{
-        selection, PhysicalBinaryExpr, PhysicalLiteralExpr, ProjectionPlan,
-    };
+    use crate::physical_plan::{PhysicalBinaryExpr, PhysicalLiteralExpr, ProjectionPlan};
     use crate::print_result;
     use arrow::{
         array::{Array, ArrayRef, Int64Array, StringArray},
@@ -154,7 +152,7 @@ mod tests {
             let expr = PhysicalBinaryExpr::new(
                 add_expr,
                 Operator::Gt,
-                PhysicalLiteralExpr::new(ScalarValue::Int64(Some(1))),
+                PhysicalLiteralExpr::new(ScalarValue::Int64(Some(5))),
             );
 
             let selection_plan = SelectionPlan::create(proj_plan, expr);
@@ -166,9 +164,10 @@ mod tests {
 
             print_result(&res)?;
 
-            let id_excepted: ArrayRef = Arc::new(Int64Array::from(vec![1, 2, 4]));
-            let name_excepted: ArrayRef =
-                Arc::new(StringArray::from(vec!["veeupup", "alex", "lynne"]));
+            let id_excepted: ArrayRef = Arc::new(Int64Array::from(vec![5, 6, 7, 8, 9]));
+            let name_excepted: ArrayRef = Arc::new(StringArray::from(vec![
+                "alice", "bob", "jack", "cock", "primer",
+            ]));
 
             assert_eq!(batch.column(0), &id_excepted);
             assert_eq!(batch.column(1), &name_excepted);
