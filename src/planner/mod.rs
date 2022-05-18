@@ -105,6 +105,7 @@ impl QueryPlanner {
             } => todo!(),
             LogicalExpr::ScalarFunction(_) => todo!(),
             LogicalExpr::AggregateFunction(_) => todo!(),
+            LogicalExpr::Wildcard => todo!(),
         }
     }
 }
@@ -131,7 +132,7 @@ mod tests {
             LogicalExpr::column(None, "name".to_string()),
             LogicalExpr::column(None, "age".to_string()),
         ];
-        let logical_plan = source.project(exprs).logical_plan();
+        let logical_plan = source.project(exprs)?.logical_plan();
         let physical_plan = QueryPlanner::create_physical_plan(&logical_plan)?;
         let batches = physical_plan.execute()?;
 

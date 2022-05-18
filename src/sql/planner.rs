@@ -191,9 +191,7 @@ impl<'a> SQLPlanner<'a> {
             .iter()
             .map(|item| match item {
                 SelectItem::UnnamedExpr(expr) => self.sql_to_expr(expr),
-                SelectItem::Wildcard => {
-                    todo!()
-                }
+                SelectItem::Wildcard => Ok(LogicalExpr::Wildcard),
                 _ => todo!(),
             })
             .flat_map(|result| match result {
@@ -201,7 +199,7 @@ impl<'a> SQLPlanner<'a> {
                 Err(err) => Err(err),
             })
             .collect::<Vec<_>>();
-        Ok(df.project(proj))
+        df.project(proj)
     }
 
     fn plan_selection(
@@ -513,6 +511,13 @@ mod tests {
 
             let ret = db
                 .run_sql("select id, name from employee innner join rank on employee.id = rank.id");
+
+            print_result(&ret?)?;
+        }
+
+        {
+            let ret = db
+                .run_sql("select * from employee innner join rank on employee.id = rank.id");
 
             print_result(&ret?)?;
         }

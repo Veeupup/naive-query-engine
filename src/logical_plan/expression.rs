@@ -12,7 +12,7 @@ use arrow::array::{new_null_array, ArrayRef, BooleanArray, Float64Array, Int64Ar
 use arrow::datatypes::DataType;
 use std::sync::Arc;
 
-use crate::error::Result;
+use crate::error::{ErrorCode, Result};
 
 use crate::logical_plan::plan::LogicalPlan;
 
@@ -43,7 +43,7 @@ pub enum LogicalExpr {
     /// Represents the call of an aggregate built-in function with arguments.
     AggregateFunction(AggregateFunction),
     // Represents a reference to all fields in a schema.
-    // Wildcard,
+    Wildcard,
     // TODO(veeupup): add more expresssions
 }
 
@@ -84,7 +84,9 @@ impl LogicalExpr {
             )),
             LogicalExpr::ScalarFunction(scalar_func) => scalar_func.data_field(input),
             LogicalExpr::AggregateFunction(aggr_func) => aggr_func.data_field(input),
-            // LogicalExpression::Wildcard => ,
+            LogicalExpr::Wildcard => Err(ErrorCode::IntervalError(
+                "Wildcard not supported in logical plan".to_string(),
+            )),
         }
     }
 
