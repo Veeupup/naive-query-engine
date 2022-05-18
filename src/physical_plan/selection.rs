@@ -7,6 +7,7 @@
 use std::sync::Arc;
 
 use super::{PhysicalExpr, PhysicalExprRef, PhysicalPlan, PhysicalPlanRef};
+use crate::logical_plan::schema::NaiveSchema;
 use crate::Result;
 use arrow::array::{
     Float64Array, Float64Builder, Int64Array, Int64Builder, StringArray, StringBuilder,
@@ -15,7 +16,7 @@ use arrow::array::{
 use arrow::record_batch::RecordBatch;
 use arrow::{
     array::{Array, BooleanArray, BooleanBuilder},
-    datatypes::{DataType, SchemaRef},
+    datatypes::{DataType},
 };
 
 #[derive(Debug)]
@@ -50,7 +51,7 @@ macro_rules! build_array_by_predicate {
 }
 
 impl PhysicalPlan for SelectionPlan {
-    fn schema(&self) -> SchemaRef {
+    fn schema(&self) -> &NaiveSchema {
         self.input.schema()
     }
 
@@ -98,7 +99,8 @@ impl PhysicalPlan for SelectionPlan {
                 };
                 columns.push(column);
             }
-            let record_batch = RecordBatch::try_new(self.schema(), columns)?;
+            let record_batch =
+                RecordBatch::try_new(Arc::new(self.schema().clone().into()), columns)?;
             batches.push(record_batch);
         }
         Ok(batches)
@@ -120,17 +122,16 @@ mod tests {
     use crate::print_result;
     use arrow::{
         array::{Array, ArrayRef, Int64Array, StringArray},
-        datatypes::Schema,
     };
 
     #[test]
     fn test_selection() -> Result<()> {
-        let source = CsvTable::try_create("test_data.csv", CsvConfig::default())?;
-        let schema = Arc::new(Schema::new(vec![
+        let source = CsvTable::try_create("data/test_data.csv", CsvConfig::default())?;
+        let schema = NaiveSchema::new(vec![
             source.schema().field(0).clone(),
             source.schema().field(1).clone(),
             source.schema().field(2).clone(),
-        ]));
+        ]);
         let scan_plan = ScanPlan::create(source, None);
 
         let expr = vec![

@@ -2,12 +2,13 @@
  * @Author: Veeupup
  * @Date: 2022-05-17 11:27:29
  * @Last Modified by: Veeupup
- * @Last Modified time: 2022-05-17 11:57:13
+ * @Last Modified time: 2022-05-18 14:45:03
  */
 
 use super::{PhysicalPlan, PhysicalPlanRef};
 use crate::error::Result;
-use arrow::datatypes::SchemaRef;
+use crate::logical_plan::schema::NaiveSchema;
+
 use arrow::record_batch::RecordBatch;
 use std::sync::Arc;
 
@@ -24,7 +25,7 @@ impl PhysicalLimitPlan {
 }
 
 impl PhysicalPlan for PhysicalLimitPlan {
-    fn schema(&self) -> SchemaRef {
+    fn schema(&self) -> &NaiveSchema {
         self.input.schema()
     }
 
@@ -64,7 +65,7 @@ mod tests {
 
     #[test]
     fn test_physical_scan() -> Result<()> {
-        let source = CsvTable::try_create("test_data.csv", CsvConfig::default())?;
+        let source = CsvTable::try_create("data/test_data.csv", CsvConfig::default())?;
 
         let scan_plan = ScanPlan::create(source, None);
         let limit_plan = PhysicalLimitPlan::create(scan_plan, 2);

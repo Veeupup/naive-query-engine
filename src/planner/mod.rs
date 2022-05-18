@@ -7,10 +7,12 @@
  *
 */
 
-use std::sync::Arc;
 
-use arrow::datatypes::Schema;
 
+
+
+use crate::logical_plan::schema::NaiveSchema;
+use crate::physical_plan::NestedLoopJoin;
 use crate::physical_plan::PhysicalBinaryExpr;
 use crate::physical_plan::PhysicalExprRef;
 use crate::physical_plan::PhysicalLimitPlan;
@@ -47,15 +49,23 @@ impl QueryPlanner {
                     .iter()
                     .map(|expr| expr.data_field(proj.input.as_ref()).unwrap())
                     .collect::<Vec<_>>();
-                let proj_schema = Arc::new(Schema::new(fields));
+                let proj_schema = NaiveSchema::new(fields);
                 Ok(ProjectionPlan::create(input, proj_schema, proj_expr))
             }
             LogicalPlan::Limit(limit) => {
                 let plan = Self::create_physical_plan(&limit.input)?;
                 Ok(PhysicalLimitPlan::create(plan, limit.n))
             }
-            LogicalPlan::Join(_join) => {
-                todo!()
+            LogicalPlan::Join(join) => {
+                let left = Self::create_physical_plan(&join.left)?;
+                let right = Self::create_physical_plan(&join.right)?;
+                Ok(NestedLoopJoin::new(
+                    left,
+                    right,
+                    join.on.clone(),
+                    join.join_type,
+                    join.schema.clone(),
+                ))
             }
             LogicalPlan::Filter(filter) => {
                 let predicate = Self::create_physical_expression(&filter.predicate, plan)?;
@@ -74,7 +84,7 @@ impl QueryPlanner {
     ) -> Result<PhysicalExprRef> {
         match expr {
             LogicalExpr::Alias(_, _) => todo!(),
-            LogicalExpr::Column(Column(name)) => {
+            LogicalExpr::Column(Column { name, .. }) => {
                 for (idx, field) in input.schema().fields().iter().enumerate() {
                     if field.name() == name {
                         return ColumnExpr::try_create(None, Some(idx));
@@ -105,6 +115,7 @@ impl QueryPlanner {
 
 #[cfg(test)]
 mod tests {
+    use std::sync::Arc;
     use arrow::array::ArrayRef;
     use arrow::array::Int64Array;
     use arrow::array::StringArray;
@@ -117,18 +128,17 @@ mod tests {
     fn test_scan_projection() -> Result<()> {
         // construct
         let mut catalog = Catalog::default();
-        catalog.add_csv_table("t1", "test_data.csv")?;
+        catalog.add_csv_table("t1", "data/test_data.csv")?;
         let source = catalog.get_table_df("t1")?;
         let exprs = vec![
-            LogicalExpr::column("id".to_string()),
-            LogicalExpr::column("name".to_string()),
-            LogicalExpr::column("age".to_string()),
+            LogicalExpr::column(None, "id".to_string()),
+            LogicalExpr::column(None, "name".to_string()),
+            LogicalExpr::column(None, "age".to_string()),
         ];
         let logical_plan = source.project(exprs).logical_plan();
         let physical_plan = QueryPlanner::create_physical_plan(&logical_plan)?;
         let batches = physical_plan.execute()?;
 
-        println!("{:?}", batches);
         // test
         assert_eq!(batches.len(), 1);
         let batch = &batches[0];

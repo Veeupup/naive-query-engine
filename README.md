@@ -20,14 +20,24 @@ use naive_db::Result;
 fn main() -> Result<()> {
     let mut db = NaiveDB::default();
 
-    db.create_csv_table("t1", "test_data.csv")?;
+    db.create_csv_table("t1", "data/test_data.csv")?;
 
     let ret = db.run_sql("select id, name, age + 100 from t1 where id < 6 limit 3")?;
 
     print_result(&ret)?;
 
+    // Join 
+    db.create_csv_table("employee", "data/employee.csv")?;
+    db.create_csv_table("rank", "data/rank.csv")?;
+
+    let ret = db.run_sql(
+        "select id, name, rank_name from employee innner join rank on employee.rank = rank.id",
+    )?;
+
+    print_result(&ret);
     Ok(())
 }
+
 ```
 
 output will be:
@@ -40,6 +50,15 @@ output will be:
 | 2  | alex    | 120       |
 | 4  | lynne   | 118       |
 +----+---------+-----------+
++----+-------+-------------+
+| id | name  | rank_name   |
++----+-------+-------------+
+| 1  | vee   | diamond     |
+| 2  | lynne | master      |
+| 3  | Alex  | master      |
+| 4  | jack  | diamond     |
+| 5  | mike  | grandmaster |
++----+-------+-------------+
 ```
 
 ## architecture
@@ -79,12 +98,16 @@ impl NaiveDB {
     - [x] filter
     - [x] aggregate
     - [x] limit
-    - [ ] join and more...
+    - [x] join
 - [x] physical plan & expressions
     - [x] physical scan
     - [x] physical projection
     - [x] physical filter
     - [x] physical limit
+    - [x] join
+        - [x] (dumb😊) nested loop join
+        - [ ] hash join
+        - [ ] sort-merge join
     - [ ] physical expression
         - [x] column expr
         - [x] binary operation expr(add/sub/mul/div/and/or...)
@@ -93,8 +116,8 @@ impl NaiveDB {
 - [ ] query planner
     - [x] scan
     - [x] limit
+    - [x] join
     - [ ] aggregate
-    - [ ] join
     - [ ] ...
 - [ ] query optimization
     - [ ] more rules needed
@@ -105,4 +128,6 @@ impl NaiveDB {
         - [x] projection
         - [x] selection
         - [x] limit
-        - [ ] join and more...
+        - [x] join
+        - [ ] aggregate
+        - [ ] scalar function

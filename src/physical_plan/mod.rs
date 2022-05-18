@@ -8,12 +8,14 @@ mod expression;
 mod plan;
 
 mod limit;
+mod nested_loop_join;
 mod projection;
 mod scan;
 mod selection;
 
 pub use expression::*;
 pub use limit::*;
+pub use nested_loop_join::*;
 pub use plan::*;
 pub use projection::*;
 pub use scan::*;

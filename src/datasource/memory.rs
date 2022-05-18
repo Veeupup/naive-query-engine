@@ -4,29 +4,29 @@
  * @Email: code@tanweime.com
 */
 
-use arrow::datatypes::SchemaRef;
+
 use arrow::record_batch::RecordBatch;
 use std::sync::Arc;
 
 use super::{TableRef, TableSource};
-use crate::error::Result;
+use crate::{error::Result, logical_plan::schema::NaiveSchema};
 
 #[derive(Debug, Clone)]
 pub struct MemTable {
-    schema: SchemaRef,
+    schema: NaiveSchema,
     batches: Vec<RecordBatch>,
 }
 
 impl MemTable {
     #[allow(unused)]
-    pub fn try_create(schema: SchemaRef, batches: Vec<RecordBatch>) -> Result<TableRef> {
+    pub fn try_create(schema: NaiveSchema, batches: Vec<RecordBatch>) -> Result<TableRef> {
         Ok(Arc::new(Self { schema, batches }))
     }
 }
 
 impl TableSource for MemTable {
-    fn schema(&self) -> SchemaRef {
-        self.schema.clone()
+    fn schema(&self) -> &NaiveSchema {
+        &self.schema
     }
 
     fn scan(&self, projection: Option<Vec<usize>>) -> Result<Vec<RecordBatch>> {
@@ -47,6 +47,7 @@ mod tests {
     use super::MemTable;
     use crate::datasource::TableSource;
     use crate::error::Result;
+    use crate::logical_plan::schema::NaiveSchema;
     use arrow::array::Int32Array;
     use arrow::datatypes::{DataType, Field, Schema};
     use arrow::record_batch::RecordBatch;
@@ -60,9 +61,10 @@ mod tests {
             Field::new("c", DataType::Int32, false),
             Field::new("d", DataType::Int32, true),
         ]));
+        let schema = NaiveSchema::from_qualified("t1", &schema);
 
         let batch = RecordBatch::try_new(
-            schema.clone(),
+            schema.clone().into(),
             vec![
                 Arc::new(Int32Array::from(vec![1, 2, 3])),
                 Arc::new(Int32Array::from(vec![4, 5, 6])),
@@ -78,8 +80,8 @@ mod tests {
         let batch2 = &batches[0];
 
         assert_eq!(2, batch2.schema().fields().len());
-        assert_eq!("c", batch2.schema().field(0).name());
-        assert_eq!("b", batch2.schema().field(1).name());
+        assert_eq!("t1.c", batch2.schema().field(0).name());
+        assert_eq!("t1.b", batch2.schema().field(1).name());
         assert_eq!(2, batch2.num_columns());
 
         Ok(())

@@ -6,10 +6,12 @@
 
 use crate::datasource::TableRef;
 use crate::logical_plan::expression::{Column, LogicalExpr};
-use arrow::datatypes::SchemaRef;
+
 use std::sync::Arc;
 
-#[derive(Clone)]
+use super::schema::NaiveSchema;
+
+#[derive(Debug, Clone)]
 pub enum LogicalPlan {
     /// Evaluates an arbitrary list of expressions (essentially a
     /// SELECT with an expression list) on its input.
@@ -40,12 +42,12 @@ pub enum LogicalPlan {
 }
 
 impl LogicalPlan {
-    pub fn schema(&self) -> SchemaRef {
+    pub fn schema(&self) -> &NaiveSchema {
         match self {
-            LogicalPlan::Projection(Projection { schema, .. }) => schema.clone(),
+            LogicalPlan::Projection(Projection { schema, .. }) => schema,
             LogicalPlan::Filter(Filter { input, .. }) => input.schema(),
-            LogicalPlan::Aggregate(Aggregate { schema, .. }) => schema.clone(),
-            LogicalPlan::Join(Join { schema, .. }) => schema.clone(),
+            LogicalPlan::Aggregate(Aggregate { schema, .. }) => schema,
+            LogicalPlan::Join(Join { schema, .. }) => schema,
             LogicalPlan::Limit(Limit { input, .. }) => input.schema(),
             LogicalPlan::TableScan(TableScan { source, .. }) => source.schema(),
         }
@@ -63,17 +65,17 @@ impl LogicalPlan {
     }
 }
 
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 pub struct Projection {
     /// The list of expressions
     pub exprs: Vec<LogicalExpr>,
     /// The incoming logical plan
     pub input: Arc<LogicalPlan>,
     /// The schema description of the output
-    pub schema: SchemaRef,
+    pub schema: NaiveSchema,
 }
 
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 pub struct Filter {
     /// The predicate expression, which must have Boolean type.
     pub predicate: LogicalExpr,
@@ -81,7 +83,7 @@ pub struct Filter {
     pub input: Arc<LogicalPlan>,
 }
 
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 pub struct TableScan {
     /// The source of the table
     pub source: TableRef,
@@ -91,7 +93,7 @@ pub struct TableScan {
 
 /// Aggregates its input based on a set of grouping and aggregate
 /// expressions (e.g. SUM).
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 pub struct Aggregate {
     /// The incoming logical plan
     pub input: Arc<LogicalPlan>,
@@ -100,10 +102,10 @@ pub struct Aggregate {
     /// Aggregate expressions
     pub aggr_expr: Vec<LogicalExpr>,
     /// The schema description of the aggregate output
-    pub schema: SchemaRef,
+    pub schema: NaiveSchema,
 }
 
-#[derive(Clone)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub enum JoinType {
     Inner,
     Left,
@@ -111,7 +113,7 @@ pub enum JoinType {
 }
 
 /// Join two logical plans on one or more join columns
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 pub struct Join {
     /// Left input
     pub left: Arc<LogicalPlan>,
@@ -122,10 +124,10 @@ pub struct Join {
     /// Join type
     pub join_type: JoinType,
     /// The output schema, containing fields from the left and right inputs
-    pub schema: SchemaRef,
+    pub schema: NaiveSchema,
 }
 
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 
 /// Produces the first `n` tuples from its input and discards the rest.
 pub struct Limit {
@@ -142,12 +144,12 @@ mod tests {
 
     use crate::error::Result;
     use crate::logical_plan::expression::*;
-    use arrow::datatypes::{DataType, Field, Schema};
+    
 
     /// Create LogicalPlan
     #[test]
     fn create_logical_plan() -> Result<()> {
-        let schema = Arc::new(Schema::new(vec![Field::new("a", DataType::Int32, false)]));
+        let schema = NaiveSchema::empty();
         let source = EmptyTable::try_create(schema)?;
 
         let scan = LogicalPlan::TableScan(TableScan {
@@ -156,7 +158,7 @@ mod tests {
         });
 
         let filter_expr = LogicalExpr::BinaryExpr(BinaryExpr {
-            left: Box::new(LogicalExpr::column("state".to_string())),
+            left: Box::new(LogicalExpr::column(None, "state".to_string())),
             op: Operator::Eq,
             right: Box::new(LogicalExpr::Literal(ScalarValue::Utf8(Some(
                 "CO".to_string(),
@@ -169,11 +171,11 @@ mod tests {
         });
 
         let _projection = vec![
-            LogicalExpr::column("id".to_string()),
-            LogicalExpr::column("first_name".to_string()),
-            LogicalExpr::column("last_name".to_string()),
-            LogicalExpr::column("state".to_string()),
-            LogicalExpr::column("salary".to_string()),
+            LogicalExpr::column(None, "id".to_string()),
+            LogicalExpr::column(None, "first_name".to_string()),
+            LogicalExpr::column(None, "last_name".to_string()),
+            LogicalExpr::column(None, "state".to_string()),
+            LogicalExpr::column(None, "salary".to_string()),
         ];
 
         Ok(())

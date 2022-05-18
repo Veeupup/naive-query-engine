@@ -6,12 +6,15 @@
 
 use std::sync::Arc;
 
-use arrow::datatypes::{Schema, SchemaRef};
+
 
 use crate::logical_plan::expression::LogicalExpr;
 use crate::logical_plan::plan::{Aggregate, Filter, LogicalPlan, Projection};
 
-use super::plan::Limit;
+use super::expression::Column;
+use super::plan::{Join, JoinType, Limit};
+use super::schema::NaiveSchema;
+use crate::error::{ErrorCode, Result};
 
 #[derive(Clone)]
 pub struct DataFrame {
@@ -19,12 +22,17 @@ pub struct DataFrame {
 }
 
 impl DataFrame {
+    pub fn new(plan: LogicalPlan) -> Self {
+        Self { plan }
+    }
+
     pub fn project(self, exprs: Vec<LogicalExpr>) -> Self {
+        // TODO(veeupup): Ambiguous reference of field
         let fields = exprs
             .iter()
             .map(|expr| expr.data_field(&self.plan).unwrap())
             .collect::<Vec<_>>();
-        let schema = Arc::new(Schema::new(fields));
+        let schema = NaiveSchema::new(fields);
         Self {
             plan: LogicalPlan::Projection(Projection {
                 input: Arc::new(self.plan),
@@ -53,7 +61,7 @@ impl DataFrame {
             .map(|expr| expr.data_field(&self.plan).unwrap())
             .collect::<Vec<_>>();
         group_fields.append(&mut aggr_fields);
-        let schema = Arc::new(Schema::new(group_fields));
+        let schema = NaiveSchema::new(group_fields);
         Self {
             plan: LogicalPlan::Aggregate(Aggregate {
                 input: Arc::new(self.plan),
@@ -73,7 +81,34 @@ impl DataFrame {
         }
     }
 
-    pub fn schema(&self) -> SchemaRef {
+    pub fn join(
+        &self,
+        right: &LogicalPlan,
+        join_type: JoinType,
+        join_keys: (Vec<Column>, Vec<Column>),
+    ) -> Result<DataFrame> {
+        if join_keys.0.len() != join_keys.1.len() {
+            return Err(ErrorCode::PlanError(
+                "left_keys length must be equal to right_keys length".to_string(),
+            ));
+        }
+
+        let (left_keys, right_keys) = join_keys;
+        let on: Vec<(_, _)> = left_keys.into_iter().zip(right_keys.into_iter()).collect();
+
+        let left_schema = self.plan.schema();
+        let join_schema = left_schema.join(right.schema());
+
+        Ok(Self::new(LogicalPlan::Join(Join {
+            left: Arc::new(self.plan.clone()),
+            right: Arc::new(right.clone()),
+            on,
+            join_type,
+            schema: join_schema,
+        })))
+    }
+
+    pub fn schema(&self) -> &NaiveSchema {
         self.plan.schema()
     }
 
@@ -86,39 +121,39 @@ impl DataFrame {
 mod tests {
 
     use super::*;
-    use crate::catalog::Catalog;
+    use crate::{catalog::Catalog, logical_plan::schema::NaiveField};
 
     use crate::error::Result;
     use crate::logical_plan::expression::*;
-    use arrow::datatypes::{DataType, Field, Schema};
+    use arrow::datatypes::{DataType};
 
     #[test]
     fn create_logical_plan() -> Result<()> {
-        let schema = Arc::new(Schema::new(vec![
-            Field::new("state", DataType::Int64, true),
-            Field::new("id", DataType::Int64, true),
-            Field::new("first_name", DataType::Utf8, true),
-            Field::new("last_name", DataType::Utf8, true),
-            Field::new("salary", DataType::Int64, true),
-        ]));
+        let schema = NaiveSchema::new(vec![
+            NaiveField::new(None, "state", DataType::Int64, true),
+            NaiveField::new(None, "id", DataType::Int64, true),
+            NaiveField::new(None, "first_name", DataType::Utf8, true),
+            NaiveField::new(None, "last_name", DataType::Utf8, true),
+            NaiveField::new(None, "salary", DataType::Int64, true),
+        ]);
         let mut catalog = Catalog::default();
         catalog.add_empty_table("empty", schema)?;
 
         let _plan = catalog
             .get_table_df("empty")?
             .filter(LogicalExpr::BinaryExpr(BinaryExpr {
-                left: Box::new(LogicalExpr::column("state".to_string())),
+                left: Box::new(LogicalExpr::column(None, "state".to_string())),
                 op: Operator::Eq,
                 right: Box::new(LogicalExpr::Literal(ScalarValue::Utf8(Some(
                     "CO".to_string(),
                 )))),
             }))
             .project(vec![
-                LogicalExpr::column("id".to_string()),
-                LogicalExpr::column("first_name".to_string()),
-                LogicalExpr::column("last_name".to_string()),
-                LogicalExpr::column("state".to_string()),
-                LogicalExpr::column("salary".to_string()),
+                LogicalExpr::column(None, "id".to_string()),
+                LogicalExpr::column(None, "first_name".to_string()),
+                LogicalExpr::column(None, "last_name".to_string()),
+                LogicalExpr::column(None, "state".to_string()),
+                LogicalExpr::column(None, "salary".to_string()),
             ]);
 
         Ok(())

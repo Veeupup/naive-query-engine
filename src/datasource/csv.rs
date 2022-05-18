@@ -11,9 +11,11 @@ use std::path::Path;
 use std::sync::Arc;
 
 use crate::error::Result;
+use crate::logical_plan::schema::NaiveSchema;
 
 use arrow::csv;
-use arrow::{datatypes::SchemaRef, record_batch::RecordBatch};
+use arrow::datatypes::Schema;
+use arrow::{record_batch::RecordBatch};
 
 use super::TableSource;
 use crate::datasource::TableRef;
@@ -42,19 +44,20 @@ impl Default for CsvConfig {
 
 #[derive(Debug, Clone)]
 pub struct CsvTable {
-    schema: SchemaRef,
+    schema: NaiveSchema,
     batches: Vec<RecordBatch>,
 }
 
 impl CsvTable {
     #[allow(unused, clippy::iter_next_loop)]
     pub fn try_create(filename: &str, csv_config: CsvConfig) -> Result<TableRef> {
-        let schema = Self::infer_schema_from_csv(filename, &csv_config)?;
+        let orig_schema = Self::infer_schema_from_csv(filename, &csv_config)?;
+        let schema = NaiveSchema::from_unqualified(&orig_schema);
 
         let mut file = File::open(env::current_dir()?.join(Path::new(filename)))?;
         let mut reader = csv::Reader::new(
             file,
-            Arc::clone(&schema),
+            Arc::new(orig_schema),
             csv_config.has_header,
             Some(csv_config.delimiter),
             csv_config.batch_size,
@@ -71,7 +74,7 @@ impl CsvTable {
         Ok(Arc::new(Self { schema, batches }))
     }
 
-    fn infer_schema_from_csv(filename: &str, csv_config: &CsvConfig) -> Result<SchemaRef> {
+    fn infer_schema_from_csv(filename: &str, csv_config: &CsvConfig) -> Result<Schema> {
         let mut file = File::open(env::current_dir()?.join(Path::new(filename)))?;
         let (schema, _) = arrow::csv::reader::infer_reader_schema(
             &mut file,
@@ -79,13 +82,13 @@ impl CsvTable {
             csv_config.max_read_records,
             csv_config.has_header,
         )?;
-        Ok(Arc::new(schema))
+        Ok(schema)
     }
 }
 
 impl TableSource for CsvTable {
-    fn schema(&self) -> SchemaRef {
-        self.schema.clone()
+    fn schema(&self) -> &NaiveSchema {
+        &self.schema
     }
 
     fn scan(&self, _projection: Option<Vec<usize>>) -> Result<Vec<RecordBatch>> {
@@ -103,7 +106,7 @@ mod tests {
 
     #[test]
     fn test_infer_schema() -> Result<()> {
-        let table = CsvTable::try_create("test_data.csv", CsvConfig::default())?;
+        let table = CsvTable::try_create("data/test_data.csv", CsvConfig::default())?;
         let schema = table.schema();
 
         let excepted = Arc::new(Schema::new(vec![
@@ -127,7 +130,7 @@ mod tests {
 
     #[test]
     fn test_read_from_csv() -> Result<()> {
-        let table = CsvTable::try_create("test_data.csv", CsvConfig::default())?;
+        let table = CsvTable::try_create("data/test_data.csv", CsvConfig::default())?;
 
         let batches = table.scan(None)?;
 

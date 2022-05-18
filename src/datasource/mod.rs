@@ -12,12 +12,13 @@ use std::fmt::Debug;
 use std::sync::Arc;
 
 use crate::error::Result;
-use arrow::{datatypes::SchemaRef, record_batch::RecordBatch};
+use crate::logical_plan::schema::NaiveSchema;
+use arrow::{record_batch::RecordBatch};
 
 pub type TableRef = Arc<dyn TableSource>;
 
 pub trait TableSource: Debug {
-    fn schema(&self) -> SchemaRef;
+    fn schema(&self) -> &NaiveSchema;
 
     // TODO(veeupup): return async stream record batch
     /// for scan

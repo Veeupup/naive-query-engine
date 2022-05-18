@@ -8,7 +8,8 @@ use std::sync::Arc;
 
 use crate::datasource::TableRef;
 use crate::error::Result;
-use arrow::{datatypes::SchemaRef, record_batch::RecordBatch};
+use crate::logical_plan::schema::NaiveSchema;
+use arrow::{record_batch::RecordBatch};
 
 use crate::physical_plan::PhysicalPlan;
 use crate::physical_plan::PhysicalPlanRef;
@@ -26,7 +27,7 @@ impl ScanPlan {
 }
 
 impl PhysicalPlan for ScanPlan {
-    fn schema(&self) -> SchemaRef {
+    fn schema(&self) -> &NaiveSchema {
         self.source.schema()
     }
 
@@ -48,7 +49,7 @@ mod tests {
 
     #[test]
     fn test_physical_scan() -> Result<()> {
-        let source = CsvTable::try_create("test_data.csv", CsvConfig::default())?;
+        let source = CsvTable::try_create("data/test_data.csv", CsvConfig::default())?;
 
         let scan_plan = ScanPlan::create(source, None);
 
