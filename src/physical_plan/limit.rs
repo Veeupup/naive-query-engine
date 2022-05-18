@@ -8,7 +8,7 @@
 use super::{PhysicalPlan, PhysicalPlanRef};
 use crate::error::Result;
 use crate::logical_plan::schema::NaiveSchema;
-use arrow::datatypes::SchemaRef;
+
 use arrow::record_batch::RecordBatch;
 use std::sync::Arc;
 

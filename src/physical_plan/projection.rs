@@ -12,7 +12,7 @@ use crate::error::Result;
 use crate::logical_plan::schema::NaiveSchema;
 use crate::physical_plan::PhysicalExprRef;
 use crate::physical_plan::PhysicalPlanRef;
-use arrow::{datatypes::SchemaRef, record_batch::RecordBatch};
+use arrow::{record_batch::RecordBatch};
 #[derive(Debug, Clone)]
 pub struct ProjectionPlan {
     input: PhysicalPlanRef,

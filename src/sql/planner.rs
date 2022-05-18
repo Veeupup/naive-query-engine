@@ -9,7 +9,7 @@
 
 use std::collections::HashSet;
 
-use arrow::datatypes::SchemaRef;
+
 use sqlparser::ast::{
     BinaryOperator, Expr, Join, JoinConstraint, JoinOperator, OrderByExpr, SetExpr, Statement,
     TableWithJoins,
@@ -20,7 +20,7 @@ use crate::error::ErrorCode;
 use crate::logical_plan::expression::{BinaryExpr, Column, LogicalExpr, Operator, ScalarValue};
 use crate::logical_plan::literal::lit;
 use crate::logical_plan::plan::{JoinType, TableScan};
-use crate::logical_plan::schema::NaiveSchema;
+
 use crate::{
     catalog::Catalog,
     error::Result,
@@ -144,10 +144,8 @@ impl<'a> SQLPlanner<'a> {
                 let mut filters = vec![];
                 extract_join_keys(&expr, &mut keys, &mut filters);
 
-                let left_keys =
-                    keys.iter().map(|pair| pair.0.clone()).collect();
-                let right_keys =
-                    keys.iter().map(|pair| pair.1.clone()).collect();
+                let left_keys = keys.iter().map(|pair| pair.0.clone()).collect();
+                let right_keys = keys.iter().map(|pair| pair.1.clone()).collect();
 
                 if filters.is_empty() {
                     let join =
@@ -232,12 +230,20 @@ impl<'a> SQLPlanner<'a> {
                     let right_schema = right.schema();
                     let mut join_keys = vec![];
                     for (l, r) in &possible_join_keys {
-                        if  left_schema.field_with_unqualified_name(l.name.as_str()).is_ok()
-                            && right_schema.field_with_unqualified_name(r.name.as_str()).is_ok()
+                        if left_schema
+                            .field_with_unqualified_name(l.name.as_str())
+                            .is_ok()
+                            && right_schema
+                                .field_with_unqualified_name(r.name.as_str())
+                                .is_ok()
                         {
                             join_keys.push((l.clone(), r.clone()));
-                        } else if left_schema.field_with_unqualified_name(r.name.as_str()).is_ok()
-                            && right_schema.field_with_unqualified_name(l.name.as_str()).is_ok()
+                        } else if left_schema
+                            .field_with_unqualified_name(r.name.as_str())
+                            .is_ok()
+                            && right_schema
+                                .field_with_unqualified_name(l.name.as_str())
+                                .is_ok()
                         {
                             join_keys.push((r.clone(), l.clone()));
                         }

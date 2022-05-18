@@ -4,7 +4,7 @@
  * @Email: code@tanweime.com
 */
 
-use arrow::datatypes::SchemaRef;
+
 use arrow::record_batch::RecordBatch;
 use std::sync::Arc;
 

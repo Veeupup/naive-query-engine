@@ -6,7 +6,7 @@
 
 use crate::datasource::TableRef;
 use crate::logical_plan::expression::{Column, LogicalExpr};
-use arrow::datatypes::SchemaRef;
+
 use std::sync::Arc;
 
 use super::schema::NaiveSchema;
@@ -105,7 +105,7 @@ pub struct Aggregate {
     pub schema: NaiveSchema,
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub enum JoinType {
     Inner,
     Left,

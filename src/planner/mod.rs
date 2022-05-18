@@ -7,11 +7,12 @@
  *
 */
 
-use std::sync::Arc;
 
-use arrow::datatypes::Schema;
+
+
 
 use crate::logical_plan::schema::NaiveSchema;
+use crate::physical_plan::NestedLoopJoin;
 use crate::physical_plan::PhysicalBinaryExpr;
 use crate::physical_plan::PhysicalExprRef;
 use crate::physical_plan::PhysicalLimitPlan;
@@ -55,8 +56,16 @@ impl QueryPlanner {
                 let plan = Self::create_physical_plan(&limit.input)?;
                 Ok(PhysicalLimitPlan::create(plan, limit.n))
             }
-            LogicalPlan::Join(_join) => {
-                todo!()
+            LogicalPlan::Join(join) => {
+                let left = Self::create_physical_plan(&join.left)?;
+                let right = Self::create_physical_plan(&join.right)?;
+                Ok(NestedLoopJoin::new(
+                    left,
+                    right,
+                    join.on.clone(),
+                    join.join_type,
+                    join.schema.clone(),
+                ))
             }
             LogicalPlan::Filter(filter) => {
                 let predicate = Self::create_physical_expression(&filter.predicate, plan)?;

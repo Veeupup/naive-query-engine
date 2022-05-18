@@ -7,7 +7,7 @@
 use std::fmt::Debug;
 use std::sync::Arc;
 
-use arrow::{datatypes::SchemaRef, record_batch::RecordBatch};
+use arrow::{record_batch::RecordBatch};
 
 use crate::{error::Result, logical_plan::schema::NaiveSchema};
 

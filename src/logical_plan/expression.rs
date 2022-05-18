@@ -9,15 +9,15 @@ use std::iter::repeat;
 use arrow::array::StringArray;
 use arrow::array::{new_null_array, ArrayRef, BooleanArray, Float64Array, Int64Array, UInt64Array};
 
-use arrow::datatypes::{DataType, Field};
+use arrow::datatypes::{DataType};
 use std::sync::Arc;
 
-use crate::error::ErrorCode;
+
 use crate::error::Result;
 
 use crate::logical_plan::plan::LogicalPlan;
 
-use super::schema::{self, NaiveField, NaiveSchema};
+use super::schema::{NaiveField};
 
 #[derive(Clone, Debug)]
 pub enum LogicalExpr {
@@ -65,12 +65,10 @@ impl LogicalExpr {
                     field.is_nullable(),
                 ))
             }
-            LogicalExpr::Column(Column { name, table }) => {
-                match table {
-                    Some(table) => input.schema().field_with_qualified_name(table, name),
-                    None => input.schema().field_with_unqualified_name(name)
-                }
-            }
+            LogicalExpr::Column(Column { name, table }) => match table {
+                Some(table) => input.schema().field_with_qualified_name(table, name),
+                None => input.schema().field_with_unqualified_name(name),
+            },
             LogicalExpr::Literal(scalar_val) => Ok(scalar_val.data_field()),
             LogicalExpr::BinaryExpr(expr) => expr.data_field(input),
             LogicalExpr::Not(expr) => Ok(NaiveField::new(

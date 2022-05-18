@@ -16,7 +16,7 @@ use arrow::array::{
 use arrow::record_batch::RecordBatch;
 use arrow::{
     array::{Array, BooleanArray, BooleanBuilder},
-    datatypes::{DataType, SchemaRef},
+    datatypes::{DataType},
 };
 
 #[derive(Debug)]

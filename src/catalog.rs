@@ -6,7 +6,7 @@
 
 use std::collections::HashMap;
 
-use arrow::datatypes::SchemaRef;
+
 
 use crate::datasource::{EmptyTable, MemTable};
 use crate::error::ErrorCode;

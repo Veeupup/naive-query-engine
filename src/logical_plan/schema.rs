@@ -19,7 +19,7 @@
  * @Author: Veeupup
  * @Date: 2022-05-18 13:45:10
  * @Last Modified by: Veeupup
- * @Last Modified time: 2022-05-18 15:57:32
+ * @Last Modified time: 2022-05-18 17:30:21
  *
  * Arrow Field does not have table/relation name as its proroties
  * So we need a Schema to define inner schema with table name
@@ -28,8 +28,8 @@
  *
  */
 
-use std::fmt::Display;
-use std::ptr::null;
+
+
 
 use arrow::datatypes::{DataType, SchemaRef};
 use arrow::datatypes::{Field, Schema};
@@ -119,11 +119,12 @@ impl NaiveSchema {
             .collect::<Vec<_>>();
         match matches.len() {
             0 => Err(ErrorCode::PlanError(format!("No field named '{}'", name))),
-            1 => Ok(matches[0].to_owned()),
-            _ => Err(ErrorCode::PlanError(format!(
-                "Ambiguous reference to field named '{}'",
-                name
-            ))),
+            _ => Ok(matches[0].to_owned()),
+            // TODO(veeupup): multi same name, and we need to return Error
+            // _ => Err(ErrorCode::PlanError(format!(
+            //     "Ambiguous reference to field named '{}'",
+            //     name
+            // ))),
         }
     }
 
@@ -137,11 +138,12 @@ impl NaiveSchema {
             .collect::<Vec<_>>();
         match matches.len() {
             0 => Err(ErrorCode::PlanError(format!("No field named '{}'", name))),
-            1 => Ok(matches[0].to_owned()),
-            _ => Err(ErrorCode::PlanError(format!(
-                "Ambiguous reference to field named '{}'",
-                name
-            ))),
+            _ => Ok(matches[0].to_owned()),
+            // TODO(veeupup): multi same name, and we need to return Error
+            // _ => Err(ErrorCode::PlanError(format!(
+            //     "Ambiguous reference to field named '{}'",
+            //     name
+            // ))),
         }
     }
 }
