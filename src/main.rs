@@ -11,7 +11,7 @@ fn main() -> Result<()> {
 
     print_result(&ret)?;
 
-    // Ok(())
+    // Join 
     db.create_csv_table("employee", "data/employee.csv")?;
     db.create_csv_table("rank", "data/rank.csv")?;
 
