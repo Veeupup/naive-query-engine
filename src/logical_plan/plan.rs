@@ -144,12 +144,12 @@ mod tests {
 
     use crate::error::Result;
     use crate::logical_plan::expression::*;
-    use arrow::datatypes::{DataType, Field, Schema};
+    
 
     /// Create LogicalPlan
     #[test]
     fn create_logical_plan() -> Result<()> {
-        let schema = Arc::new(Schema::new(vec![Field::new("a", DataType::Int32, false)]));
+        let schema = NaiveSchema::empty();
         let source = EmptyTable::try_create(schema)?;
 
         let scan = LogicalPlan::TableScan(TableScan {

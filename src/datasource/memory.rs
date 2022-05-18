@@ -64,7 +64,7 @@ mod tests {
         let schema = NaiveSchema::from_qualified("t1", &schema);
 
         let batch = RecordBatch::try_new(
-            schema.clone(),
+            schema.clone().into(),
             vec![
                 Arc::new(Int32Array::from(vec![1, 2, 3])),
                 Arc::new(Int32Array::from(vec![4, 5, 6])),
@@ -80,8 +80,8 @@ mod tests {
         let batch2 = &batches[0];
 
         assert_eq!(2, batch2.schema().fields().len());
-        assert_eq!("c", batch2.schema().field(0).name());
-        assert_eq!("b", batch2.schema().field(1).name());
+        assert_eq!("t1.c", batch2.schema().field(0).name());
+        assert_eq!("t1.b", batch2.schema().field(1).name());
         assert_eq!(2, batch2.num_columns());
 
         Ok(())

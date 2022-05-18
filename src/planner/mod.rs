@@ -115,6 +115,7 @@ impl QueryPlanner {
 
 #[cfg(test)]
 mod tests {
+    use std::sync::Arc;
     use arrow::array::ArrayRef;
     use arrow::array::Int64Array;
     use arrow::array::StringArray;

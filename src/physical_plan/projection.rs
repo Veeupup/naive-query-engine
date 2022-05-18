@@ -75,16 +75,15 @@ mod tests {
     use crate::physical_plan::scan::ScanPlan;
     use arrow::{
         array::{Array, ArrayRef, Int64Array, StringArray},
-        datatypes::Schema,
     };
 
     #[test]
     fn test_projection() -> Result<()> {
         let source = CsvTable::try_create("data/test_data.csv", CsvConfig::default())?;
-        let schema = Arc::new(Schema::new(vec![
+        let schema =  NaiveSchema::new(vec![
             source.schema().field(0).clone(),
             source.schema().field(1).clone(),
-        ]));
+        ]);
         let scan_plan = ScanPlan::create(source, None);
 
         let expr = vec![

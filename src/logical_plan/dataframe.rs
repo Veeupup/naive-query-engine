@@ -121,21 +121,21 @@ impl DataFrame {
 mod tests {
 
     use super::*;
-    use crate::catalog::Catalog;
+    use crate::{catalog::Catalog, logical_plan::schema::NaiveField};
 
     use crate::error::Result;
     use crate::logical_plan::expression::*;
-    use arrow::datatypes::{DataType, Field, Schema};
+    use arrow::datatypes::{DataType};
 
     #[test]
     fn create_logical_plan() -> Result<()> {
-        let schema = Arc::new(Schema::new(vec![
-            Field::new("state", DataType::Int64, true),
-            Field::new("id", DataType::Int64, true),
-            Field::new("first_name", DataType::Utf8, true),
-            Field::new("last_name", DataType::Utf8, true),
-            Field::new("salary", DataType::Int64, true),
-        ]));
+        let schema = NaiveSchema::new(vec![
+            NaiveField::new(None, "state", DataType::Int64, true),
+            NaiveField::new(None, "id", DataType::Int64, true),
+            NaiveField::new(None, "first_name", DataType::Utf8, true),
+            NaiveField::new(None, "last_name", DataType::Utf8, true),
+            NaiveField::new(None, "salary", DataType::Int64, true),
+        ]);
         let mut catalog = Catalog::default();
         catalog.add_empty_table("empty", schema)?;
 

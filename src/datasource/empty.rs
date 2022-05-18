@@ -39,7 +39,7 @@ impl TableSource for EmptyTable {
 mod tests {
     use super::*;
     use arrow::datatypes::{DataType, Field, Schema};
-    use std::sync::Arc;
+    
 
     #[test]
     fn test_empty_table() -> Result<()> {
