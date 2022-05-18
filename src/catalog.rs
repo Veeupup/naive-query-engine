@@ -11,6 +11,7 @@ use arrow::datatypes::SchemaRef;
 use crate::datasource::{EmptyTable, MemTable};
 use crate::error::ErrorCode;
 use crate::logical_plan::plan::{LogicalPlan, TableScan};
+use crate::logical_plan::schema::NaiveSchema;
 use crate::logical_plan::DataFrame;
 use crate::{
     datasource::{CsvConfig, CsvTable, TableRef},
@@ -35,7 +36,7 @@ impl Catalog {
     pub fn add_memory_table(
         &mut self,
         table: &str,
-        schema: SchemaRef,
+        schema: NaiveSchema,
         batches: Vec<RecordBatch>,
     ) -> Result<()> {
         let source = MemTable::try_create(schema, batches)?;
@@ -44,7 +45,7 @@ impl Catalog {
     }
 
     /// add empty table
-    pub fn add_empty_table(&mut self, table: &str, schema: SchemaRef) -> Result<()> {
+    pub fn add_empty_table(&mut self, table: &str, schema: NaiveSchema) -> Result<()> {
         let source = EmptyTable::try_create(schema)?;
         self.tables.insert(table.to_string(), source);
         Ok(())

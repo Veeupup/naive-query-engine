@@ -13,6 +13,7 @@ use crate::logical_plan::plan::{Aggregate, Filter, LogicalPlan, Projection};
 
 use super::expression::Column;
 use super::plan::{Join, JoinType, Limit};
+use super::schema::NaiveSchema;
 use crate::error::{ErrorCode, Result};
 
 #[derive(Clone)]
@@ -30,7 +31,7 @@ impl DataFrame {
             .iter()
             .map(|expr| expr.data_field(&self.plan).unwrap())
             .collect::<Vec<_>>();
-        let schema = Arc::new(Schema::new(fields));
+        let schema = NaiveSchema::new(fields);
         Self {
             plan: LogicalPlan::Projection(Projection {
                 input: Arc::new(self.plan),
@@ -59,7 +60,7 @@ impl DataFrame {
             .map(|expr| expr.data_field(&self.plan).unwrap())
             .collect::<Vec<_>>();
         group_fields.append(&mut aggr_fields);
-        let schema = Arc::new(Schema::new(group_fields));
+        let schema = NaiveSchema::new(group_fields);
         Self {
             plan: LogicalPlan::Aggregate(Aggregate {
                 input: Arc::new(self.plan),
@@ -117,7 +118,7 @@ impl DataFrame {
         let right_schema = right.schema();
         let right_fields = right_schema.fields().iter();
         let fields = left_fields.chain(right_fields).cloned().collect();
-        let join_schema = Arc::new(Schema::new(fields));
+        let join_schema = NaiveSchema::new(fields);
         Ok(Self::new(LogicalPlan::Join(Join {
             left: Arc::new(self.plan.clone()),
             right: Arc::new(right.clone()),
@@ -127,7 +128,7 @@ impl DataFrame {
         })))
     }
 
-    pub fn schema(&self) -> SchemaRef {
+    pub fn schema(&self) -> &NaiveSchema {
         self.plan.schema()
     }
 

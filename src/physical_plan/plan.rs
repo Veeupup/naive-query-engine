@@ -9,10 +9,10 @@ use std::sync::Arc;
 
 use arrow::{datatypes::SchemaRef, record_batch::RecordBatch};
 
-use crate::error::Result;
+use crate::{error::Result, logical_plan::schema::NaiveSchema};
 
 pub trait PhysicalPlan: Debug {
-    fn schema(&self) -> SchemaRef;
+    fn schema(&self) -> &NaiveSchema;
 
     // TODO(veeupup): return by using streaming mode
     fn execute(&self) -> Result<Vec<RecordBatch>>;

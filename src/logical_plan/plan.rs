@@ -9,6 +9,8 @@ use crate::logical_plan::expression::{Column, LogicalExpr};
 use arrow::datatypes::SchemaRef;
 use std::sync::Arc;
 
+use super::schema::NaiveSchema;
+
 #[derive(Debug, Clone)]
 pub enum LogicalPlan {
     /// Evaluates an arbitrary list of expressions (essentially a
@@ -40,12 +42,12 @@ pub enum LogicalPlan {
 }
 
 impl LogicalPlan {
-    pub fn schema(&self) -> SchemaRef {
+    pub fn schema(&self) -> &NaiveSchema {
         match self {
-            LogicalPlan::Projection(Projection { schema, .. }) => schema.clone(),
+            LogicalPlan::Projection(Projection { schema, .. }) => schema,
             LogicalPlan::Filter(Filter { input, .. }) => input.schema(),
-            LogicalPlan::Aggregate(Aggregate { schema, .. }) => schema.clone(),
-            LogicalPlan::Join(Join { schema, .. }) => schema.clone(),
+            LogicalPlan::Aggregate(Aggregate { schema, .. }) => schema,
+            LogicalPlan::Join(Join { schema, .. }) => schema,
             LogicalPlan::Limit(Limit { input, .. }) => input.schema(),
             LogicalPlan::TableScan(TableScan { source, .. }) => source.schema(),
         }
@@ -70,7 +72,7 @@ pub struct Projection {
     /// The incoming logical plan
     pub input: Arc<LogicalPlan>,
     /// The schema description of the output
-    pub schema: SchemaRef,
+    pub schema: NaiveSchema,
 }
 
 #[derive(Debug, Clone)]
@@ -100,7 +102,7 @@ pub struct Aggregate {
     /// Aggregate expressions
     pub aggr_expr: Vec<LogicalExpr>,
     /// The schema description of the aggregate output
-    pub schema: SchemaRef,
+    pub schema: NaiveSchema,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -122,7 +124,7 @@ pub struct Join {
     /// Join type
     pub join_type: JoinType,
     /// The output schema, containing fields from the left and right inputs
-    pub schema: SchemaRef,
+    pub schema: NaiveSchema,
 }
 
 #[derive(Debug, Clone)]

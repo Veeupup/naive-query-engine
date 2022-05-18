@@ -8,6 +8,7 @@ use std::sync::Arc;
 
 use crate::datasource::TableRef;
 use crate::error::Result;
+use crate::logical_plan::schema::NaiveSchema;
 use arrow::{datatypes::SchemaRef, record_batch::RecordBatch};
 
 use crate::physical_plan::PhysicalPlan;
@@ -26,7 +27,7 @@ impl ScanPlan {
 }
 
 impl PhysicalPlan for ScanPlan {
-    fn schema(&self) -> SchemaRef {
+    fn schema(&self) -> &NaiveSchema {
         self.source.schema()
     }
 

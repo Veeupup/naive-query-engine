@@ -1,8 +1,25 @@
+// Licensed to the Apache Software Foundation (ASF) under one
+// or more contributor license agreements.  See the NOTICE file
+// distributed with this work for additional information
+// regarding copyright ownership.  The ASF licenses this file
+// to you under the Apache License, Version 2.0 (the
+// "License"); you may not use this file except in compliance
+// with the License.  You may obtain a copy of the License at
+//
+//   http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing,
+// software distributed under the License is distributed on an
+// "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+// KIND, either express or implied.  See the License for the
+// specific language governing permissions and limitations
+// under the License.
+
 /*
  * @Author: Veeupup
  * @Date: 2022-05-18 13:45:10
  * @Last Modified by: Veeupup
- * @Last Modified time: 2022-05-18 14:10:09
+ * @Last Modified time: 2022-05-18 14:54:46
  *
  * Arrow Field does not have table/relation name as its proroties
  * So we need a Schema to define inner schema with table name
@@ -13,12 +30,13 @@
 
 use std::ptr::null;
 
-use arrow::datatypes::DataType;
+use arrow::datatypes::{DataType, SchemaRef};
 use arrow::datatypes::{Field, Schema};
 
 use crate::error::ErrorCode;
 use crate::error::Result;
 
+#[derive(Debug, Clone)]
 pub struct NaiveSchema {
     pub fields: Vec<NaiveField>,
 }
@@ -41,6 +59,19 @@ impl NaiveSchema {
                 .map(|field| NaiveField {
                     field: field.clone(),
                     qualifier: Some(qualifier.to_owned()),
+                })
+                .collect(),
+        )
+    }
+
+    pub fn from_unqualified(schema: &Schema) -> Self {
+        Self::new(
+            schema
+                .fields()
+                .iter()
+                .map(|field| NaiveField {
+                    field: field.clone(),
+                    qualifier: None,
                 })
                 .collect(),
         )
@@ -114,7 +145,35 @@ impl NaiveSchema {
     }
 }
 
-/// DFField wraps an Arrow field and adds an optional qualifier
+impl Into<Schema> for NaiveSchema {
+    /// Convert a schema into a DFSchema
+    fn into(self) -> Schema {
+        Schema::new(
+            self.fields
+                .into_iter()
+                .map(|f| {
+                    if f.qualifier().is_some() {
+                        Field::new(
+                            f.qualified_name().as_str(),
+                            f.data_type().to_owned(),
+                            f.is_nullable(),
+                        )
+                    } else {
+                        f.field
+                    }
+                })
+                .collect(),
+        )
+    }
+}
+
+impl Into<SchemaRef> for NaiveSchema {
+    fn into(self) -> SchemaRef {
+        SchemaRef::new(self.into())
+    }
+}
+
+/// NaiveField wraps an Arrow field and adds an optional qualifier
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct NaiveField {
     /// Optional qualifier (usually a table or relation name)
@@ -149,17 +208,17 @@ impl NaiveField {
         self.field.name()
     }
 
-    /// Returns an immutable reference to the `DFField`'s data-type
+    /// Returns an immutable reference to the `NaiveField`'s data-type
     pub fn data_type(&self) -> &DataType {
         &self.field.data_type()
     }
 
-    /// Indicates whether this `DFField` supports null values
+    /// Indicates whether this `NaiveField` supports null values
     pub fn is_nullable(&self) -> bool {
         self.field.is_nullable()
     }
 
-    /// Returns a reference to the `DFField`'s qualified name
+    /// Returns a reference to the `NaiveField`'s qualified name
     pub fn qualified_name(&self) -> String {
         if let Some(relation_name) = &self.qualifier {
             format!("{}.{}", relation_name, self.field.name())

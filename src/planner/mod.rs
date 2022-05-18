@@ -11,6 +11,7 @@ use std::sync::Arc;
 
 use arrow::datatypes::Schema;
 
+use crate::logical_plan::schema::NaiveSchema;
 use crate::physical_plan::PhysicalBinaryExpr;
 use crate::physical_plan::PhysicalExprRef;
 use crate::physical_plan::PhysicalLimitPlan;
@@ -47,7 +48,7 @@ impl QueryPlanner {
                     .iter()
                     .map(|expr| expr.data_field(proj.input.as_ref()).unwrap())
                     .collect::<Vec<_>>();
-                let proj_schema = Arc::new(Schema::new(fields));
+                let proj_schema = NaiveSchema::new(fields);
                 Ok(ProjectionPlan::create(input, proj_schema, proj_expr))
             }
             LogicalPlan::Limit(limit) => {

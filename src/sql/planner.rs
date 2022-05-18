@@ -20,6 +20,7 @@ use crate::error::ErrorCode;
 use crate::logical_plan::expression::{BinaryExpr, Column, LogicalExpr, Operator, ScalarValue};
 use crate::logical_plan::literal::lit;
 use crate::logical_plan::plan::{JoinType, TableScan};
+use crate::logical_plan::schema::NaiveSchema;
 use crate::{
     catalog::Catalog,
     error::Result,
@@ -429,7 +430,7 @@ fn extract_possible_join_keys(expr: &LogicalExpr, accum: &mut Vec<(Column, Colum
     }
 }
 
-fn find_column_in_schema(schema: &SchemaRef, col: &Column) -> Result<()> {
+fn find_column_in_schema(schema: &NaiveSchema, col: &Column) -> Result<()> {
     let fields = schema.fields();
     for field in fields {
         if field.name() == &col.name {

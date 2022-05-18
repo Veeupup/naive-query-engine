@@ -17,6 +17,8 @@ use crate::error::Result;
 
 use crate::logical_plan::plan::LogicalPlan;
 
+use super::schema::{self, NaiveField, NaiveSchema};
+
 #[derive(Clone, Debug)]
 pub enum LogicalExpr {
     /// An expression with a specific name.
@@ -52,32 +54,30 @@ impl LogicalExpr {
     }
 
     /// TODO(veeupup): consider return Vec<Field>
-    pub fn data_field(&self, input: &LogicalPlan) -> Result<Field> {
+    pub fn data_field(&self, input: &LogicalPlan) -> Result<NaiveField> {
         match self {
             LogicalExpr::Alias(expr, alias) => {
                 let field = expr.data_field(input)?;
-                Ok(Field::new(
+                Ok(NaiveField::new(
+                    None,
                     alias,
                     field.data_type().clone(),
                     field.is_nullable(),
                 ))
             }
             LogicalExpr::Column(Column { name, .. }) => {
-                for field in input.schema().fields() {
-                    if field.name() == name.as_str() {
-                        return Ok(field.clone());
-                    }
-                }
-                Err(ErrorCode::NoSuchField)
+                input.schema().field_with_unqualified_name(name)
             }
             LogicalExpr::Literal(scalar_val) => Ok(scalar_val.data_field()),
             LogicalExpr::BinaryExpr(expr) => expr.data_field(input),
-            LogicalExpr::Not(expr) => Ok(Field::new(
+            LogicalExpr::Not(expr) => Ok(NaiveField::new(
+                None,
                 format!("Not {}", expr.data_field(input)?.name()).as_str(),
                 DataType::Boolean,
                 true,
             )),
-            LogicalExpr::Cast { expr, data_type } => Ok(Field::new(
+            LogicalExpr::Cast { expr, data_type } => Ok(NaiveField::new(
+                None,
                 expr.data_field(input)?.name(),
                 data_type.clone(),
                 true,
@@ -136,14 +136,14 @@ macro_rules! build_array_from_option {
 }
 
 impl ScalarValue {
-    pub fn data_field(&self) -> Field {
+    pub fn data_field(&self) -> NaiveField {
         match self {
-            ScalarValue::Null => Field::new("Null", DataType::Null, true),
-            ScalarValue::Boolean(_) => Field::new("bool", DataType::Boolean, true),
-            ScalarValue::Float64(_) => Field::new("f64", DataType::Float64, true),
-            ScalarValue::Int64(_) => Field::new("i64", DataType::Int64, true),
-            ScalarValue::UInt64(_) => Field::new("u64", DataType::UInt64, true),
-            ScalarValue::Utf8(_) => Field::new("string", DataType::Utf8, true),
+            ScalarValue::Null => NaiveField::new(None, "Null", DataType::Null, true),
+            ScalarValue::Boolean(_) => NaiveField::new(None, "bool", DataType::Boolean, true),
+            ScalarValue::Float64(_) => NaiveField::new(None, "f64", DataType::Float64, true),
+            ScalarValue::Int64(_) => NaiveField::new(None, "i64", DataType::Int64, true),
+            ScalarValue::UInt64(_) => NaiveField::new(None, "u64", DataType::UInt64, true),
+            ScalarValue::Utf8(_) => NaiveField::new(None, "string", DataType::Utf8, true),
         }
     }
 
@@ -173,7 +173,7 @@ pub struct BinaryExpr {
 }
 
 impl BinaryExpr {
-    pub fn data_field(&self, input: &LogicalPlan) -> Result<Field> {
+    pub fn data_field(&self, input: &LogicalPlan) -> Result<NaiveField> {
         let left = self.left.data_field(input)?;
         let left = left.name();
         let right = match &*self.right {
@@ -188,67 +188,80 @@ impl BinaryExpr {
             _ => self.right.data_field(input)?.name().clone(),
         };
         let field = match self.op {
-            Operator::Eq => Field::new(
+            Operator::Eq => NaiveField::new(
+                None,
                 format!("{} = {}", left, right).as_str(),
                 DataType::Boolean,
                 true,
             ),
-            Operator::NotEq => Field::new(
+            Operator::NotEq => NaiveField::new(
+                None,
                 format!("{} != {}", left, right).as_str(),
                 DataType::Boolean,
                 true,
             ),
-            Operator::Lt => Field::new(
+            Operator::Lt => NaiveField::new(
+                None,
                 format!("{} < {}", left, right).as_str(),
                 DataType::Boolean,
                 true,
             ),
-            Operator::LtEq => Field::new(
+            Operator::LtEq => NaiveField::new(
+                None,
                 format!("{} <= {}", left, right).as_str(),
                 DataType::Boolean,
                 true,
             ),
-            Operator::Gt => Field::new(
+            Operator::Gt => NaiveField::new(
+                None,
                 format!("{} > {}", left, right).as_str(),
                 DataType::Boolean,
                 true,
             ),
-            Operator::GtEq => Field::new(
+            Operator::GtEq => NaiveField::new(
+                None,
                 format!("{} >= {}", left, right).as_str(),
                 DataType::Boolean,
                 true,
             ),
-            Operator::Plus => Field::new(
+            Operator::Plus => NaiveField::new(
+                None,
                 format!("{} + {}", left, right).as_str(),
                 self.left.data_field(input)?.data_type().clone(),
                 true,
             ),
-            Operator::Minus => Field::new(
+            Operator::Minus => NaiveField::new(
+                None,
                 format!("{} - {}", left, right).as_str(),
                 self.left.data_field(input)?.data_type().clone(),
                 true,
             ),
-            Operator::Multiply => Field::new(
+            Operator::Multiply => NaiveField::new(
+                None,
                 format!("{} * {}", left, right).as_str(),
                 self.left.data_field(input)?.data_type().clone(),
                 true,
             ),
-            Operator::Divide => Field::new(
+            Operator::Divide => NaiveField::new(
+                None,
                 format!("{} / {}", left, right).as_str(),
                 self.left.data_field(input)?.data_type().clone(),
                 true,
             ),
-            Operator::Modulo => Field::new(
+            Operator::Modulo => NaiveField::new(
+                None,
                 format!("{} % {}", left, right).as_str(),
                 self.left.data_field(input)?.data_type().clone(),
                 true,
             ),
-            Operator::And => Field::new(
+            Operator::And => NaiveField::new(
+                None,
                 format!("{} and {}", left, right).as_str(),
                 DataType::Boolean,
                 true,
             ),
-            Operator::Or => Field::new(
+            Operator::Or => NaiveField::new(
+                None,
                 format!("{} or {}", left, right).as_str(),
                 DataType::Boolean,
                 true,
@@ -298,21 +311,24 @@ pub struct ScalarFunction {
 }
 
 impl ScalarFunction {
-    pub fn data_field(&self, input: &LogicalPlan) -> Result<Field> {
+    pub fn data_field(&self, input: &LogicalPlan) -> Result<NaiveField> {
         // TODO(veeupup): we should make scalar func more specific and should check if valid before creating them
         let field = self.args[0].data_field(input)?;
         let field = match self.fun {
-            ScalarFunc::Abs => Field::new(
+            ScalarFunc::Abs => NaiveField::new(
+                None,
                 format!("abs({})", field.name()).as_str(),
                 DataType::Int64,
                 true,
             ),
-            ScalarFunc::Add => Field::new(
+            ScalarFunc::Add => NaiveField::new(
+                None,
                 format!("add({})", field.name()).as_str(),
                 DataType::Int64,
                 true,
             ),
-            ScalarFunc::Sub => Field::new(
+            ScalarFunc::Sub => NaiveField::new(
+                None,
                 format!("sub({})", field.name()).as_str(),
                 DataType::Int64,
                 true,
@@ -339,30 +355,35 @@ pub struct AggregateFunction {
 }
 
 impl AggregateFunction {
-    pub fn data_field(&self, input: &LogicalPlan) -> Result<Field> {
+    pub fn data_field(&self, input: &LogicalPlan) -> Result<NaiveField> {
         let dt = self.args.data_field(input)?;
         let field = match self.fun {
-            AggregateFunc::Count => Field::new(
+            AggregateFunc::Count => NaiveField::new(
+                None,
                 format!("count({})", dt.name()).as_str(),
                 dt.data_type().clone(),
                 true,
             ),
-            AggregateFunc::Sum => Field::new(
+            AggregateFunc::Sum => NaiveField::new(
+                None,
                 format!("sum({})", dt.name()).as_str(),
                 dt.data_type().clone(),
                 true,
             ),
-            AggregateFunc::Min => Field::new(
+            AggregateFunc::Min => NaiveField::new(
+                None,
                 format!("min({})", dt.name()).as_str(),
                 dt.data_type().clone(),
                 true,
             ),
-            AggregateFunc::Max => Field::new(
+            AggregateFunc::Max => NaiveField::new(
+                None,
                 format!("max({})", dt.name()).as_str(),
                 dt.data_type().clone(),
                 true,
             ),
-            AggregateFunc::Avg => Field::new(
+            AggregateFunc::Avg => NaiveField::new(
+                None,
                 format!("avg({})", dt.name()).as_str(),
                 dt.data_type().clone(),
                 true,

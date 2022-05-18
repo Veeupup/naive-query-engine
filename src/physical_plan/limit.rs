@@ -2,11 +2,12 @@
  * @Author: Veeupup
  * @Date: 2022-05-17 11:27:29
  * @Last Modified by: Veeupup
- * @Last Modified time: 2022-05-17 11:57:13
+ * @Last Modified time: 2022-05-18 14:45:03
  */
 
 use super::{PhysicalPlan, PhysicalPlanRef};
 use crate::error::Result;
+use crate::logical_plan::schema::NaiveSchema;
 use arrow::datatypes::SchemaRef;
 use arrow::record_batch::RecordBatch;
 use std::sync::Arc;
@@ -24,7 +25,7 @@ impl PhysicalLimitPlan {
 }
 
 impl PhysicalPlan for PhysicalLimitPlan {
-    fn schema(&self) -> SchemaRef {
+    fn schema(&self) -> &NaiveSchema {
         self.input.schema()
     }
 

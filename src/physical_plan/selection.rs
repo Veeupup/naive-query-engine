@@ -7,6 +7,7 @@
 use std::sync::Arc;
 
 use super::{PhysicalExpr, PhysicalExprRef, PhysicalPlan, PhysicalPlanRef};
+use crate::logical_plan::schema::NaiveSchema;
 use crate::Result;
 use arrow::array::{
     Float64Array, Float64Builder, Int64Array, Int64Builder, StringArray, StringBuilder,
@@ -50,7 +51,7 @@ macro_rules! build_array_by_predicate {
 }
 
 impl PhysicalPlan for SelectionPlan {
-    fn schema(&self) -> SchemaRef {
+    fn schema(&self) -> &NaiveSchema {
         self.input.schema()
     }
 
@@ -98,7 +99,8 @@ impl PhysicalPlan for SelectionPlan {
                 };
                 columns.push(column);
             }
-            let record_batch = RecordBatch::try_new(self.schema(), columns)?;
+            let record_batch =
+                RecordBatch::try_new(Arc::new(self.schema().clone().into()), columns)?;
             batches.push(record_batch);
         }
         Ok(batches)

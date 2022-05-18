@@ -9,20 +9,21 @@ use std::sync::Arc;
 
 use super::{expression::PhysicalExpr, plan::PhysicalPlan};
 use crate::error::Result;
+use crate::logical_plan::schema::NaiveSchema;
 use crate::physical_plan::PhysicalExprRef;
 use crate::physical_plan::PhysicalPlanRef;
 use arrow::{datatypes::SchemaRef, record_batch::RecordBatch};
 #[derive(Debug, Clone)]
 pub struct ProjectionPlan {
     input: PhysicalPlanRef,
-    schema: SchemaRef,
+    schema: NaiveSchema,
     expr: Vec<PhysicalExprRef>,
 }
 
 impl ProjectionPlan {
     pub fn create(
         input: PhysicalPlanRef,
-        schema: SchemaRef,
+        schema: NaiveSchema,
         expr: Vec<PhysicalExprRef>,
     ) -> PhysicalPlanRef {
         Arc::new(Self {
@@ -34,8 +35,8 @@ impl ProjectionPlan {
 }
 
 impl PhysicalPlan for ProjectionPlan {
-    fn schema(&self) -> SchemaRef {
-        self.schema.clone()
+    fn schema(&self) -> &NaiveSchema {
+        &self.schema
     }
 
     fn execute(&self) -> Result<Vec<RecordBatch>> {
@@ -54,7 +55,8 @@ impl PhysicalPlan for ProjectionPlan {
                     .map(|column| column.clone().into_array())
                     .collect::<Vec<_>>();
                 // TODO(veeupup): remove unwrap
-                RecordBatch::try_new(self.schema.clone(), columns).unwrap()
+                // let projection_schema = self.schema.into();
+                RecordBatch::try_new(self.schema.clone().into(), columns).unwrap()
             })
             .collect::<Vec<_>>();
         Ok(batches)
