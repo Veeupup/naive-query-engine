@@ -6,8 +6,6 @@
 
 use std::collections::HashMap;
 
-
-
 use crate::datasource::{EmptyTable, MemTable};
 use crate::error::ErrorCode;
 use crate::logical_plan::plan::{LogicalPlan, TableScan};

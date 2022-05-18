@@ -6,8 +6,6 @@
 
 use std::sync::Arc;
 
-
-
 use crate::logical_plan::expression::LogicalExpr;
 use crate::logical_plan::plan::{Aggregate, Filter, LogicalPlan, Projection};
 
@@ -125,7 +123,7 @@ mod tests {
 
     use crate::error::Result;
     use crate::logical_plan::expression::*;
-    use arrow::datatypes::{DataType};
+    use arrow::datatypes::DataType;
 
     #[test]
     fn create_logical_plan() -> Result<()> {

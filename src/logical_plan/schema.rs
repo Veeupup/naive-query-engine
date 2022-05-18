@@ -28,9 +28,6 @@
  *
  */
 
-
-
-
 use arrow::datatypes::{DataType, SchemaRef};
 use arrow::datatypes::{Field, Schema};
 

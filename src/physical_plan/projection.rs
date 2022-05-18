@@ -12,7 +12,7 @@ use crate::error::Result;
 use crate::logical_plan::schema::NaiveSchema;
 use crate::physical_plan::PhysicalExprRef;
 use crate::physical_plan::PhysicalPlanRef;
-use arrow::{record_batch::RecordBatch};
+use arrow::record_batch::RecordBatch;
 #[derive(Debug, Clone)]
 pub struct ProjectionPlan {
     input: PhysicalPlanRef,
@@ -73,14 +73,12 @@ mod tests {
     use crate::datasource::{CsvConfig, CsvTable, TableSource};
     use crate::physical_plan::expression::ColumnExpr;
     use crate::physical_plan::scan::ScanPlan;
-    use arrow::{
-        array::{Array, ArrayRef, Int64Array, StringArray},
-    };
+    use arrow::array::{Array, ArrayRef, Int64Array, StringArray};
 
     #[test]
     fn test_projection() -> Result<()> {
         let source = CsvTable::try_create("data/test_data.csv", CsvConfig::default())?;
-        let schema =  NaiveSchema::new(vec![
+        let schema = NaiveSchema::new(vec![
             source.schema().field(0).clone(),
             source.schema().field(1).clone(),
         ]);

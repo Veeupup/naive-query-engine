@@ -15,7 +15,7 @@ use crate::logical_plan::schema::NaiveSchema;
 
 use arrow::csv;
 use arrow::datatypes::Schema;
-use arrow::{record_batch::RecordBatch};
+use arrow::record_batch::RecordBatch;
 
 use super::TableSource;
 use crate::datasource::TableRef;

@@ -9,7 +9,7 @@ use std::sync::Arc;
 use crate::datasource::TableRef;
 use crate::error::Result;
 use crate::logical_plan::schema::NaiveSchema;
-use arrow::{record_batch::RecordBatch};
+use arrow::record_batch::RecordBatch;
 
 use crate::physical_plan::PhysicalPlan;
 use crate::physical_plan::PhysicalPlanRef;

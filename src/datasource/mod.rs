@@ -13,7 +13,7 @@ use std::sync::Arc;
 
 use crate::error::Result;
 use crate::logical_plan::schema::NaiveSchema;
-use arrow::{record_batch::RecordBatch};
+use arrow::record_batch::RecordBatch;
 
 pub type TableRef = Arc<dyn TableSource>;
 

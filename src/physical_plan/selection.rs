@@ -16,7 +16,7 @@ use arrow::array::{
 use arrow::record_batch::RecordBatch;
 use arrow::{
     array::{Array, BooleanArray, BooleanBuilder},
-    datatypes::{DataType},
+    datatypes::DataType,
 };
 
 #[derive(Debug)]
@@ -120,9 +120,7 @@ mod tests {
     use crate::physical_plan::scan::ScanPlan;
     use crate::physical_plan::{PhysicalBinaryExpr, PhysicalLiteralExpr, ProjectionPlan};
     use crate::print_result;
-    use arrow::{
-        array::{Array, ArrayRef, Int64Array, StringArray},
-    };
+    use arrow::array::{Array, ArrayRef, Int64Array, StringArray};
 
     #[test]
     fn test_selection() -> Result<()> {

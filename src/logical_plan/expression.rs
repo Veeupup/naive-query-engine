@@ -9,15 +9,14 @@ use std::iter::repeat;
 use arrow::array::StringArray;
 use arrow::array::{new_null_array, ArrayRef, BooleanArray, Float64Array, Int64Array, UInt64Array};
 
-use arrow::datatypes::{DataType};
+use arrow::datatypes::DataType;
 use std::sync::Arc;
-
 
 use crate::error::Result;
 
 use crate::logical_plan::plan::LogicalPlan;
 
-use super::schema::{NaiveField};
+use super::schema::NaiveField;
 
 #[derive(Clone, Debug)]
 pub enum LogicalExpr {

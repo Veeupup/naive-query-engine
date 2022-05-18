@@ -144,7 +144,6 @@ mod tests {
 
     use crate::error::Result;
     use crate::logical_plan::expression::*;
-    
 
     /// Create LogicalPlan
     #[test]

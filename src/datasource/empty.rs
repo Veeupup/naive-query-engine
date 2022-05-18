@@ -39,7 +39,6 @@ impl TableSource for EmptyTable {
 mod tests {
     use super::*;
     use arrow::datatypes::{DataType, Field, Schema};
-    
 
     #[test]
     fn test_empty_table() -> Result<()> {

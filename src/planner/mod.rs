@@ -7,10 +7,6 @@
  *
 */
 
-
-
-
-
 use crate::logical_plan::schema::NaiveSchema;
 use crate::physical_plan::NestedLoopJoin;
 use crate::physical_plan::PhysicalBinaryExpr;
@@ -115,10 +111,10 @@ impl QueryPlanner {
 
 #[cfg(test)]
 mod tests {
-    use std::sync::Arc;
     use arrow::array::ArrayRef;
     use arrow::array::Int64Array;
     use arrow::array::StringArray;
+    use std::sync::Arc;
 
     use crate::catalog::Catalog;
 
