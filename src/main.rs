@@ -12,11 +12,11 @@ fn main() -> Result<()> {
     print_result(&ret)?;
 
     // Ok(())
-    // db.create_csv_table("employee", "data/employee.csv")?;
-    // db.create_csv_table("rank", "data/rank.csv")?;
+    db.create_csv_table("employee", "data/employee.csv")?;
+    db.create_csv_table("rank", "data/rank.csv")?;
 
-    // let ret =
-    //     db.run_sql("select id, name  from employee innner join rank on employee.id = rank.id");
+    let ret =
+        db.run_sql("select name, rank  from employee innner join rank on employee.id = rank.id");
 
     // print_result(&ret?);
     Ok(())

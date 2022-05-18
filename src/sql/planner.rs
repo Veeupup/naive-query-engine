@@ -210,17 +210,6 @@ impl<'a> SQLPlanner<'a> {
         plans: Vec<LogicalPlan>,
     ) -> Result<DataFrame> {
         // TODO(veeupup): handle joins
-        // let df = DataFrame {
-        //     plan: plans[0].clone(),
-        // };
-        // match selection {
-        //     Some(predicate_expr) => {
-        //         let filter_expr = self.sql_to_expr(&predicate_expr)?;
-        //         let df = df.filter(filter_expr);
-        //         Ok(df)
-        //     }
-        //     None => Ok(df),
-        // }
         match selection {
             Some(expr) => {
                 let mut fields = vec![];
@@ -240,12 +229,12 @@ impl<'a> SQLPlanner<'a> {
                     let right_schema = right.schema();
                     let mut join_keys = vec![];
                     for (l, r) in &possible_join_keys {
-                        if find_column_in_schema(&left_schema, l).is_ok()
-                            && find_column_in_schema(&right_schema, r).is_ok()
+                        if  left_schema.field_with_unqualified_name(l.name.as_str()).is_ok()
+                            && right_schema.field_with_unqualified_name(r.name.as_str()).is_ok()
                         {
                             join_keys.push((l.clone(), r.clone()));
-                        } else if find_column_in_schema(&left_schema, r).is_ok()
-                            && find_column_in_schema(&right_schema, l).is_ok()
+                        } else if left_schema.field_with_unqualified_name(r.name.as_str()).is_ok()
+                            && right_schema.field_with_unqualified_name(l.name.as_str()).is_ok()
                         {
                             join_keys.push((r.clone(), l.clone()));
                         }
@@ -428,16 +417,6 @@ fn extract_possible_join_keys(expr: &LogicalExpr, accum: &mut Vec<(Column, Colum
         },
         _ => Ok(()),
     }
-}
-
-fn find_column_in_schema(schema: &NaiveSchema, col: &Column) -> Result<()> {
-    let fields = schema.fields();
-    for field in fields {
-        if field.name() == &col.name {
-            return Ok(());
-        }
-    }
-    Err(ErrorCode::NoSuchField)
 }
 
 /// Remove join expressions from a filter expression

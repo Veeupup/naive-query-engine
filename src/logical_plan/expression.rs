@@ -65,8 +65,11 @@ impl LogicalExpr {
                     field.is_nullable(),
                 ))
             }
-            LogicalExpr::Column(Column { name, .. }) => {
-                input.schema().field_with_unqualified_name(name)
+            LogicalExpr::Column(Column { name, table }) => {
+                match table {
+                    Some(table) => input.schema().field_with_qualified_name(table, name),
+                    None => input.schema().field_with_unqualified_name(name)
+                }
             }
             LogicalExpr::Literal(scalar_val) => Ok(scalar_val.data_field()),
             LogicalExpr::BinaryExpr(expr) => expr.data_field(input),

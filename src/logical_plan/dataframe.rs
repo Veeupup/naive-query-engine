@@ -27,6 +27,8 @@ impl DataFrame {
     }
 
     pub fn project(self, exprs: Vec<LogicalExpr>) -> Self {
+        // TODO(veeupup): Ambiguous reference of field
+        println!("plan: {:?}", &self.plan.schema());
         let fields = exprs
             .iter()
             .map(|expr| expr.data_field(&self.plan).unwrap())
