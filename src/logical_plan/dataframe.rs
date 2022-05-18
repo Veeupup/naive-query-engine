@@ -28,7 +28,6 @@ impl DataFrame {
 
     pub fn project(self, exprs: Vec<LogicalExpr>) -> Self {
         // TODO(veeupup): Ambiguous reference of field
-        println!("plan: {:?}", &self.plan.schema());
         let fields = exprs
             .iter()
             .map(|expr| expr.data_field(&self.plan).unwrap())
@@ -94,33 +93,12 @@ impl DataFrame {
             ));
         }
 
-        // TODO(veeupup): we need judge which side os conditions on
-        // let (left_keys, right_keys) =
-        //     join_keys
-        //         .0
-        //         .into_iter()
-        //         .zip(join_keys.1.into_iter())
-        //         .map(|(l, r)| {
-        //             match (&l.table, &r.table) {
-        //                 (Some(l), Some(r)) => {
-        //                     (Ok(l), Ok(r))
-        //                 },
-        //                 _ => unimplemented!()
-        //             }
-        //         }).collect::<Vec<_>>();
-        // let left_keys = left_keys.into_iter().collect::<Result<Vec<_>>>()?;
-        // let right_keys = right_keys.into_iter().collect::<Result<Vec<_>>>()?;
-        let left_keys = join_keys.0.clone();
-        let right_keys = join_keys.1.clone();
-
+        let (left_keys, right_keys) = join_keys;
         let on: Vec<(_, _)> = left_keys.into_iter().zip(right_keys.into_iter()).collect();
-        // join schema
+
         let left_schema = self.plan.schema();
-        let left_fields = left_schema.fields().iter();
-        let right_schema = right.schema();
-        let right_fields = right_schema.fields().iter();
-        let fields = left_fields.chain(right_fields).cloned().collect();
-        let join_schema = NaiveSchema::new(fields);
+        let join_schema = left_schema.join(right.schema());
+
         Ok(Self::new(LogicalPlan::Join(Join {
             left: Arc::new(self.plan.clone()),
             right: Arc::new(right.clone()),

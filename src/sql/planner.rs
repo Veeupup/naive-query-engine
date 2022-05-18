@@ -144,7 +144,10 @@ impl<'a> SQLPlanner<'a> {
                 let mut filters = vec![];
                 extract_join_keys(&expr, &mut keys, &mut filters);
 
-                let (left_keys, right_keys): (Vec<Column>, Vec<Column>) = keys.into_iter().unzip();
+                let left_keys =
+                    keys.iter().map(|pair| pair.0.clone()).collect();
+                let right_keys =
+                    keys.iter().map(|pair| pair.1.clone()).collect();
 
                 if filters.is_empty() {
                     let join =
