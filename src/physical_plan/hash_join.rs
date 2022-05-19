@@ -27,6 +27,7 @@ use crate::logical_plan::expression::Column;
 use crate::logical_plan::plan::JoinType;
 use crate::logical_plan::schema::NaiveSchema;
 use crate::physical_plan::ColumnExpr;
+use crate::physical_plan::PhysicalExpr;
 
 use crate::Result;
 use std::collections::HashMap;

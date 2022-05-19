@@ -306,17 +306,17 @@ pub enum Operator {
 #[derive(Debug, Clone)]
 pub struct ScalarFunction {
     /// The function
-    pub fun: ScalarFunc,
+    pub func: ScalarFunc,
     /// List of expressions to feed to the functions as arguments
     /// TODO(veeupup): we should check the args' type and nums
-    pub args: Vec<LogicalExpr>,
+    pub arg: Box<LogicalExpr>,
 }
 
 impl ScalarFunction {
     pub fn data_field(&self, input: &LogicalPlan) -> Result<NaiveField> {
         // TODO(veeupup): we should make scalar func more specific and should check if valid before creating them
-        let field = self.args[0].data_field(input)?;
-        let field = match self.fun {
+        let field = self.arg.data_field(input)?;
+        let field = match self.func {
             ScalarFunc::Abs => NaiveField::new(
                 None,
                 format!("abs({})", field.name()).as_str(),
