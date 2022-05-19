@@ -9,6 +9,7 @@ mod plan;
 
 mod limit;
 mod nested_loop_join;
+mod hash_join;
 mod projection;
 mod scan;
 mod selection;
@@ -20,3 +21,4 @@ pub use plan::*;
 pub use projection::*;
 pub use scan::*;
 pub use selection::*;
+pub use hash_join::*;

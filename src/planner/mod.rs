@@ -8,6 +8,7 @@
 */
 
 use crate::logical_plan::schema::NaiveSchema;
+use crate::physical_plan::HashJoin;
 use crate::physical_plan::NestedLoopJoin;
 use crate::physical_plan::PhysicalBinaryExpr;
 use crate::physical_plan::PhysicalExprRef;
@@ -55,7 +56,14 @@ impl QueryPlanner {
             LogicalPlan::Join(join) => {
                 let left = Self::create_physical_plan(&join.left)?;
                 let right = Self::create_physical_plan(&join.right)?;
-                Ok(NestedLoopJoin::new(
+                // Ok(NestedLoopJoin::new(
+                //     left,
+                //     right,
+                //     join.on.clone(),
+                //     join.join_type,
+                //     join.schema.clone(),
+                // ))
+                Ok(HashJoin::new(
                     left,
                     right,
                     join.on.clone(),
