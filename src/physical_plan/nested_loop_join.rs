@@ -2,7 +2,7 @@
  * @Author: Veeupup
  * @Date: 2022-05-18 16:00:13
  * @Last Modified by: Veeupup
- * @Last Modified time: 2022-05-18 17:58:32
+ * @Last Modified time: 2022-05-19 15:53:24
  */
 use super::PhysicalPlan;
 use super::PhysicalPlanRef;
@@ -101,6 +101,7 @@ impl PhysicalPlan for NestedLoopJoin {
         }
 
         let (left_col, right_col) = &self.on[0];
+        // TODO(veeupup): consider make left_col in physical plan and not create when executing
         let left_col = ColumnExpr::try_create(Some(left_col.name.clone()), None)?;
         let right_col = ColumnExpr::try_create(Some(right_col.name.clone()), None)?;
 

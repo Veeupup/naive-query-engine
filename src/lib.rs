@@ -16,6 +16,7 @@ mod planner;
 mod sql;
 mod utils;
 
+pub use datasource::CsvConfig;
 pub use db::NaiveDB;
 pub use error::Result;
 pub use utils::*;

@@ -21,12 +21,12 @@ use super::TableSource;
 use crate::datasource::TableRef;
 
 pub struct CsvConfig {
-    has_header: bool,
-    delimiter: u8,
-    max_read_records: Option<usize>,
-    batch_size: usize,
-    file_projection: Option<Vec<usize>>,
-    datetime_format: Option<String>,
+    pub has_header: bool,
+    pub delimiter: u8,
+    pub max_read_records: Option<usize>,
+    pub batch_size: usize,
+    pub file_projection: Option<Vec<usize>>,
+    pub datetime_format: Option<String>,
 }
 
 impl Default for CsvConfig {
