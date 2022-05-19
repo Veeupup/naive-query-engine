@@ -11,12 +11,12 @@ use std::collections::HashSet;
 
 use sqlparser::ast::{
     BinaryOperator, Expr, Join, JoinConstraint, JoinOperator, OrderByExpr, SetExpr, Statement,
-    TableWithJoins,
+    TableWithJoins, UnaryOperator,
 };
 use sqlparser::ast::{Ident, ObjectName, SelectItem, TableFactor, Value};
 
 use crate::error::ErrorCode;
-use crate::logical_plan::expression::{BinaryExpr, Column, LogicalExpr, Operator, ScalarValue};
+use crate::logical_plan::expression::{BinaryExpr, Column, LogicalExpr, Operator, ScalarValue, ScalarFunc, ScalarFunction};
 use crate::logical_plan::literal::lit;
 use crate::logical_plan::plan::{JoinType, TableScan};
 
@@ -302,6 +302,7 @@ impl<'a> SQLPlanner<'a> {
             Expr::Identifier(id) => Ok(LogicalExpr::column(None, normalize_ident(id))),
             // TODO(veeupup): cast func
             Expr::BinaryOp { left, op, right } => self.parse_sql_binary_op(left, op, right),
+            Expr::UnaryOp { op, expr } => self.parse_sql_unary_op(op, expr),
             Expr::CompoundIdentifier(ids) => {
                 let mut var_names = ids.iter().map(|id| id.value.clone()).collect::<Vec<_>>();
 
@@ -346,6 +347,21 @@ impl<'a> SQLPlanner<'a> {
             left: Box::new(self.sql_to_expr(&left)?),
             op,
             right: Box::new(self.sql_to_expr(&right)?),
+        }))
+    }
+
+    fn parse_sql_unary_op(
+        &self,
+        op: &UnaryOperator,
+        expr: &Box<Expr>,
+    ) -> Result<LogicalExpr> {
+        let func = match op {
+            UnaryOperator::PGAbs => ScalarFunc::Abs,
+            _ => unimplemented!(),
+        };
+        Ok(LogicalExpr::ScalarFunction(ScalarFunction {
+            func: func,
+            arg: Box::new(self.sql_to_expr(&expr)?),
         }))
     }
 }

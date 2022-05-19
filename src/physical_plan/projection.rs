@@ -71,6 +71,8 @@ impl PhysicalPlan for ProjectionPlan {
 mod tests {
     use super::*;
     use crate::datasource::{CsvConfig, CsvTable, TableSource};
+    use crate::logical_plan::expression::{ScalarValue, Operator, ScalarFunction, ScalarFunc};
+    use crate::physical_plan::{PhysicalBinaryExpr, PhysicalLiteralExpr, PhysicalScalarExpr};
     use crate::physical_plan::expression::ColumnExpr;
     use crate::physical_plan::scan::ScanPlan;
     use arrow::array::{Array, ArrayRef, Int64Array, StringArray};
@@ -83,9 +85,51 @@ mod tests {
             source.schema().field(1).clone(),
         ]);
         let scan_plan = ScanPlan::create(source, None);
-
+        let add_expr = PhysicalBinaryExpr::new(
+            ColumnExpr::try_create(Some("id".to_string()), None)?,
+            Operator::Plus,
+            PhysicalLiteralExpr::new(ScalarValue::Int64(Some(1)))
+        );
         let expr = vec![
-            ColumnExpr::try_create(None, Some(0))?,
+            // ColumnExpr::try_create(None, Some(0))?,
+            add_expr,
+            ColumnExpr::try_create(Some("name".to_string()), None)?,
+        ];
+        let proj_plan = ProjectionPlan::create(scan_plan, schema, expr);
+
+        let res = proj_plan.execute()?;
+
+        assert_eq!(res.len(), 1);
+        let batch = &res[0];
+
+        // let id_excepted: ArrayRef = Arc::new(Int64Array::from(vec![1, 2, 4, 5, 6, 7, 8, 9]));
+        let name_excepted: ArrayRef = Arc::new(StringArray::from(vec![
+            "veeupup", "alex", "lynne", "alice", "bob", "jack", "cock", "primer",
+        ]));
+        let id_excepted2: ArrayRef = Arc::new(Int64Array::from(vec![2, 3, 5, 6, 7, 8, 9, 10]));
+        assert_eq!(batch.column(0), &id_excepted2);
+        assert_eq!(batch.column(1), &name_excepted);
+        // assert_eq!(batch.column(2), &id_excepted2);
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_scalar() -> Result<()> {
+        let source = CsvTable::try_create("data/test_data.csv", CsvConfig::default())?;
+        let schema = NaiveSchema::new(vec![
+            source.schema().field(0).clone(),
+            source.schema().field(1).clone(),
+        ]);
+        let scan_plan = ScanPlan::create(source, None);
+        let abs_expr = PhysicalScalarExpr::new(
+            ColumnExpr::try_create(Some("id".to_string()), None)?,
+            ScalarFunc::Abs,
+            
+        );
+        let expr = vec![
+            // ColumnExpr::try_create(None, Some(0))?,
+            abs_expr,
             ColumnExpr::try_create(Some("name".to_string()), None)?,
         ];
         let proj_plan = ProjectionPlan::create(scan_plan, schema, expr);
@@ -99,7 +143,6 @@ mod tests {
         let name_excepted: ArrayRef = Arc::new(StringArray::from(vec![
             "veeupup", "alex", "lynne", "alice", "bob", "jack", "cock", "primer",
         ]));
-
         assert_eq!(batch.column(0), &id_excepted);
         assert_eq!(batch.column(1), &name_excepted);
 

@@ -7,10 +7,12 @@
 mod binary;
 mod column;
 mod literal;
+mod scalar;
 
 pub use binary::PhysicalBinaryExpr;
 pub use column::ColumnExpr;
 pub use literal::PhysicalLiteralExpr;
+pub use scalar::PhysicalScalarExpr;
 
 use crate::{datatype::ColumnValue, error::Result};
 use arrow::record_batch::RecordBatch;

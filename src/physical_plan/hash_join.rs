@@ -18,7 +18,6 @@ use arrow::datatypes::SchemaRef;
 use arrow::datatypes::UInt64Type;
 use arrow::record_batch::RecordBatch;
 
-
 use twox_hash::XxHash64;
 
 use super::PhysicalPlan;
@@ -30,10 +29,8 @@ use crate::logical_plan::schema::NaiveSchema;
 use crate::physical_plan::ColumnExpr;
 use crate::physical_plan::PhysicalExpr;
 
-
 use crate::Result;
 use std::collections::HashMap;
-
 
 use std::hash::Hasher;
 

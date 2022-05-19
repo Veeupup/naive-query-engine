@@ -115,10 +115,10 @@ impl PhysicalPlan for SelectionPlan {
 mod tests {
     use super::*;
     use crate::datasource::{CsvConfig, CsvTable, TableSource};
-    use crate::logical_plan::expression::{Operator, ScalarValue};
+    use crate::logical_plan::expression::{Operator, ScalarValue, ScalarFunc};
     use crate::physical_plan::expression::ColumnExpr;
     use crate::physical_plan::scan::ScanPlan;
-    use crate::physical_plan::{PhysicalBinaryExpr, PhysicalLiteralExpr, ProjectionPlan};
+    use crate::physical_plan::{PhysicalBinaryExpr, PhysicalLiteralExpr, ProjectionPlan, PhysicalScalarExpr};
     use crate::print_result;
     use arrow::array::{Array, ArrayRef, Int64Array, StringArray};
 
