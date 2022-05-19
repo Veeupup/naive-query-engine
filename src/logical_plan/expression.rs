@@ -323,18 +323,7 @@ impl ScalarFunction {
                 DataType::Int64,
                 true,
             ),
-            ScalarFunc::Add => NaiveField::new(
-                None,
-                format!("add({})", field.name()).as_str(),
-                DataType::Int64,
-                true,
-            ),
-            ScalarFunc::Sub => NaiveField::new(
-                None,
-                format!("sub({})", field.name()).as_str(),
-                DataType::Int64,
-                true,
-            ),
+            _ => unimplemented!()
         };
         Ok(field)
     }
@@ -342,10 +331,22 @@ impl ScalarFunction {
 
 #[derive(Debug, Clone)]
 pub enum ScalarFunc {
-    // math functions
+    // Math functions
     Abs,
-    Add,
-    Sub,
+    Sin,
+    Cos,
+    Tan,
+    // String functions
+    Trim,
+    LTrim,
+    RTrim,
+    CharacterLength,
+    Lower,
+    Upper,
+    Repeat,
+    Replace,
+    Reverse,
+    Substr,
 }
 
 #[derive(Debug, Clone)]
