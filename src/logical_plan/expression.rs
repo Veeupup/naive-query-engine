@@ -180,11 +180,11 @@ impl BinaryExpr {
         let left = left.name();
         let right = match &*self.right {
             LogicalExpr::Literal(scalar_val) => match scalar_val {
-                ScalarValue::Boolean(Some(val)) => format!("{}", val),
-                ScalarValue::Int64(Some(val)) => format!("{}", val),
-                ScalarValue::UInt64(Some(val)) => format!("{}", val),
-                ScalarValue::Float64(Some(val)) => format!("{}", val),
-                ScalarValue::Utf8(Some(val)) => format!("{}", val),
+                ScalarValue::Boolean(Some(val)) => val.to_string(),
+                ScalarValue::Int64(Some(val)) => val.to_string(),
+                ScalarValue::UInt64(Some(val)) => val.to_string(),
+                ScalarValue::Float64(Some(val)) => val.to_string(),
+                ScalarValue::Utf8(Some(val)) => val.to_string(),
                 _ => "null".to_string(),
             },
             _ => self.right.data_field(input)?.name().clone(),

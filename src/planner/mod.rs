@@ -64,7 +64,7 @@ impl QueryPlanner {
                 //     join.join_type,
                 //     join.schema.clone(),
                 // ))
-                Ok(HashJoin::new(
+                Ok(HashJoin::create(
                     left,
                     right,
                     join.on.clone(),
@@ -100,11 +100,11 @@ impl QueryPlanner {
                     name
                 )))
             }
-            LogicalExpr::Literal(scalar_val) => Ok(PhysicalLiteralExpr::new(scalar_val.clone())),
+            LogicalExpr::Literal(scalar_val) => Ok(PhysicalLiteralExpr::create(scalar_val.clone())),
             LogicalExpr::BinaryExpr(bin_expr) => {
                 let left = Self::create_physical_expression(bin_expr.left.as_ref(), input)?;
                 let right = Self::create_physical_expression(bin_expr.right.as_ref(), input)?;
-                let phy_bin_expr = PhysicalBinaryExpr::new(left, bin_expr.op.clone(), right);
+                let phy_bin_expr = PhysicalBinaryExpr::create(left, bin_expr.op.clone(), right);
                 Ok(phy_bin_expr)
             }
             LogicalExpr::Not(_) => todo!(),

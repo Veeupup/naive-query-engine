@@ -95,7 +95,7 @@ pub struct PhysicalBinaryExpr {
 }
 
 impl PhysicalBinaryExpr {
-    pub fn new(left: PhysicalExprRef, op: Operator, right: PhysicalExprRef) -> PhysicalExprRef {
+    pub fn create(left: PhysicalExprRef, op: Operator, right: PhysicalExprRef) -> PhysicalExprRef {
         Arc::new(Self { left, op, right })
     }
 }

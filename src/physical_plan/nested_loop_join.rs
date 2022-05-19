@@ -11,7 +11,6 @@ use crate::logical_plan::expression::Column;
 use crate::logical_plan::plan::JoinType;
 use crate::logical_plan::schema::NaiveSchema;
 use crate::physical_plan::ColumnExpr;
-use crate::physical_plan::PhysicalExpr;
 
 use crate::Result;
 use std::sync::Arc;
@@ -27,17 +26,19 @@ use arrow::datatypes::Int64Type;
 use arrow::datatypes::UInt64Type;
 use arrow::record_batch::RecordBatch;
 
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub struct NestedLoopJoin {
     left: PhysicalPlanRef,
     right: PhysicalPlanRef,
     on: Vec<(Column, Column)>,
+    #[allow(unused)]
     join_type: JoinType,
     schema: NaiveSchema,
 }
 
 impl NestedLoopJoin {
-    pub fn new(
+    #[allow(unused)]
+    pub fn create(
         left: PhysicalPlanRef,
         right: PhysicalPlanRef,
         on: Vec<(Column, Column)>,
@@ -71,8 +72,8 @@ macro_rules! join_match {
                     (Some(x), Some(y)) => {
                         if x == y {
                             // equal and we should
-                            $OUTER_POS.append_value(x_pos as i64);
-                            $INNER_POS.append_value(y_pos as i64);
+                            $OUTER_POS.append_value(x_pos as i64)?;
+                            $INNER_POS.append_value(y_pos as i64)?;
                         }
                     }
                     _ => {}
@@ -94,7 +95,7 @@ impl PhysicalPlan for NestedLoopJoin {
         let mut batches: Vec<RecordBatch> = vec![];
         // TODO(veeupup): support multi on conditions
         // Using for loop to combine different conditions
-        if self.on.len() == 0 {
+        if self.on.is_empty() {
             return Err(ErrorCode::PlanError(
                 "Inner Join on Conditions can't not be empty".to_string(),
             ));
@@ -139,15 +140,12 @@ impl PhysicalPlan for NestedLoopJoin {
 
                         for (x_pos, x) in left_col.iter().enumerate() {
                             for (y_pos, y) in right_col.iter().enumerate() {
-                                match (x, y) {
-                                    (Some(x), Some(y)) => {
-                                        if x == y {
-                                            // equal and we should
-                                            outer_pos.append_value(x_pos as i64);
-                                            inner_pos.append_value(y_pos as i64);
-                                        }
+                                if let (Some(x), Some(y)) = (x, y) {
+                                    if x == y {
+                                        // equal and we should
+                                        outer_pos.append_value(x_pos as i64)?;
+                                        inner_pos.append_value(y_pos as i64)?;
                                     }
-                                    _ => {}
                                 }
                             }
                         }
@@ -176,7 +174,7 @@ impl PhysicalPlan for NestedLoopJoin {
             }
         }
 
-        return Ok(batches);
+        Ok(batches)
     }
 
     fn children(&self) -> Result<Vec<PhysicalPlanRef>> {

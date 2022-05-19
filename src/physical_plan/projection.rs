@@ -7,7 +7,7 @@
 use std::iter::Iterator;
 use std::sync::Arc;
 
-use super::{expression::PhysicalExpr, plan::PhysicalPlan};
+use super::plan::PhysicalPlan;
 use crate::error::Result;
 use crate::logical_plan::schema::NaiveSchema;
 use crate::physical_plan::PhysicalExprRef;

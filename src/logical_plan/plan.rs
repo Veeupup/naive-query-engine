@@ -53,6 +53,7 @@ impl LogicalPlan {
         }
     }
 
+    #[allow(unused)]
     pub fn children(&self) -> Vec<Arc<LogicalPlan>> {
         match self {
             LogicalPlan::Projection(Projection { input, .. }) => vec![input.clone()],

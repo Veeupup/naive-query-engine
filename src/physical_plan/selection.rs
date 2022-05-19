@@ -6,7 +6,7 @@
 
 use std::sync::Arc;
 
-use super::{PhysicalExpr, PhysicalExprRef, PhysicalPlan, PhysicalPlanRef};
+use super::{PhysicalExprRef, PhysicalPlan, PhysicalPlanRef};
 use crate::logical_plan::schema::NaiveSchema;
 use crate::Result;
 use arrow::array::{
@@ -142,16 +142,16 @@ mod tests {
         // TODO(veeupup): selection expression
 
         {
-            let add_expr = PhysicalBinaryExpr::new(
+            let add_expr = PhysicalBinaryExpr::create(
                 ColumnExpr::try_create(Some("id".to_string()), None)?,
                 Operator::Plus,
-                PhysicalLiteralExpr::new(ScalarValue::Int64(Some(1))),
+                PhysicalLiteralExpr::create(ScalarValue::Int64(Some(1))),
             );
 
-            let expr = PhysicalBinaryExpr::new(
+            let expr = PhysicalBinaryExpr::create(
                 add_expr,
                 Operator::Gt,
-                PhysicalLiteralExpr::new(ScalarValue::Int64(Some(5))),
+                PhysicalLiteralExpr::create(ScalarValue::Int64(Some(5))),
             );
 
             let selection_plan = SelectionPlan::create(proj_plan, expr);

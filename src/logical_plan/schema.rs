@@ -40,6 +40,7 @@ pub struct NaiveSchema {
 }
 
 impl NaiveSchema {
+    #[allow(unused)]
     pub fn empty() -> Self {
         Self { fields: vec![] }
     }
@@ -49,6 +50,7 @@ impl NaiveSchema {
         Self { fields }
     }
 
+    #[allow(unused)]
     pub fn from_qualified(qualifier: &str, schema: &Schema) -> Self {
         Self::new(
             schema
@@ -86,10 +88,12 @@ impl NaiveSchema {
         &self.fields
     }
 
+    #[allow(unused)]
     pub fn field(&self, i: usize) -> &NaiveField {
         &self.fields[i]
     }
 
+    #[allow(unused)]
     pub fn index_of(&self, name: &str) -> Result<usize> {
         for i in 0..self.fields().len() {
             if self.fields[i].name() == name {
@@ -99,6 +103,7 @@ impl NaiveSchema {
         Err(ErrorCode::NoSuchField)
     }
 
+    #[allow(unused)]
     /// Find the field with the given name
     pub fn field_with_name(&self, relation_name: Option<&str>, name: &str) -> Result<NaiveField> {
         if let Some(relation_name) = relation_name {
@@ -190,6 +195,7 @@ impl NaiveField {
         }
     }
 
+    #[allow(unused)]
     pub fn from(field: Field) -> Self {
         Self {
             qualifier: None,
@@ -197,6 +203,7 @@ impl NaiveField {
         }
     }
 
+    #[allow(unused)]
     pub fn from_qualified(qualifier: &str, field: Field) -> Self {
         Self {
             qualifier: Some(qualifier.to_owned()),
@@ -210,7 +217,7 @@ impl NaiveField {
 
     /// Returns an immutable reference to the `NaiveField`'s data-type
     pub fn data_type(&self) -> &DataType {
-        &self.field.data_type()
+        self.field.data_type()
     }
 
     /// Indicates whether this `NaiveField` supports null values

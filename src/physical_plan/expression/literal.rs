@@ -18,7 +18,7 @@ pub struct PhysicalLiteralExpr {
 }
 
 impl PhysicalLiteralExpr {
-    pub fn new(literal: ScalarValue) -> PhysicalExprRef {
+    pub fn create(literal: ScalarValue) -> PhysicalExprRef {
         Arc::new(Self { literal })
     }
 }

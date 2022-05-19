@@ -18,7 +18,6 @@ use arrow::datatypes::SchemaRef;
 use arrow::datatypes::UInt64Type;
 use arrow::record_batch::RecordBatch;
 
-
 use twox_hash::XxHash64;
 
 use super::PhysicalPlan;
@@ -28,12 +27,9 @@ use crate::logical_plan::expression::Column;
 use crate::logical_plan::plan::JoinType;
 use crate::logical_plan::schema::NaiveSchema;
 use crate::physical_plan::ColumnExpr;
-use crate::physical_plan::PhysicalExpr;
-
 
 use crate::Result;
 use std::collections::HashMap;
-
 
 use std::hash::Hasher;
 
@@ -49,6 +45,7 @@ pub struct HashJoin {
     left: PhysicalPlanRef,
     right: PhysicalPlanRef,
     on: Vec<(Column, Column)>,
+    #[allow(unused)]
     join_type: JoinType,
     schema: NaiveSchema,
     /// on col hash val and row id
@@ -96,8 +93,8 @@ macro_rules! probe_match {
                 for idx in left_pos {
                     // hash val same, but we need to check whether real value equal or not
                     if left_col.value(*idx) == right_col.value(i) {
-                        $OUTER_POS.append_value(*idx as i64);
-                        $INNER_POS.append_value(i as i64);
+                        $OUTER_POS.append_value(*idx as i64)?;
+                        $INNER_POS.append_value(i as i64)?;
                     }
                 }
             }
@@ -106,7 +103,7 @@ macro_rules! probe_match {
 }
 
 impl HashJoin {
-    pub fn new(
+    pub fn create(
         left: PhysicalPlanRef,
         right: PhysicalPlanRef,
         on: Vec<(Column, Column)>,
@@ -125,7 +122,7 @@ impl HashJoin {
     }
 
     pub fn build(&self) -> Result<Vec<ArrayRef>> {
-        if self.on.len() == 0 {
+        if self.on.is_empty() {
             return Err(ErrorCode::PlanError(
                 "Inner Join on Conditions can't not be empty".to_string(),
             ));
@@ -178,7 +175,7 @@ impl HashJoin {
         let mut batches = vec![];
 
         for right_batch in &right_batches {
-            let right_col = right_col.evaluate(&right_batch)?.into_array();
+            let right_col = right_col.evaluate(right_batch)?.into_array();
 
             let hashtable = self.hashtable.lock().unwrap();
 
@@ -219,8 +216,8 @@ impl HashJoin {
                             for idx in left_pos {
                                 // hash val same, but we need to check whether real value equal or not
                                 if left_col.value(*idx) == right_col.value(i) {
-                                    outer_pos.append_value(*idx as i64);
-                                    inner_pos.append_value(i as i64);
+                                    outer_pos.append_value(*idx as i64)?;
+                                    inner_pos.append_value(i as i64)?;
                                 }
                             }
                         }
