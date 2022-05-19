@@ -180,11 +180,11 @@ impl BinaryExpr {
         let left = left.name();
         let right = match &*self.right {
             LogicalExpr::Literal(scalar_val) => match scalar_val {
-                ScalarValue::Boolean(Some(val)) => format!("{}", val),
-                ScalarValue::Int64(Some(val)) => format!("{}", val),
-                ScalarValue::UInt64(Some(val)) => format!("{}", val),
-                ScalarValue::Float64(Some(val)) => format!("{}", val),
-                ScalarValue::Utf8(Some(val)) => format!("{}", val),
+                ScalarValue::Boolean(Some(val)) => val.to_string(),
+                ScalarValue::Int64(Some(val)) => val.to_string(),
+                ScalarValue::UInt64(Some(val)) => val.to_string(),
+                ScalarValue::Float64(Some(val)) => val.to_string(),
+                ScalarValue::Utf8(Some(val)) => val.to_string(),
                 _ => "null".to_string(),
             },
             _ => self.right.data_field(input)?.name().clone(),
@@ -323,18 +323,7 @@ impl ScalarFunction {
                 DataType::Int64,
                 true,
             ),
-            ScalarFunc::Add => NaiveField::new(
-                None,
-                format!("add({})", field.name()).as_str(),
-                DataType::Int64,
-                true,
-            ),
-            ScalarFunc::Sub => NaiveField::new(
-                None,
-                format!("sub({})", field.name()).as_str(),
-                DataType::Int64,
-                true,
-            ),
+            _ => unimplemented!()
         };
         Ok(field)
     }
@@ -342,10 +331,22 @@ impl ScalarFunction {
 
 #[derive(Debug, Clone)]
 pub enum ScalarFunc {
-    // math functions
+    // Math functions
     Abs,
-    Add,
-    Sub,
+    Sin,
+    Cos,
+    Tan,
+    // String functions
+    Trim,
+    LTrim,
+    RTrim,
+    CharacterLength,
+    Lower,
+    Upper,
+    Repeat,
+    Replace,
+    Reverse,
+    Substr,
 }
 
 #[derive(Debug, Clone)]

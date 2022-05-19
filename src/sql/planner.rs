@@ -77,9 +77,9 @@ impl<'a> SQLPlanner<'a> {
             Some(limit_expr) => {
                 let n = match self.sql_to_expr(&limit_expr)? {
                     LogicalExpr::Literal(ScalarValue::Int64(Some(n))) => Ok(n as usize),
-                    _ => Err(ErrorCode::PlanError(format!(
-                        "Unexpected expression for LIMIT clause"
-                    ))),
+                    _ => Err(ErrorCode::PlanError(
+                        "Unexpected expression for LIMIT clause".to_string(),
+                    )),
                 }?;
                 Ok(DataFrame { plan }.limit(n).logical_plan())
             }
@@ -290,13 +290,10 @@ impl<'a> SQLPlanner<'a> {
     fn sql_to_expr(&self, sql: &Expr) -> Result<LogicalExpr> {
         match sql {
             Expr::Value(Value::Boolean(n)) => Ok(lit(*n)),
-            Expr::Value(Value::Number(n, _)) => {
-                let num = match n.parse::<i64>() {
-                    Ok(n) => Ok(lit(n)),
-                    Err(_) => Ok(lit(n.parse::<f64>().unwrap())),
-                };
-                num
-            }
+            Expr::Value(Value::Number(n, _)) => match n.parse::<i64>() {
+                Ok(n) => Ok(lit(n)),
+                Err(_) => Ok(lit(n.parse::<f64>().unwrap())),
+            },
             Expr::Value(Value::SingleQuotedString(ref s)) => Ok(lit(s.clone())),
             Expr::Value(Value::Null) => Ok(LogicalExpr::Literal(ScalarValue::Null)),
             Expr::Identifier(id) => Ok(LogicalExpr::column(None, normalize_ident(id))),
@@ -323,9 +320,9 @@ impl<'a> SQLPlanner<'a> {
 
     fn parse_sql_binary_op(
         &self,
-        left: &Box<Expr>,
+        left: &Expr,
         op: &BinaryOperator,
-        right: &Box<Expr>,
+        right: &Expr,
     ) -> Result<LogicalExpr> {
         let op = match op {
             BinaryOperator::Eq => Operator::Eq,
@@ -344,9 +341,9 @@ impl<'a> SQLPlanner<'a> {
             _ => unimplemented!(),
         };
         Ok(LogicalExpr::BinaryExpr(BinaryExpr {
-            left: Box::new(self.sql_to_expr(&left)?),
+            left: Box::new(self.sql_to_expr(left)?),
             op,
-            right: Box::new(self.sql_to_expr(&right)?),
+            right: Box::new(self.sql_to_expr(right)?),
         }))
     }
 
