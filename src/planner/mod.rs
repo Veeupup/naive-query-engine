@@ -9,7 +9,7 @@
 
 use crate::logical_plan::schema::NaiveSchema;
 use crate::physical_plan::HashJoin;
-use crate::physical_plan::NestedLoopJoin;
+
 use crate::physical_plan::PhysicalBinaryExpr;
 use crate::physical_plan::PhysicalExprRef;
 use crate::physical_plan::PhysicalLimitPlan;
@@ -56,6 +56,7 @@ impl QueryPlanner {
             LogicalPlan::Join(join) => {
                 let left = Self::create_physical_plan(&join.left)?;
                 let right = Self::create_physical_plan(&join.right)?;
+                // We now have two join physical implementation
                 // Ok(NestedLoopJoin::new(
                 //     left,
                 //     right,
@@ -126,6 +127,7 @@ mod tests {
     use std::sync::Arc;
 
     use crate::catalog::Catalog;
+    use crate::CsvConfig;
 
     use super::*;
 
@@ -133,7 +135,7 @@ mod tests {
     fn test_scan_projection() -> Result<()> {
         // construct
         let mut catalog = Catalog::default();
-        catalog.add_csv_table("t1", "data/test_data.csv")?;
+        catalog.add_csv_table("t1", "data/test_data.csv", CsvConfig::default())?;
         let source = catalog.get_table_df("t1")?;
         let exprs = vec![
             LogicalExpr::column(None, "id".to_string()),

@@ -24,8 +24,13 @@ pub struct Catalog {
 
 impl Catalog {
     /// add csv table
-    pub fn add_csv_table(&mut self, table: &str, csv_file: &str) -> Result<()> {
-        let source = CsvTable::try_create(csv_file, CsvConfig::default())?;
+    pub fn add_csv_table(
+        &mut self,
+        table: &str,
+        csv_file: &str,
+        csv_conf: CsvConfig,
+    ) -> Result<()> {
+        let source = CsvTable::try_create(csv_file, csv_conf)?;
         self.tables.insert(table.to_string(), source);
         Ok(())
     }

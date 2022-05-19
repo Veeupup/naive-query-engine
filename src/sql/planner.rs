@@ -463,6 +463,7 @@ fn remove_join_expressions(
 #[cfg(test)]
 mod tests {
     use crate::error::Result;
+    use crate::CsvConfig;
     use crate::{db::NaiveDB, print_result};
     use arrow::array::{Array, ArrayRef, Int64Array, StringArray};
     use std::sync::Arc;
@@ -470,7 +471,7 @@ mod tests {
     #[test]
     fn select_with_projection_filter() -> Result<()> {
         let mut db = NaiveDB::default();
-        db.create_csv_table("t1", "data/test_data.csv")?;
+        db.create_csv_table("t1", "data/test_data.csv", CsvConfig::default())?;
 
         {
             let ret = db.run_sql("select id, name from t1")?;
@@ -506,8 +507,8 @@ mod tests {
         }
 
         {
-            db.create_csv_table("employee", "data/employee.csv")?;
-            db.create_csv_table("rank", "data/rank.csv")?;
+            db.create_csv_table("employee", "data/employee.csv", CsvConfig::default())?;
+            db.create_csv_table("rank", "data/rank.csv", CsvConfig::default())?;
 
             let ret = db
                 .run_sql("select id, name from employee innner join rank on employee.id = rank.id");
@@ -516,8 +517,8 @@ mod tests {
         }
 
         {
-            let ret = db
-                .run_sql("select * from employee innner join rank on employee.id = rank.id");
+            let ret =
+                db.run_sql("select * from employee innner join rank on employee.id = rank.id");
 
             print_result(&ret?)?;
         }

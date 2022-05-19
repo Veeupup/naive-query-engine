@@ -7,6 +7,7 @@
 use arrow::record_batch::RecordBatch;
 
 use crate::catalog::Catalog;
+use crate::datasource::CsvConfig;
 use crate::error::Result;
 
 use crate::optimizer::Optimizer;
@@ -35,7 +36,12 @@ impl NaiveDB {
         physical_plan.execute()
     }
 
-    pub fn create_csv_table(&mut self, table: &str, csv_file: &str) -> Result<()> {
-        self.catalog.add_csv_table(table, csv_file)
+    pub fn create_csv_table(
+        &mut self,
+        table: &str,
+        csv_file: &str,
+        csv_conf: CsvConfig,
+    ) -> Result<()> {
+        self.catalog.add_csv_table(table, csv_file, csv_conf)
     }
 }
