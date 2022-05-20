@@ -43,7 +43,7 @@ impl PhysicalPlan for ScanPlan {
 #[cfg(test)]
 mod tests {
     use crate::datasource::{CsvConfig, CsvTable};
-    use arrow::array::{Array, ArrayRef, Float64Array, Int64Array, StringArray};
+    use arrow::array::{ArrayRef, Float64Array, Int64Array, StringArray};
 
     use super::*;
 

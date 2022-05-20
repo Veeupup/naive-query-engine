@@ -20,6 +20,7 @@ use super::schema::NaiveField;
 
 #[derive(Clone, Debug)]
 pub enum LogicalExpr {
+    #[allow(unused)]
     /// An expression with a specific name.
     Alias(Box<LogicalExpr>, String),
     /// A named reference to a qualified filed in a schema.
@@ -30,8 +31,10 @@ pub enum LogicalExpr {
     BinaryExpr(BinaryExpr),
     /// A unary expression such as "-id"
     UnaryExpr(UnaryExpr),
+    #[allow(unused)]
     /// Negation of an expression. The expression's type must be a boolean to make sense.
     Not(Box<LogicalExpr>),
+    #[allow(unused)]
     /// Casts the expression to a given type and will return a runtime error if the expression cannot be cast.
     /// This expression is guaranteed to have a fixed type.
     Cast {
@@ -40,6 +43,7 @@ pub enum LogicalExpr {
         /// The `DataType` the expression will yield
         data_type: DataType,
     },
+    #[allow(unused)]
     /// Represents the call of a built-in scalar function with a set of arguments.
     // UnaryExpr(UnaryExpr), TODO(ywq): scalar
     /// Represents the call of an aggregate built-in function with arguments.
@@ -325,7 +329,7 @@ impl UnaryExpr {
                 DataType::Int64,
                 true,
             ),
-            _ => unimplemented!()
+            _ => unimplemented!(),
         };
         Ok(field)
     }
@@ -335,19 +339,32 @@ impl UnaryExpr {
 pub enum UnaryOperator {
     // Math functions
     Abs,
+    #[allow(unused)]
     Sin,
+    #[allow(unused)]
     Cos,
+    #[allow(unused)]
     Tan,
     // String functions
+    #[allow(unused)]
     Trim,
+    #[allow(unused)]
     LTrim,
+    #[allow(unused)]
     RTrim,
+    #[allow(unused)]
     CharacterLength,
+    #[allow(unused)]
     Lower,
+    #[allow(unused)]
     Upper,
+    #[allow(unused)]
     Repeat,
+    #[allow(unused)]
     Replace,
+    #[allow(unused)]
     Reverse,
+    #[allow(unused)]
     Substr,
 }
 
@@ -400,9 +417,14 @@ impl AggregateFunction {
 
 #[derive(Debug, Clone)]
 pub enum AggregateFunc {
+    #[allow(unused)]
     Count,
+    #[allow(unused)]
     Sum,
+    #[allow(unused)]
     Min,
+    #[allow(unused)]
     Max,
+    #[allow(unused)]
     Avg,
 }

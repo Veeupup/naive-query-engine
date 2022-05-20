@@ -62,6 +62,7 @@ impl DataFrame {
         }
     }
 
+    #[allow(unused)]
     pub fn aggregate(self, group_expr: Vec<LogicalExpr>, aggr_expr: Vec<LogicalExpr>) -> Self {
         let mut group_fields = group_expr
             .iter()
@@ -119,6 +120,7 @@ impl DataFrame {
         })))
     }
 
+    #[allow(unused)]
     pub fn schema(&self) -> &NaiveSchema {
         self.plan.schema()
     }

@@ -150,11 +150,11 @@ impl NaiveSchema {
     }
 }
 
-impl Into<Schema> for NaiveSchema {
-    /// Convert a schema into a DFSchema
-    fn into(self) -> Schema {
+impl From<NaiveSchema> for Schema {
+    fn from(schema: NaiveSchema) -> Self {
         Schema::new(
-            self.fields
+            schema
+                .fields
                 .into_iter()
                 .map(|f| {
                     if f.qualifier().is_some() {
@@ -172,11 +172,39 @@ impl Into<Schema> for NaiveSchema {
     }
 }
 
-impl Into<SchemaRef> for NaiveSchema {
-    fn into(self) -> SchemaRef {
-        SchemaRef::new(self.into())
+// impl Into<Schema> for NaiveSchema {
+//     /// Convert a schema into a DFSchema
+//     fn into(self) -> Schema {
+//         Schema::new(
+//             self.fields
+//                 .into_iter()
+//                 .map(|f| {
+//                     if f.qualifier().is_some() {
+//                         Field::new(
+//                             f.qualified_name().as_str(),
+//                             f.data_type().to_owned(),
+//                             f.is_nullable(),
+//                         )
+//                     } else {
+//                         f.field
+//                     }
+//                 })
+//                 .collect(),
+//         )
+//     }
+// }
+
+impl From<NaiveSchema> for SchemaRef {
+    fn from(schema: NaiveSchema) -> Self {
+        SchemaRef::new(schema.into())
     }
 }
+
+// impl Into<SchemaRef> for NaiveSchema {
+//     fn into(self) -> SchemaRef {
+//         SchemaRef::new(self.into())
+//     }
+// }
 
 /// NaiveField wraps an Arrow field and adds an optional qualifier
 #[derive(Debug, Clone, PartialEq, Eq)]

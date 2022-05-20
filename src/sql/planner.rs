@@ -17,7 +17,9 @@ use sqlparser::ast::{Ident, ObjectName, SelectItem, TableFactor, Value};
 
 use crate::error::ErrorCode;
 use crate::logical_plan;
-use crate::logical_plan::expression::{BinaryExpr, Column, LogicalExpr, Operator, ScalarValue, UnaryExpr};
+use crate::logical_plan::expression::{
+    BinaryExpr, Column, LogicalExpr, Operator, ScalarValue, UnaryExpr,
+};
 use crate::logical_plan::literal::lit;
 use crate::logical_plan::plan::{JoinType, TableScan};
 
@@ -348,18 +350,14 @@ impl<'a> SQLPlanner<'a> {
         }))
     }
 
-    fn parse_sql_unary_op(
-        &self,
-        op: &UnaryOperator,
-        expr: &Box<Expr>,
-    ) -> Result<LogicalExpr> {
+    fn parse_sql_unary_op(&self, op: &UnaryOperator, expr: &Expr) -> Result<LogicalExpr> {
         let func = match op {
             UnaryOperator::PGAbs => logical_plan::expression::UnaryOperator::Abs,
             _ => unimplemented!(),
         };
         Ok(LogicalExpr::UnaryExpr(UnaryExpr {
-            func: func,
-            arg: Box::new(self.sql_to_expr(&expr)?),
+            func,
+            arg: Box::new(self.sql_to_expr(expr)?),
         }))
     }
 }

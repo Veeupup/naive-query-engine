@@ -100,7 +100,7 @@ impl TableSource for CsvTable {
 mod tests {
     use super::*;
     use arrow::{
-        array::{Array, ArrayRef, Float64Array, Int64Array, StringArray},
+        array::{ArrayRef, Float64Array, Int64Array, StringArray},
         datatypes::{DataType, Field, Schema},
     };
 
