@@ -2,13 +2,13 @@
  * @Author: ywqzzy
  * @Date: 2022-05-19
 */
-use std::any::Any;
 use arrow::{
     array::PrimitiveArray,
     datatypes::{DataType, Float32Type, Float64Type},
     record_batch::RecordBatch,
 };
 use core::fmt;
+use std::any::Any;
 use std::{
     fmt::{Debug, Formatter},
     sync::Arc,

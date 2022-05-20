@@ -2,26 +2,24 @@
  * @Author: Veeupup
  * @Date: 2022-05-20 14:12:40
  * @Last Modified by: Veeupup
- * @Last Modified time: 2022-05-20 21:15:17
+ * @Last Modified time: 2022-05-20 21:24:37
  */
 
 pub mod count;
 pub mod sum;
 
-use std::sync::{Arc, Mutex};
 use std::fmt::Debug;
-
-
+use std::sync::{Arc, Mutex};
 
 use crate::logical_plan::schema::NaiveField;
-use crate::logical_plan::{schema::NaiveSchema, expression::ScalarValue};
+use crate::logical_plan::{expression::ScalarValue, schema::NaiveSchema};
 
-use super::{PhysicalPlanRef, PhysicalPlan};
+use super::{PhysicalPlan, PhysicalPlanRef};
 
-use arrow::record_batch::RecordBatch;
+use crate::error::ErrorCode;
 use crate::physical_plan::PhysicalExprRef;
 use crate::Result;
-use crate::error::ErrorCode;
+use arrow::record_batch::RecordBatch;
 
 #[derive(Debug)]
 pub struct PhysicalAggregatePlan {
@@ -57,11 +55,11 @@ impl PhysicalPlan for PhysicalAggregatePlan {
         &self.schema
     }
 
-    fn children(&self) -> crate::Result<Vec<PhysicalPlanRef>> {
-        todo!()
+    fn children(&self) -> Result<Vec<PhysicalPlanRef>> {
+        Ok(vec![self.input.clone()])
     }
 
-    fn execute(&self) -> crate::Result<Vec<RecordBatch>> {
+    fn execute(&self) -> Result<Vec<RecordBatch>> {
         if self.group_expr.is_empty() {
             let batches = self.input.execute()?;
 
@@ -83,7 +81,7 @@ impl PhysicalPlan for PhysicalAggregatePlan {
             let schema = Arc::new(self.schema.clone().into());
             let record_batch = RecordBatch::try_new(schema, arrays)?;
             Ok(vec![record_batch])
-        }else {
+        } else {
             Err(ErrorCode::NotImplemented)
         }
     }
@@ -92,7 +90,7 @@ impl PhysicalPlan for PhysicalAggregatePlan {
 pub trait AggregateOperator: Debug {
     fn data_field(&self) -> NaiveField;
 
-    fn update(&mut self, data: &RecordBatch) -> Result<()>; 
+    fn update(&mut self, data: &RecordBatch) -> Result<()>;
 
     fn evaluate(&self) -> Result<ScalarValue>;
 }

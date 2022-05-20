@@ -11,6 +11,8 @@ use crate::logical_plan::expression::AggregateFunc;
 use crate::logical_plan::schema::NaiveSchema;
 use crate::physical_plan::HashJoin;
 
+use crate::physical_plan::count::Count;
+use crate::physical_plan::sum::Sum;
 use crate::physical_plan::PhysicalAggregatePlan;
 use crate::physical_plan::PhysicalBinaryExpr;
 use crate::physical_plan::PhysicalCastExpr;
@@ -20,8 +22,6 @@ use crate::physical_plan::PhysicalLiteralExpr;
 use crate::physical_plan::PhysicalPlanRef;
 use crate::physical_plan::PhysicalUnaryExpr;
 use crate::physical_plan::SelectionPlan;
-use crate::physical_plan::count::Count;
-use crate::physical_plan::sum::Sum;
 use crate::{
     error::{ErrorCode, Result},
     logical_plan::{
@@ -97,26 +97,29 @@ impl QueryPlanner {
                             let col_expr = expr.as_any().downcast_ref::<ColumnExpr>();
                             if let Some(col_expr) = col_expr {
                                 Count::create(col_expr.clone())
-                            }else {
-                                return Err(ErrorCode::PlanError(format!("Aggregate Func should have a column in it")));
+                            } else {
+                                return Err(ErrorCode::PlanError(
+                                    "Aggregate Func should have a column in it".to_string(),
+                                ));
                             }
-                        },
+                        }
                         AggregateFunc::Sum => {
                             let expr = Self::create_physical_expression(&aggr_expr.args, plan)?;
                             let col_expr = expr.as_any().downcast_ref::<ColumnExpr>();
                             if let Some(col_expr) = col_expr {
                                 Sum::create(col_expr.clone())
-                            }else {
-                                return Err(ErrorCode::PlanError(format!("Aggregate Func should have a column in it")));
+                            } else {
+                                return Err(ErrorCode::PlanError(
+                                    "Aggregate Func should have a column in it".to_string(),
+                                ));
                             }
-                        },
+                        }
                         AggregateFunc::Avg => todo!(),
                         AggregateFunc::Min => todo!(),
                         AggregateFunc::Max => todo!(),
                     };
                     aggr_ops.push(aggr_op);
                 }
-
 
                 let input = Self::create_physical_plan(&aggr.input)?;
                 Ok(PhysicalAggregatePlan::create(group_exprs, aggr_ops, input))

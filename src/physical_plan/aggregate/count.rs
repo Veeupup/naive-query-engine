@@ -1,6 +1,6 @@
 /*
- * @Author: Veeupup 
- * @Date: 2022-05-20 19:06:45 
+ * @Author: Veeupup
+ * @Date: 2022-05-20 19:06:45
  * @Last Modified by: Veeupup
  * @Last Modified time: 2022-05-20 21:13:03
  */
@@ -9,12 +9,12 @@ use arrow::datatypes::DataType;
 
 use arrow::record_batch::RecordBatch;
 
-use crate::Result;
+use super::AggregateOperator;
 use crate::logical_plan::expression::ScalarValue;
 use crate::logical_plan::schema::NaiveField;
 use crate::physical_plan::ColumnExpr;
 use crate::physical_plan::PhysicalExpr;
-use super::AggregateOperator;
+use crate::Result;
 
 #[derive(Debug)]
 pub struct Count {
@@ -23,16 +23,13 @@ pub struct Count {
 }
 
 impl Count {
-    pub fn create(col_expr: ColumnExpr) ->Box<dyn AggregateOperator> {
-        Box::new(Self {
-            cnt: 0,
-            col_expr,
-        })
+    pub fn create(col_expr: ColumnExpr) -> Box<dyn AggregateOperator> {
+        Box::new(Self { cnt: 0, col_expr })
     }
 }
 
 impl AggregateOperator for Count {
-    fn data_field(&self) -> NaiveField{
+    fn data_field(&self) -> NaiveField {
         NaiveField::new(None, "count(x)", DataType::UInt64, true)
     }
 

@@ -5,8 +5,8 @@
 */
 
 use crate::logical_plan::expression::ScalarValue;
-use std::sync::Arc;
 use std::any::Any;
+use std::sync::Arc;
 
 use super::{PhysicalExpr, PhysicalExprRef};
 use crate::datatype::ColumnValue;
