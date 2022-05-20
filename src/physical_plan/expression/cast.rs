@@ -2,9 +2,9 @@
  * @Author: ywqzzy
  * @Date: 2022-05-20
 */
-
 use arrow::{datatypes::DataType, record_batch::RecordBatch};
 use core::fmt;
+use std::any::Any;
 use std::{
     fmt::{Debug, Formatter},
     sync::Arc,
@@ -38,6 +38,10 @@ impl PhysicalCastExpr {
 }
 
 impl PhysicalExpr for PhysicalCastExpr {
+    fn as_any(&self) -> &dyn Any {
+        self
+    }
+
     fn evaluate(&self, _input: &RecordBatch) -> crate::Result<ColumnValue> {
         // let value = self.expr.evaluate(input)?;
 

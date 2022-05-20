@@ -9,6 +9,7 @@ use crate::logical_plan::expression::{Column, LogicalExpr};
 
 use std::sync::Arc;
 
+use super::expression::AggregateFunction;
 use super::schema::NaiveSchema;
 
 #[derive(Debug, Clone)]
@@ -102,7 +103,7 @@ pub struct Aggregate {
     /// Grouping expressions
     pub group_expr: Vec<LogicalExpr>,
     /// Aggregate expressions
-    pub aggr_expr: Vec<LogicalExpr>,
+    pub aggr_expr: Vec<AggregateFunction>,
     /// The schema description of the aggregate output
     pub schema: NaiveSchema,
 }

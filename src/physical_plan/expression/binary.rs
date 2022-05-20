@@ -3,7 +3,6 @@
  * @Date: 2022-05-14 20:26:01
  * @Email: code@tanweime.com
 */
-
 use arrow::{
     array::{BooleanArray, PrimitiveArray},
     compute::{
@@ -14,6 +13,7 @@ use arrow::{
     datatypes::{DataType, Float64Type, Int64Type, UInt64Type},
     record_batch::RecordBatch,
 };
+use std::any::Any;
 use std::sync::Arc;
 
 use super::{PhysicalExpr, PhysicalExprRef};
@@ -101,6 +101,10 @@ impl PhysicalBinaryExpr {
 }
 
 impl PhysicalExpr for PhysicalBinaryExpr {
+    fn as_any(&self) -> &dyn Any {
+        self
+    }
+
     fn evaluate(&self, input: &RecordBatch) -> crate::Result<ColumnValue> {
         let left_value = self.left.evaluate(input)?;
         let right_value = self.right.evaluate(input)?;

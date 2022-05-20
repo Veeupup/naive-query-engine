@@ -32,6 +32,8 @@ pub enum ErrorCode {
 
     NoMatchFunction(String),
 
+    NotSupported(String),
+
     NotImplemented,
     #[allow(unused)]
     Others,
