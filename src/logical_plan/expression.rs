@@ -28,6 +28,8 @@ pub enum LogicalExpr {
     Literal(ScalarValue),
     /// A binary expression such as "age > 21"
     BinaryExpr(BinaryExpr),
+    /// A unary expression such as "-id"
+    UnaryExpr(UnaryExpr),
     /// Negation of an expression. The expression's type must be a boolean to make sense.
     Not(Box<LogicalExpr>),
     /// Casts the expression to a given type and will return a runtime error if the expression cannot be cast.
@@ -39,7 +41,7 @@ pub enum LogicalExpr {
         data_type: DataType,
     },
     /// Represents the call of a built-in scalar function with a set of arguments.
-    ScalarFunction(ScalarFunction),
+    // UnaryExpr(UnaryExpr), TODO(ywq): scalar
     /// Represents the call of an aggregate built-in function with arguments.
     AggregateFunction(AggregateFunction),
     // Represents a reference to all fields in a schema.
@@ -82,7 +84,7 @@ impl LogicalExpr {
                 data_type.clone(),
                 true,
             )),
-            LogicalExpr::ScalarFunction(scalar_func) => scalar_func.data_field(input),
+            LogicalExpr::UnaryExpr(scalar_func) => scalar_func.data_field(input),
             LogicalExpr::AggregateFunction(aggr_func) => aggr_func.data_field(input),
             LogicalExpr::Wildcard => Err(ErrorCode::IntervalError(
                 "Wildcard not supported in logical plan".to_string(),
@@ -304,20 +306,20 @@ pub enum Operator {
 }
 
 #[derive(Debug, Clone)]
-pub struct ScalarFunction {
+pub struct UnaryExpr {
     /// The function
-    pub func: ScalarFunc,
+    pub func: UnaryOperator,
     /// List of expressions to feed to the functions as arguments
     /// TODO(veeupup): we should check the args' type and nums
     pub arg: Box<LogicalExpr>,
 }
 
-impl ScalarFunction {
+impl UnaryExpr {
     pub fn data_field(&self, input: &LogicalPlan) -> Result<NaiveField> {
         // TODO(veeupup): we should make scalar func more specific and should check if valid before creating them
         let field = self.arg.data_field(input)?;
         let field = match self.func {
-            ScalarFunc::Abs => NaiveField::new(
+            UnaryOperator::Abs => NaiveField::new(
                 None,
                 format!("abs({})", field.name()).as_str(),
                 DataType::Int64,
@@ -330,7 +332,7 @@ impl ScalarFunction {
 }
 
 #[derive(Debug, Clone)]
-pub enum ScalarFunc {
+pub enum UnaryOperator {
     // Math functions
     Abs,
     Sin,
