@@ -8,6 +8,10 @@ This is inspired(and most ideas come) by [how-query-engines-work](https://github
 
 Use [arrow](https://github.com/apache/arrow-rs) to express in-memory columnar format and use [sqlparser](https://github.com/sqlparser-rs/sqlparser-rs) as SQL parser.
 
+## architecture
+
+![query_engine](./doc/query_engine.jpg)
+
 ## how to use
 
 for now, we can use `NaiveDB` like below, we can use csv as table storage.
