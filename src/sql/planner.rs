@@ -16,7 +16,8 @@ use sqlparser::ast::{
 use sqlparser::ast::{Ident, ObjectName, SelectItem, TableFactor, Value};
 
 use crate::error::ErrorCode;
-use crate::logical_plan::expression::{BinaryExpr, Column, LogicalExpr, Operator, ScalarValue, ScalarFunc, ScalarFunction};
+use crate::logical_plan;
+use crate::logical_plan::expression::{BinaryExpr, Column, LogicalExpr, Operator, ScalarValue, UnaryExpr};
 use crate::logical_plan::literal::lit;
 use crate::logical_plan::plan::{JoinType, TableScan};
 
@@ -353,10 +354,10 @@ impl<'a> SQLPlanner<'a> {
         expr: &Box<Expr>,
     ) -> Result<LogicalExpr> {
         let func = match op {
-            UnaryOperator::PGAbs => ScalarFunc::Abs,
+            UnaryOperator::PGAbs => logical_plan::expression::UnaryOperator::Abs,
             _ => unimplemented!(),
         };
-        Ok(LogicalExpr::ScalarFunction(ScalarFunction {
+        Ok(LogicalExpr::UnaryExpr(UnaryExpr {
             func: func,
             arg: Box::new(self.sql_to_expr(&expr)?),
         }))
@@ -478,7 +479,7 @@ mod tests {
     use crate::error::Result;
     use crate::CsvConfig;
     use crate::{db::NaiveDB, print_result};
-    use arrow::array::{Array, ArrayRef, Int64Array, StringArray};
+    use arrow::array::{ArrayRef, Int64Array, StringArray};
     use std::sync::Arc;
 
     #[test]

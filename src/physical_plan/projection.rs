@@ -70,12 +70,13 @@ impl PhysicalPlan for ProjectionPlan {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::datasource::{CsvConfig, CsvTable, TableSource};
-    use crate::logical_plan::expression::{ScalarValue, Operator, ScalarFunction, ScalarFunc};
-    use crate::physical_plan::{PhysicalBinaryExpr, PhysicalLiteralExpr, PhysicalScalarExpr};
+    use crate::datasource::{CsvConfig, CsvTable};
+    use crate::logical_plan::expression::{ScalarValue, Operator, UnaryOperator};
+    use crate::physical_plan::{PhysicalBinaryExpr, PhysicalLiteralExpr, PhysicalUnaryExpr};
     use crate::physical_plan::expression::ColumnExpr;
     use crate::physical_plan::scan::ScanPlan;
-    use arrow::array::{Array, ArrayRef, Int64Array, StringArray};
+    use arrow::array::{ArrayRef, Int64Array, StringArray};
+    use arrow::datatypes::DataType;
 
     #[test]
     fn test_projection() -> Result<()> {
@@ -85,10 +86,10 @@ mod tests {
             source.schema().field(1).clone(),
         ]);
         let scan_plan = ScanPlan::create(source, None);
-        let add_expr = PhysicalBinaryExpr::new(
+        let add_expr = PhysicalBinaryExpr::create(
             ColumnExpr::try_create(Some("id".to_string()), None)?,
             Operator::Plus,
-            PhysicalLiteralExpr::new(ScalarValue::Int64(Some(1)))
+            PhysicalLiteralExpr::create(ScalarValue::Int64(Some(1)))
         );
         let expr = vec![
             // ColumnExpr::try_create(None, Some(0))?,
@@ -122,10 +123,11 @@ mod tests {
             source.schema().field(1).clone(),
         ]);
         let scan_plan = ScanPlan::create(source, None);
-        let abs_expr = PhysicalScalarExpr::new(
+        let abs_expr = PhysicalUnaryExpr::create(
             ColumnExpr::try_create(Some("id".to_string()), None)?,
-            ScalarFunc::Abs,
-            
+            UnaryOperator::Abs,
+            "abs".to_string(),
+            &DataType::Int64,
         );
         let expr = vec![
             // ColumnExpr::try_create(None, Some(0))?,

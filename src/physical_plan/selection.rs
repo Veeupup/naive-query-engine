@@ -114,13 +114,13 @@ impl PhysicalPlan for SelectionPlan {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::datasource::{CsvConfig, CsvTable, TableSource};
-    use crate::logical_plan::expression::{Operator, ScalarValue, ScalarFunc};
+    use crate::datasource::{CsvConfig, CsvTable};
+    use crate::logical_plan::expression::{Operator, ScalarValue};
     use crate::physical_plan::expression::ColumnExpr;
     use crate::physical_plan::scan::ScanPlan;
-    use crate::physical_plan::{PhysicalBinaryExpr, PhysicalLiteralExpr, ProjectionPlan, PhysicalScalarExpr};
+    use crate::physical_plan::{PhysicalBinaryExpr, PhysicalLiteralExpr, ProjectionPlan};
     use crate::print_result;
-    use arrow::array::{Array, ArrayRef, Int64Array, StringArray};
+    use arrow::array::{ArrayRef, Int64Array, StringArray};
 
     #[test]
     fn test_selection() -> Result<()> {
