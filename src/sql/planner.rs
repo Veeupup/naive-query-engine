@@ -10,8 +10,8 @@
 use std::collections::HashSet;
 
 use sqlparser::ast::{
-    BinaryOperator, Expr, Join, JoinConstraint, JoinOperator, OrderByExpr, SetExpr, Statement,
-    TableWithJoins, UnaryOperator,
+    BinaryOperator, Expr, FunctionArg, Join, JoinConstraint, JoinOperator, OrderByExpr, SetExpr,
+    Statement, TableWithJoins, UnaryOperator,
 };
 use sqlparser::ast::{Ident, ObjectName, SelectItem, TableFactor, Value};
 
@@ -317,6 +317,40 @@ impl<'a> SQLPlanner<'a> {
                     _ => Err(ErrorCode::NotImplemented),
                 }
             }
+            Expr::Function(function) => {
+                let name = if !function.name.0.is_empty() {
+                    function.name.to_string()
+                } else {
+                    return Err(ErrorCode::PlanError(
+                        "Function not support with quote".to_string(),
+                    ));
+                };
+
+                // calculate parameters
+                let mut args = vec![];
+                for arg in &function.args {
+                    let arg = match arg {
+                        FunctionArg::Named { name: _, arg } => self.sql_to_expr(arg),
+                        FunctionArg::Unnamed(arg) => self.sql_to_expr(arg),
+                    }?;
+                    args.push(arg);
+                }
+
+                // check if scalar function
+                if let Ok(func) = LogicalExpr::try_create_scalar_func(&name, &args) {
+                    return Ok(func);
+                };
+
+                // check aggregate function
+                if let Ok(func) = LogicalExpr::try_create_aggregate_func(&name, &args) {
+                    return Ok(func);
+                };
+
+                Err(ErrorCode::NoMatchFunction(format!(
+                    "Not find match func: {}",
+                    name
+                )))
+            }
             _ => todo!(),
         }
     }
@@ -338,7 +372,7 @@ impl<'a> SQLPlanner<'a> {
             BinaryOperator::Minus => Operator::Minus,
             BinaryOperator::Multiply => Operator::Multiply,
             BinaryOperator::Divide => Operator::Divide,
-            BinaryOperator::Modulo => Operator::Modulo,
+            BinaryOperator::Modulus => Operator::Modulos,
             BinaryOperator::And => Operator::And,
             BinaryOperator::Or => Operator::Or,
             _ => unimplemented!(),

@@ -97,6 +97,65 @@ impl LogicalExpr {
     pub fn and(self, other: LogicalExpr) -> LogicalExpr {
         binary_expr(self, Operator::And, other)
     }
+
+    pub fn try_create_scalar_func(func_name: &str, exprs: &[LogicalExpr]) -> Result<LogicalExpr> {
+        if exprs.len() != 1 {
+            return Err(ErrorCode::PlanError(
+                "Scalar Func only has one parameter".to_string(),
+            ));
+        }
+        match func_name {
+            "abs" => Ok(LogicalExpr::UnaryExpr(UnaryExpr {
+                func: UnaryOperator::Abs,
+                arg: Box::new(exprs[0].clone()),
+            })),
+            _ => {
+                return Err(ErrorCode::NoMatchFunction(format!(
+                    "Not match scalar func: {}",
+                    func_name
+                )));
+            }
+        }
+    }
+
+    pub fn try_create_aggregate_func(
+        func_name: &str,
+        exprs: &[LogicalExpr],
+    ) -> Result<LogicalExpr> {
+        if exprs.len() != 1 {
+            return Err(ErrorCode::PlanError(
+                "Aggregate Func Now only Support One parameter".to_string(),
+            ));
+        }
+        match func_name {
+            "count" => Ok(LogicalExpr::AggregateFunction(AggregateFunction {
+                fun: AggregateFunc::Count,
+                args: Box::new(exprs[0].clone()),
+            })),
+            "sum" => Ok(LogicalExpr::AggregateFunction(AggregateFunction {
+                fun: AggregateFunc::Sum,
+                args: Box::new(exprs[0].clone()),
+            })),
+            "avg" => Ok(LogicalExpr::AggregateFunction(AggregateFunction {
+                fun: AggregateFunc::Avg,
+                args: Box::new(exprs[0].clone()),
+            })),
+            "min" => Ok(LogicalExpr::AggregateFunction(AggregateFunction {
+                fun: AggregateFunc::Min,
+                args: Box::new(exprs[0].clone()),
+            })),
+            "max" => Ok(LogicalExpr::AggregateFunction(AggregateFunction {
+                fun: AggregateFunc::Min,
+                args: Box::new(exprs[0].clone()),
+            })),
+            _ => {
+                return Err(ErrorCode::NoMatchFunction(format!(
+                    "Not match aggregate func: {}",
+                    func_name
+                )));
+            }
+        }
+    }
 }
 
 /// return a new expression l <op> r
@@ -254,7 +313,7 @@ impl BinaryExpr {
                 self.left.data_field(input)?.data_type().clone(),
                 true,
             ),
-            Operator::Modulo => NaiveField::new(
+            Operator::Modulos => NaiveField::new(
                 None,
                 format!("{} % {}", left, right).as_str(),
                 self.left.data_field(input)?.data_type().clone(),
@@ -300,7 +359,7 @@ pub enum Operator {
     /// Division operator, like `/`
     Divide,
     /// Remainder operator, like `%`
-    Modulo,
+    Modulos,
     /// Logical AND, like `&&`
     And,
     /// Logical OR, like `||`
@@ -372,7 +431,7 @@ pub struct AggregateFunction {
     /// Name of the function
     pub fun: AggregateFunc,
     /// List of expressions to feed to the functions as arguments
-    pub args: Arc<LogicalExpr>,
+    pub args: Box<LogicalExpr>,
 }
 
 impl AggregateFunction {
