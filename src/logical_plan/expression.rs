@@ -44,8 +44,6 @@ pub enum LogicalExpr {
         data_type: DataType,
     },
     #[allow(unused)]
-    /// Represents the call of a built-in scalar function with a set of arguments.
-    // UnaryExpr(UnaryExpr), TODO(ywq): scalar
     /// Represents the call of an aggregate built-in function with arguments.
     AggregateFunction(AggregateFunction),
     // Represents a reference to all fields in a schema.
@@ -320,8 +318,9 @@ pub struct UnaryExpr {
 
 impl UnaryExpr {
     pub fn data_field(&self, input: &LogicalPlan) -> Result<NaiveField> {
-        // TODO(veeupup): we should make scalar func more specific and should check if valid before creating them
+        // TODO(veeupup): we should make unary func more specific and should check if valid before creating them
         let field = self.arg.data_field(input)?;
+        // TODO(ywq): add more exprs
         let field = match self.func {
             UnaryOperator::Abs => NaiveField::new(
                 None,
