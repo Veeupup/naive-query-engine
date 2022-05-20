@@ -146,7 +146,7 @@ impl PhysicalExpr for PhysicalBinaryExpr {
             Operator::Minus => arithemic_op!(subtract, left_data_type, left_array, right_array),
             Operator::Multiply => arithemic_op!(multiply, left_data_type, left_array, right_array),
             Operator::Divide => arithemic_op!(divide, left_data_type, left_array, right_array),
-            Operator::Modulo => arithemic_op!(modulus, left_data_type, left_array, right_array),
+            Operator::Modulos => arithemic_op!(modulus, left_data_type, left_array, right_array),
         }
     }
 }

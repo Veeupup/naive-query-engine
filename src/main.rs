@@ -8,7 +8,7 @@ fn main() -> Result<()> {
 
     db.create_csv_table("t1", "data/test_data.csv", CsvConfig::default())?;
 
-    let ret = db.run_sql("select id, name, age + 100 from t1 where id < 6 limit 3")?;
+    let ret = db.run_sql("select abs(id), name, age + 100 from t1 where id < 6 limit 3")?;
 
     print_result(&ret)?;
 

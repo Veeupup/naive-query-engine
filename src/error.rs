@@ -30,6 +30,8 @@ pub enum ErrorCode {
 
     PlanError(String),
 
+    NoMatchFunction(String),
+
     NotImplemented,
     #[allow(unused)]
     Others,
