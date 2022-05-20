@@ -111,6 +111,9 @@ impl DataFrame {
         let left_schema = self.plan.schema();
         let join_schema = left_schema.join(right.schema());
 
+        // TODO(ywq) test on it.
+        dbg!(on.len());
+
         Ok(Self::new(LogicalPlan::Join(Join {
             left: Arc::new(self.plan.clone()),
             right: Arc::new(right.clone()),

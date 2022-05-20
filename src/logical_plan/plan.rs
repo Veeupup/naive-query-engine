@@ -112,6 +112,7 @@ pub enum JoinType {
     Inner,
     Left,
     Right,
+    Cross
 }
 
 /// Join two logical plans on one or more join columns
@@ -121,7 +122,7 @@ pub struct Join {
     pub left: Arc<LogicalPlan>,
     /// Right input
     pub right: Arc<LogicalPlan>,
-    /// Equijoin clause expressed as pairs of (left, right) join columns
+    /// Equijoin clause expressed as pairs of (left, right) join columns, cross join don't have on conditions
     pub on: Vec<(Column, Column)>,
     /// Join type
     pub join_type: JoinType,

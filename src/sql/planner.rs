@@ -128,6 +128,9 @@ impl<'a> SQLPlanner<'a> {
             JoinOperator::Inner(constraint) => {
                 self.parse_join(left, right, constraint, JoinType::Inner)
             }
+            JoinOperator::CrossJoin => {
+                self.parse_join(left, right, &JoinConstraint::None, JoinType::Cross)
+            }
             // TODO(veeupup): cross join
             _other => Err(ErrorCode::NotImplemented),
         }
@@ -168,6 +171,10 @@ impl<'a> SQLPlanner<'a> {
                 } else {
                     Err(ErrorCode::NotImplemented)
                 }
+            }
+            JoinConstraint::None => {
+                let join = DataFrame::new(left).join(&right, join_type, (vec![], vec![]))?;
+                Ok(join.logical_plan())
             }
             _ => Err(ErrorCode::NotImplemented),
         }
