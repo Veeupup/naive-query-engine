@@ -12,6 +12,7 @@ use crate::error::Result;
 use crate::logical_plan::schema::NaiveSchema;
 use crate::physical_plan::PhysicalExprRef;
 use crate::physical_plan::PhysicalPlanRef;
+use arrow::datatypes::SchemaRef;
 use arrow::record_batch::RecordBatch;
 #[derive(Debug, Clone)]
 pub struct ProjectionPlan {
@@ -56,7 +57,7 @@ impl PhysicalPlan for ProjectionPlan {
                     .collect::<Vec<_>>();
                 // TODO(veeupup): remove unwrap
                 // let projection_schema = self.schema.into();
-                RecordBatch::try_new(self.schema.clone().into(), columns).unwrap()
+                RecordBatch::try_new(SchemaRef::from(self.schema.clone()), columns).unwrap()
             })
             .collect::<Vec<_>>();
         Ok(batches)
@@ -71,10 +72,10 @@ impl PhysicalPlan for ProjectionPlan {
 mod tests {
     use super::*;
     use crate::datasource::{CsvConfig, CsvTable};
-    use crate::logical_plan::expression::{ScalarValue, Operator, UnaryOperator};
-    use crate::physical_plan::{PhysicalBinaryExpr, PhysicalLiteralExpr, PhysicalUnaryExpr};
+    use crate::logical_plan::expression::{Operator, ScalarValue, UnaryOperator};
     use crate::physical_plan::expression::ColumnExpr;
     use crate::physical_plan::scan::ScanPlan;
+    use crate::physical_plan::{PhysicalBinaryExpr, PhysicalLiteralExpr, PhysicalUnaryExpr};
     use arrow::array::{ArrayRef, Int64Array, StringArray};
     use arrow::datatypes::DataType;
 
@@ -89,7 +90,7 @@ mod tests {
         let add_expr = PhysicalBinaryExpr::create(
             ColumnExpr::try_create(Some("id".to_string()), None)?,
             Operator::Plus,
-            PhysicalLiteralExpr::create(ScalarValue::Int64(Some(1)))
+            PhysicalLiteralExpr::create(ScalarValue::Int64(Some(1))),
         );
         let expr = vec![
             // ColumnExpr::try_create(None, Some(0))?,

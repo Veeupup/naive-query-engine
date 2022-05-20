@@ -9,13 +9,13 @@ use arrow::{
     record_batch::RecordBatch,
 };
 use core::fmt;
-use std::{sync::Arc, fmt::{Debug, Formatter}};
+use std::{
+    fmt::{Debug, Formatter},
+    sync::Arc,
+};
 
 use super::{PhysicalExpr, PhysicalExprRef};
-use crate::{
-    datatype::ColumnValue,
-    logical_plan::expression::UnaryOperator,
-};
+use crate::{datatype::ColumnValue, logical_plan::expression::UnaryOperator};
 
 macro_rules! unary_op {
     ($OP:ident, $DT: expr, $COL: expr) => {{
@@ -25,7 +25,8 @@ macro_rules! unary_op {
                     .as_any()
                     .downcast_ref::<PrimitiveArray<Int64Type>>()
                     .unwrap();
-                let res: PrimitiveArray<Int64Type> = arrow::compute::kernels::arity::unary(value, |x| x.$OP());
+                let res: PrimitiveArray<Int64Type> =
+                    arrow::compute::kernels::arity::unary(value, |x| x.$OP());
                 Ok(ColumnValue::Array(Arc::new(res)))
             }
             DataType::Float64 => {
@@ -33,7 +34,8 @@ macro_rules! unary_op {
                     .as_any()
                     .downcast_ref::<PrimitiveArray<Float64Type>>()
                     .unwrap();
-                let res: PrimitiveArray<Float64Type> = arrow::compute::kernels::arity::unary(value, |x| x.$OP());
+                let res: PrimitiveArray<Float64Type> =
+                    arrow::compute::kernels::arity::unary(value, |x| x.$OP());
                 Ok(ColumnValue::Array(Arc::new(res)))
             }
             _ => unimplemented!(),
@@ -45,7 +47,7 @@ pub struct PhysicalUnaryExpr {
     expr: PhysicalExprRef,
     func: UnaryOperator,
     name: String,
-    return_type: DataType
+    return_type: DataType,
 }
 
 impl Debug for PhysicalUnaryExpr {
@@ -60,8 +62,18 @@ impl Debug for PhysicalUnaryExpr {
 }
 
 impl PhysicalUnaryExpr {
-    pub fn create(expr: PhysicalExprRef, func: UnaryOperator, name: String, return_type: &DataType) -> PhysicalExprRef {
-        Arc::new(Self { expr, func, name, return_type: return_type.clone() })
+    pub fn create(
+        expr: PhysicalExprRef,
+        func: UnaryOperator,
+        name: String,
+        return_type: &DataType,
+    ) -> PhysicalExprRef {
+        Arc::new(Self {
+            expr,
+            func,
+            name,
+            return_type: return_type.clone(),
+        })
     }
 }
 

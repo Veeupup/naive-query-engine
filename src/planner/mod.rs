@@ -110,7 +110,12 @@ impl QueryPlanner {
             }
             LogicalExpr::UnaryExpr(scalar_expr) => {
                 let expr = Self::create_physical_expression(scalar_expr.arg.as_ref(), input)?;
-                let phy_scalar_expr = PhysicalUnaryExpr::create(expr, scalar_expr.func.clone(),"todo".to_string(), &arrow::datatypes::DataType::Int32);
+                let phy_scalar_expr = PhysicalUnaryExpr::create(
+                    expr,
+                    scalar_expr.func.clone(),
+                    "todo".to_string(),
+                    &arrow::datatypes::DataType::Int32,
+                );
                 Ok(phy_scalar_expr)
             }
             LogicalExpr::Not(_) => todo!(),

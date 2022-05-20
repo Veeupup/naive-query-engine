@@ -44,7 +44,6 @@ impl TableSource for MemTable {
 #[cfg(test)]
 mod tests {
     use super::MemTable;
-    use crate::datasource::TableSource;
     use crate::error::Result;
     use crate::logical_plan::schema::NaiveSchema;
     use arrow::array::Int32Array;

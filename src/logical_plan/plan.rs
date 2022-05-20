@@ -27,6 +27,7 @@ pub enum LogicalPlan {
     /// discarded.
     Filter(Filter),
 
+    #[allow(unused)]
     /// Aggregates its input based on a set of grouping and aggregate
     /// expressions (e.g. SUM).
     Aggregate(Aggregate),

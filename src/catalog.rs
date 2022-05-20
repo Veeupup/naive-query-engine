@@ -35,6 +35,7 @@ impl Catalog {
         Ok(())
     }
 
+    #[allow(unused)]
     /// add memory table
     pub fn add_memory_table(
         &mut self,
@@ -47,6 +48,7 @@ impl Catalog {
         Ok(())
     }
 
+    #[allow(unused)]
     /// add empty table
     pub fn add_empty_table(&mut self, table: &str, schema: NaiveSchema) -> Result<()> {
         let source = EmptyTable::try_create(schema)?;
@@ -62,6 +64,7 @@ impl Catalog {
             .ok_or_else(|| ErrorCode::NoSuchTable(format!("No table name: {}", table)))
     }
 
+    #[allow(unused)]
     /// get dataframe by table name
     pub fn get_table_df(&self, table: &str) -> Result<DataFrame> {
         let source = self

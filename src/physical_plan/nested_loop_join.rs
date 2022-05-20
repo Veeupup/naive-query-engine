@@ -23,6 +23,7 @@ use arrow::compute;
 use arrow::datatypes::DataType;
 use arrow::datatypes::Float64Type;
 use arrow::datatypes::Int64Type;
+use arrow::datatypes::SchemaRef;
 use arrow::datatypes::UInt64Type;
 use arrow::record_batch::RecordBatch;
 
@@ -169,7 +170,7 @@ impl PhysicalPlan for NestedLoopJoin {
                     columns.push(compute::take(array.as_ref(), &inner_pos, None)?);
                 }
 
-                let batch = RecordBatch::try_new(self.schema.clone().into(), columns)?;
+                let batch = RecordBatch::try_new(SchemaRef::from(self.schema.clone()), columns)?;
                 batches.push(batch);
             }
         }

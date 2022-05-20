@@ -27,7 +27,6 @@ use crate::logical_plan::expression::Column;
 use crate::logical_plan::plan::JoinType;
 use crate::logical_plan::schema::NaiveSchema;
 use crate::physical_plan::ColumnExpr;
-use crate::physical_plan::PhysicalExpr;
 
 use crate::Result;
 use std::collections::HashMap;
@@ -246,7 +245,7 @@ impl HashJoin {
                     columns.push(compute::take(array.as_ref(), &inner_pos, None)?);
                 }
 
-                let batch = RecordBatch::try_new(self.schema.clone().into(), columns)?;
+                let batch = RecordBatch::try_new(SchemaRef::from(self.schema.clone()), columns)?;
                 batches.push(batch);
             }
         }
