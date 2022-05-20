@@ -9,7 +9,7 @@ use std::sync::Arc;
 use crate::logical_plan::expression::LogicalExpr;
 use crate::logical_plan::plan::{Aggregate, Filter, LogicalPlan, Projection};
 
-use super::expression::Column;
+use super::expression::{Column, AggregateFunction};
 use super::plan::{Join, JoinType, Limit};
 use super::schema::NaiveSchema;
 use crate::error::{ErrorCode, Result};
@@ -63,7 +63,7 @@ impl DataFrame {
     }
 
     #[allow(unused)]
-    pub fn aggregate(self, group_expr: Vec<LogicalExpr>, aggr_expr: Vec<LogicalExpr>) -> Self {
+    pub fn aggregate(self, group_expr: Vec<LogicalExpr>, aggr_expr: Vec<AggregateFunction>) -> Self {
         let mut group_fields = group_expr
             .iter()
             .map(|expr| expr.data_field(&self.plan).unwrap())

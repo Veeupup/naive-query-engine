@@ -2,7 +2,7 @@
  * @Author: ywqzzy
  * @Date: 2022-05-19
 */
-
+use std::any::Any;
 use arrow::{
     array::PrimitiveArray,
     datatypes::{DataType, Float32Type, Float64Type},
@@ -78,6 +78,10 @@ impl PhysicalUnaryExpr {
 }
 
 impl PhysicalExpr for PhysicalUnaryExpr {
+    fn as_any(&self) -> &dyn Any {
+        self
+    }
+
     fn evaluate(&self, input: &RecordBatch) -> crate::Result<ColumnValue> {
         let value = self.expr.evaluate(input)?;
 

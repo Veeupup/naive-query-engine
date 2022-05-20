@@ -6,6 +6,7 @@
 
 use crate::logical_plan::expression::ScalarValue;
 use std::sync::Arc;
+use std::any::Any;
 
 use super::{PhysicalExpr, PhysicalExprRef};
 use crate::datatype::ColumnValue;
@@ -24,6 +25,10 @@ impl PhysicalLiteralExpr {
 }
 
 impl PhysicalExpr for PhysicalLiteralExpr {
+    fn as_any(&self) -> &dyn Any {
+        self
+    }
+
     fn evaluate(&self, input: &RecordBatch) -> Result<ColumnValue> {
         Ok(ColumnValue::Const(self.literal.clone(), input.num_rows()))
     }

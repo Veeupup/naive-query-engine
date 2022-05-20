@@ -5,6 +5,7 @@
 */
 
 use std::sync::Arc;
+use std::any::Any;
 
 use arrow::record_batch::RecordBatch;
 
@@ -29,6 +30,10 @@ impl ColumnExpr {
 }
 
 impl PhysicalExpr for ColumnExpr {
+    fn as_any(&self) -> &dyn Any {
+        self
+    }
+
     fn evaluate(&self, input: &RecordBatch) -> Result<ColumnValue> {
         // prefer idx first
         if let Some(idx) = self.idx {
