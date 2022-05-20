@@ -37,12 +37,7 @@ pub enum LogicalExpr {
     #[allow(unused)]
     /// Casts the expression to a given type and will return a runtime error if the expression cannot be cast.
     /// This expression is guaranteed to have a fixed type.
-    Cast {
-        /// The expression being cast
-        expr: Box<LogicalExpr>,
-        /// The `DataType` the expression will yield
-        data_type: DataType,
-    },
+    Cast(CastExpr),
     #[allow(unused)]
     /// Represents the call of an aggregate built-in function with arguments.
     AggregateFunction(AggregateFunction),
@@ -80,10 +75,10 @@ impl LogicalExpr {
                 DataType::Boolean,
                 true,
             )),
-            LogicalExpr::Cast { expr, data_type } => Ok(NaiveField::new(
+            LogicalExpr::Cast(expr) => Ok(NaiveField::new(
                 None,
                 expr.data_field(input)?.name(),
-                data_type.clone(),
+                expr.data_type.clone(),
                 true,
             )),
             LogicalExpr::UnaryExpr(scalar_func) => scalar_func.data_field(input),
@@ -424,6 +419,25 @@ pub enum UnaryOperator {
     Reverse,
     #[allow(unused)]
     Substr,
+}
+
+#[derive(Debug, Clone)]
+pub struct CastExpr {
+    /// The expression being cast
+    pub expr: Box<LogicalExpr>,
+    /// The `DataType` the expression will yield
+    pub data_type: DataType,
+}
+
+impl CastExpr {
+    pub fn data_field(&self, input: &LogicalPlan) -> Result<NaiveField> {
+        Ok(NaiveField::new(
+            None,
+            self.expr.data_field(input)?.name(),
+            self.data_type.clone(),
+            true,
+        ))
+    }
 }
 
 #[derive(Debug, Clone)]

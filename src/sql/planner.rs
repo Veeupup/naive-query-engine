@@ -9,6 +9,8 @@
 
 use std::collections::HashSet;
 
+use arrow::datatypes::DataType;
+use sqlparser::ast::DataType as SQLDataType;
 use sqlparser::ast::{
     BinaryOperator, Expr, FunctionArg, Join, JoinConstraint, JoinOperator, OrderByExpr, SetExpr,
     Statement, TableWithJoins, UnaryOperator,
@@ -18,7 +20,7 @@ use sqlparser::ast::{Ident, ObjectName, SelectItem, TableFactor, Value};
 use crate::error::ErrorCode;
 use crate::logical_plan;
 use crate::logical_plan::expression::{
-    BinaryExpr, Column, LogicalExpr, Operator, ScalarValue, UnaryExpr,
+    BinaryExpr, CastExpr, Column, LogicalExpr, Operator, ScalarValue, UnaryExpr,
 };
 use crate::logical_plan::literal::lit;
 use crate::logical_plan::plan::{JoinType, TableScan};
@@ -301,6 +303,7 @@ impl<'a> SQLPlanner<'a> {
             Expr::Value(Value::Null) => Ok(LogicalExpr::Literal(ScalarValue::Null)),
             Expr::Identifier(id) => Ok(LogicalExpr::column(None, normalize_ident(id))),
             // TODO(veeupup): cast func
+            Expr::Cast { expr, data_type } => self.parse_sql_cast(expr, data_type),
             Expr::BinaryOp { left, op, right } => self.parse_sql_binary_op(left, op, right),
             Expr::UnaryOp { op, expr } => self.parse_sql_unary_op(op, expr),
             Expr::CompoundIdentifier(ids) => {
@@ -393,6 +396,33 @@ impl<'a> SQLPlanner<'a> {
             func,
             arg: Box::new(self.sql_to_expr(expr)?),
         }))
+    }
+
+    fn parse_sql_cast(&self, expr: &Expr, data_type: &SQLDataType) -> Result<LogicalExpr> {
+        Ok(LogicalExpr::Cast(CastExpr {
+            expr: Box::new(self.sql_to_expr(expr)?),
+            data_type: convert_data_type(data_type)?,
+        }))
+    }
+}
+
+pub fn convert_data_type(sql_type: &SQLDataType) -> Result<DataType> {
+    match sql_type {
+        SQLDataType::Boolean => Ok(DataType::Boolean),
+        SQLDataType::SmallInt => Ok(DataType::Int16),
+        SQLDataType::Int => Ok(DataType::Int32),
+        SQLDataType::BigInt => Ok(DataType::Int64),
+        SQLDataType::Float(_) => Ok(DataType::Float32),
+        SQLDataType::Real => Ok(DataType::Float32),
+        SQLDataType::Double => Ok(DataType::Float64),
+        SQLDataType::Char(_) | SQLDataType::Varchar(_) => Ok(DataType::Utf8),
+        SQLDataType::Timestamp => todo!(),
+        SQLDataType::Date => Ok(DataType::Date32),
+        SQLDataType::Decimal(_, _) => todo!(),
+        other => Err(ErrorCode::NoMatchFunction(format!(
+            "Unsupported SQL type {:?}",
+            other
+        ))),
     }
 }
 

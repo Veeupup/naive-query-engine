@@ -53,7 +53,7 @@ pub struct PhysicalUnaryExpr {
 impl Debug for PhysicalUnaryExpr {
     fn fmt(&self, f: &mut Formatter) -> fmt::Result {
         f.debug_struct("UnaryExpr")
-            .field("fun", &"<FUNC>")
+            .field("func", &"<FUNC>")
             .field("name", &self.name)
             .field("expr", &self.expr)
             .field("return_type", &self.return_type)
