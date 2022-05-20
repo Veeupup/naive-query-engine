@@ -11,6 +11,7 @@ use crate::logical_plan::schema::NaiveSchema;
 use crate::physical_plan::HashJoin;
 
 use crate::physical_plan::PhysicalBinaryExpr;
+use crate::physical_plan::PhysicalCastExpr;
 use crate::physical_plan::PhysicalExprRef;
 use crate::physical_plan::PhysicalLimitPlan;
 use crate::physical_plan::PhysicalLiteralExpr;
@@ -119,10 +120,11 @@ impl QueryPlanner {
                 Ok(phy_scalar_expr)
             }
             LogicalExpr::Not(_) => todo!(),
-            LogicalExpr::Cast {
-                expr: _,
-                data_type: _,
-            } => todo!(),
+            LogicalExpr::Cast(cast_expr) => {
+                let expr = Self::create_physical_expression(cast_expr.expr.as_ref(), input)?;
+                let phy_cast_expr = PhysicalCastExpr::create(expr, &cast_expr.data_type);
+                Ok(phy_cast_expr)
+            }
             LogicalExpr::AggregateFunction(_) => todo!(),
             LogicalExpr::Wildcard => todo!(),
         }

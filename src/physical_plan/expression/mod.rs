@@ -5,11 +5,13 @@
 */
 
 mod binary;
+mod cast;
 mod column;
 mod literal;
 mod unary;
 
 pub use binary::PhysicalBinaryExpr;
+pub use cast::PhysicalCastExpr;
 pub use column::ColumnExpr;
 pub use literal::PhysicalLiteralExpr;
 pub use unary::PhysicalUnaryExpr;
