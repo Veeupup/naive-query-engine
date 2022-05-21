@@ -39,7 +39,7 @@ fn main() -> Result<()> {
     print_result(&ret)?;
 
     // aggregate
-    let ret = db.run_sql("select sum(age), count(id) from t1")?;
+    let ret = db.run_sql("select count(id), sum(age), sum(score) from t1 group by id % 3")?;
     print_result(&ret)?;
 
     Ok(())
@@ -65,11 +65,13 @@ output will be:
 | 4  | jack  | 2             | 1    | 4  | diamond     |
 | 5  | mike  | 3             | 2    | 5  | grandmaster |
 +----+-------+---------------+------+----+-------------+
-+----------+-----------+
-| sum(age) | count(id) |
-+----------+-----------+
-| 166      | 8         |
-+----------+-----------+
++-----------+----------+--------------------+
+| count(id) | sum(age) | sum(score)         |
++-----------+----------+--------------------+
+| 2         | 43       | 167.7              |
+| 3         | 62       | 243.29000000000002 |
+| 3         | 61       | 255.6              |
++-----------+----------+--------------------+
 ```
 
 ## architecture
@@ -123,12 +125,14 @@ impl NaiveDB {
         - [x] column expr
         - [x] binary operation expr(add/sub/mul/div/and/or...)
         - [x] literal expr
+        - [x] unary expr
+        - [x] aggr expr
         - [ ] so many work to do... TAT
 - [ ] query planner
     - [x] scan
     - [x] limit
     - [x] join
-    - [ ] aggregate
+    - [x] aggregate
     - [ ] ...
 - [ ] query optimization
     - [ ] more rules needed
@@ -141,5 +145,5 @@ impl NaiveDB {
         - [x] limit
         - [x] join
         - [x] aggregate
-            - [ ] group by
+            - [x] group by
         - [ ] scalar function

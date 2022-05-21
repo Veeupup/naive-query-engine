@@ -86,7 +86,7 @@ impl QueryPlanner {
             LogicalPlan::Aggregate(aggr) => {
                 let mut group_exprs = vec![];
                 for group_expr in &aggr.group_expr {
-                    group_exprs.push(Self::create_physical_expression(group_expr, plan)?);
+                    group_exprs.push(Self::create_physical_expression(group_expr, &aggr.input)?);
                 }
 
                 let mut aggr_ops = vec![];
