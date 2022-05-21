@@ -8,7 +8,7 @@ fn main() -> Result<()> {
 
     db.create_csv_table("t1", "data/test_data.csv", CsvConfig::default())?;
 
-    let ret = db.run_sql("select abs(id), name, age + 100 from t1 where id < 6 limit 3")?;
+    let ret = db.run_sql("select * from t1")?;
 
     print_result(&ret)?;
 
@@ -16,9 +16,7 @@ fn main() -> Result<()> {
     db.create_csv_table("employee", "data/employee.csv", CsvConfig::default())?;
     db.create_csv_table("rank", "data/rank.csv", CsvConfig::default())?;
 
-    let ret = db.run_sql(
-        "select id, name, rank_name from employee innner join rank on employee.rank = rank.id",
-    )?;
+    let ret = db.run_sql("select * from employee innner join rank on employee.rank = rank.id")?;
 
     print_result(&ret)?;
     Ok(())

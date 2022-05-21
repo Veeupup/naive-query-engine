@@ -25,6 +25,7 @@ use crate::logical_plan::expression::{
 use crate::logical_plan::literal::lit;
 use crate::logical_plan::plan::{JoinType, TableScan};
 
+use crate::logical_plan::schema::NaiveSchema;
 use crate::{
     catalog::Catalog,
     error::Result,
@@ -57,18 +58,56 @@ impl<'a> SQLPlanner<'a> {
             SetExpr::Select(select) => {
                 let plans = self.plan_from_tables(select.from)?;
 
-                let df = self.plan_selection(select.selection, plans)?;
-
-                // process the SELECT expressions, with wildcards expanded
-                let df = self.plan_from_projection(df, select.projection)?;
+                let plan = self.plan_selection(select.selection, plans)?;
 
                 // TODO(veeupup): aggregate expr
+                let select_exprs = self.prepare_select_exprs(&plan, &select.projection)?;
+                // filter aggregate expr, these exps should not pass to projection
 
                 // TODO(veeupup): group by
 
-                Ok(df.logical_plan())
+                // process the SELECT expressions, with wildcards expanded
+                let plan = self.plan_from_projection(plan, select_exprs)?;
+
+                Ok(plan)
             }
             _ => todo!(),
+        }
+    }
+
+    fn prepare_select_exprs(
+        &self,
+        plan: &LogicalPlan,
+        projection: &[SelectItem],
+    ) -> Result<Vec<LogicalExpr>> {
+        let input_schema = plan.schema();
+
+        Ok(projection
+            .iter()
+            .map(|expr| self.select_item_to_expr(&expr))
+            .collect::<Result<Vec<LogicalExpr>>>()?
+            .iter()
+            .flat_map(|expr| Self::expand_wildcard(&expr, &input_schema))
+            .collect::<Vec<LogicalExpr>>())
+    }
+
+    /// Generate a relational expression from a select SQL expression
+    fn select_item_to_expr(&self, sql: &SelectItem) -> Result<LogicalExpr> {
+        match sql {
+            SelectItem::UnnamedExpr(expr) => self.sql_to_expr(expr),
+            SelectItem::Wildcard => Ok(LogicalExpr::Wildcard),
+            _ => unimplemented!(),
+        }
+    }
+
+    fn expand_wildcard(expr: &LogicalExpr, schema: &NaiveSchema) -> Vec<LogicalExpr> {
+        match expr {
+            LogicalExpr::Wildcard => schema
+                .fields()
+                .iter()
+                .map(|f| LogicalExpr::column(None, f.name().to_string()))
+                .collect::<Vec<LogicalExpr>>(),
+            _ => vec![expr.clone()],
         }
     }
 
@@ -189,29 +228,30 @@ impl<'a> SQLPlanner<'a> {
 
     fn plan_from_projection(
         &self,
-        df: DataFrame,
-        projection: Vec<SelectItem>,
-    ) -> Result<DataFrame> {
-        let proj = projection
-            .iter()
-            .map(|item| match item {
-                SelectItem::UnnamedExpr(expr) => self.sql_to_expr(expr),
-                SelectItem::Wildcard => Ok(LogicalExpr::Wildcard),
-                _ => todo!(),
-            })
-            .flat_map(|result| match result {
-                Ok(expr) => Ok(expr),
-                Err(err) => Err(err),
-            })
-            .collect::<Vec<_>>();
-        df.project(proj)
+        plan: LogicalPlan,
+        projection: Vec<LogicalExpr>,
+    ) -> Result<LogicalPlan> {
+        let df = DataFrame::new(plan);
+        // let proj = projection
+        //     .iter()
+        //     .map(|item| match item {
+        //         SelectItem::UnnamedExpr(expr) => self.sql_to_expr(expr),
+        //         SelectItem::Wildcard => Ok(LogicalExpr::Wildcard),
+        //         _ => todo!(),
+        //     })
+        //     .flat_map(|result| match result {
+        //         Ok(expr) => Ok(expr),
+        //         Err(err) => Err(err),
+        //     })
+        //     .collect::<Vec<_>>();
+        Ok(df.project(projection)?.logical_plan())
     }
 
     fn plan_selection(
         &self,
         selection: Option<Expr>,
         plans: Vec<LogicalPlan>,
-    ) -> Result<DataFrame> {
+    ) -> Result<LogicalPlan> {
         // TODO(veeupup): handle joins
         match selection {
             Some(expr) => {
@@ -267,13 +307,15 @@ impl<'a> SQLPlanner<'a> {
                 }
                 // remove join expressions from filter
                 match remove_join_expressions(&filter_expr, &all_join_keys)? {
-                    Some(filter_expr) => Ok(DataFrame::new(left).filter(filter_expr)),
-                    _ => Ok(DataFrame::new(left)),
+                    Some(filter_expr) => {
+                        Ok(DataFrame::new(left).filter(filter_expr).logical_plan())
+                    }
+                    _ => Ok(left),
                 }
             }
             None => {
                 if plans.len() == 1 {
-                    Ok(DataFrame::new(plans[0].clone()))
+                    Ok(plans[0].clone())
                 } else {
                     // CROSS JOIN NOT SUPPORTED YET
                     Err(ErrorCode::NotImplemented)
