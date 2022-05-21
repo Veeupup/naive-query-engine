@@ -19,6 +19,7 @@ use super::{PhysicalPlan, PhysicalPlanRef};
 use crate::error::ErrorCode;
 use crate::physical_plan::PhysicalExprRef;
 use crate::Result;
+use arrow::datatypes::{Field, Schema};
 use arrow::record_batch::RecordBatch;
 
 #[derive(Debug)]
@@ -35,12 +36,7 @@ impl PhysicalAggregatePlan {
         aggr_ops: Vec<Box<dyn AggregateOperator>>,
         input: PhysicalPlanRef,
     ) -> PhysicalPlanRef {
-        let mut fields = vec![];
-        for aggr_op in aggr_ops.iter() {
-            fields.push(aggr_op.data_field());
-        }
-
-        let schema = NaiveSchema::new(fields);
+        let schema = input.schema().clone();
         Arc::new(Self {
             group_expr,
             aggr_ops: Mutex::new(aggr_ops),
@@ -78,7 +74,12 @@ impl PhysicalPlan for PhysicalAggregatePlan {
                 arrays.push(x.into_array(1));
             }
 
-            let schema = Arc::new(self.schema.clone().into());
+            let mut fields: Vec<Field> = vec![];
+            for aggr_op in aggr_ops.iter() {
+                fields.push(aggr_op.data_field().into());
+            }
+
+            let schema = Arc::new(Schema::new(fields));
             let record_batch = RecordBatch::try_new(schema, arrays)?;
             Ok(vec![record_batch])
         } else {

@@ -63,16 +63,59 @@ impl<'a> SQLPlanner<'a> {
                 // TODO(veeupup): aggregate expr
                 let select_exprs = self.prepare_select_exprs(&plan, &select.projection)?;
                 // filter aggregate expr, these exps should not pass to projection
-
+                let aggr_exprs_haystack = select_exprs;
+                let (aggr_exprs, project_exprs) = self.find_agrr_exprs(&aggr_exprs_haystack);
+                let plan = if aggr_exprs.is_empty() {
+                    plan
+                } else {
+                    self.plan_from_aggregate(plan, aggr_exprs, select.group_by)?
+                };
                 // TODO(veeupup): group by
 
                 // process the SELECT expressions, with wildcards expanded
-                let plan = self.plan_from_projection(plan, select_exprs)?;
+                let plan = self.plan_from_projection(plan, project_exprs)?;
 
                 Ok(plan)
             }
             _ => todo!(),
         }
+    }
+
+    fn plan_from_aggregate(
+        &self,
+        plan: LogicalPlan,
+        aggr_exprs: Vec<LogicalExpr>,
+        group_by: Vec<Expr>,
+    ) -> Result<LogicalPlan> {
+        let mut group_by_exprs = vec![];
+        for expr in &group_by {
+            group_by_exprs.push(self.sql_to_expr(expr)?);
+        }
+
+        let mut aggr_func = vec![];
+        for aggr_expr in &aggr_exprs {
+            if let LogicalExpr::AggregateFunction(aggr) = aggr_expr {
+                aggr_func.push(aggr.clone());
+            }
+        }
+
+        let df = DataFrame::new(plan);
+        Ok(df.aggregate(group_by_exprs, aggr_func).logical_plan())
+    }
+
+    // return tuple
+    // tuple[0] means aggr exprs
+    // tuple[1] means normal projection
+    fn find_agrr_exprs(&self, exprs: &[LogicalExpr]) -> (Vec<LogicalExpr>, Vec<LogicalExpr>) {
+        let mut aggr_exprs = vec![];
+        let mut project_exprs = vec![];
+        for expr in exprs {
+            match expr {
+                LogicalExpr::AggregateFunction(_) => aggr_exprs.push(expr.clone()),
+                _ => project_exprs.push(expr.clone()),
+            }
+        }
+        (aggr_exprs, project_exprs)
     }
 
     fn prepare_select_exprs(
@@ -84,10 +127,10 @@ impl<'a> SQLPlanner<'a> {
 
         Ok(projection
             .iter()
-            .map(|expr| self.select_item_to_expr(&expr))
+            .map(|expr| self.select_item_to_expr(expr))
             .collect::<Result<Vec<LogicalExpr>>>()?
             .iter()
-            .flat_map(|expr| Self::expand_wildcard(&expr, &input_schema))
+            .flat_map(|expr| Self::expand_wildcard(expr, input_schema))
             .collect::<Vec<LogicalExpr>>())
     }
 
@@ -232,18 +275,6 @@ impl<'a> SQLPlanner<'a> {
         projection: Vec<LogicalExpr>,
     ) -> Result<LogicalPlan> {
         let df = DataFrame::new(plan);
-        // let proj = projection
-        //     .iter()
-        //     .map(|item| match item {
-        //         SelectItem::UnnamedExpr(expr) => self.sql_to_expr(expr),
-        //         SelectItem::Wildcard => Ok(LogicalExpr::Wildcard),
-        //         _ => todo!(),
-        //     })
-        //     .flat_map(|result| match result {
-        //         Ok(expr) => Ok(expr),
-        //         Err(err) => Err(err),
-        //     })
-        //     .collect::<Vec<_>>();
         Ok(df.project(projection)?.logical_plan())
     }
 
@@ -637,6 +668,12 @@ mod tests {
         {
             let ret =
                 db.run_sql("select * from employee innner join rank on employee.id = rank.id");
+
+            print_result(&ret?)?;
+        }
+
+        {
+            let ret = db.run_sql("select count(id), sum(id) from t1");
 
             print_result(&ret?)?;
         }
