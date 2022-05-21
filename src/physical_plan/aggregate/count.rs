@@ -18,7 +18,7 @@ use crate::physical_plan::ColumnExpr;
 use crate::physical_plan::PhysicalExpr;
 use crate::Result;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Count {
     cnt: u64,
     col_expr: ColumnExpr,
@@ -58,13 +58,25 @@ impl AggregateOperator for Count {
         ))
     }
 
-    fn update(&mut self, data: &RecordBatch) -> Result<()> {
+    fn update_batch(&mut self, data: &RecordBatch) -> Result<()> {
         let col = self.col_expr.evaluate(data)?.into_array();
         self.cnt += (col.len() - col.null_count()) as u64;
         Ok(())
     }
 
+    fn update(&mut self, data: &RecordBatch, idx: usize) -> Result<()>{
+        let col = self.col_expr.evaluate(data)?.into_array();
+        if !col.is_null(idx) {
+            self.cnt += 1;
+        }
+        Ok(())
+    }
+
     fn evaluate(&self) -> Result<ScalarValue> {
         Ok(ScalarValue::UInt64(Some(self.cnt)))
+    }
+
+    fn clear_state(&mut self) {
+        self.cnt = 0;
     }
 }

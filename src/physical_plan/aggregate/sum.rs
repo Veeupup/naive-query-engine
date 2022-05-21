@@ -5,6 +5,7 @@
  * @Last Modified time: 2022-05-20 21:19:45
  */
 
+use arrow::array::Array;
 use arrow::array::PrimitiveArray;
 use arrow::datatypes::DataType;
 
@@ -20,7 +21,7 @@ use crate::physical_plan::ColumnExpr;
 use crate::physical_plan::PhysicalExpr;
 use crate::Result;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Sum {
     // TODO(veeupup): should use generic type for Int64, UInt Float64
     sum: i64,
@@ -62,7 +63,7 @@ impl AggregateOperator for Sum {
         ))
     }
 
-    fn update(&mut self, data: &RecordBatch) -> Result<()> {
+    fn update_batch(&mut self, data: &RecordBatch) -> Result<()> {
         let col = self.col_expr.evaluate(data)?.into_array();
         match col.data_type() {
             DataType::Int64 => {
@@ -87,7 +88,27 @@ impl AggregateOperator for Sum {
         Ok(())
     }
 
+    fn update(&mut self, data: &RecordBatch, idx: usize) -> Result<()>{
+        let col = self.col_expr.evaluate(data)?.into_array();
+        match col.data_type() {
+            DataType::Int64 => {
+                let col = col.as_any().downcast_ref::<PrimitiveArray<Int64Type>>().unwrap();
+                if !col.is_null(idx) {
+                    self.sum += col.value(idx);
+                }
+            },
+            DataType::UInt64 => todo!(),
+            DataType::Float64 => todo!(),
+            _ => unimplemented!()
+        }
+        Ok(())
+    }
+
     fn evaluate(&self) -> Result<ScalarValue> {
         Ok(ScalarValue::Int64(Some(self.sum)))
+    }
+
+    fn clear_state(&mut self) {
+        self.sum = 0;
     }
 }
