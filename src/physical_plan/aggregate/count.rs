@@ -64,7 +64,7 @@ impl AggregateOperator for Count {
         Ok(())
     }
 
-    fn update(&mut self, data: &RecordBatch, idx: usize) -> Result<()>{
+    fn update(&mut self, data: &RecordBatch, idx: usize) -> Result<()> {
         let col = self.col_expr.evaluate(data)?.into_array();
         if !col.is_null(idx) {
             self.cnt += 1;

@@ -655,12 +655,13 @@ mod tests {
             assert_eq!(batch.column(2), &age_excepted);
         }
 
+        // TODO: we should add some assert result here
         {
             db.create_csv_table("employee", "data/employee.csv", CsvConfig::default())?;
             db.create_csv_table("rank", "data/rank.csv", CsvConfig::default())?;
 
             let ret = db
-                .run_sql("select id, name from employee innner join rank on employee.id = rank.id");
+                .run_sql("select id, name, rank_name from employee innner join rank on employee.id = rank.id");
 
             print_result(&ret?)?;
         }
@@ -676,6 +677,12 @@ mod tests {
             let ret = db.run_sql("select count(id), sum(id) from t1");
 
             print_result(&ret?)?;
+        }
+        {
+            let ret =
+                db.run_sql("select count(id), sum(age), sum(score) from t1 group by id % 3")?;
+
+            print_result(&ret)?;
         }
 
         Ok(())
