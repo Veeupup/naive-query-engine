@@ -76,7 +76,7 @@ impl PhysicalPlan for PhysicalAggregatePlan {
 
             let mut fields: Vec<Field> = vec![];
             for aggr_op in aggr_ops.iter() {
-                fields.push(aggr_op.data_field().into());
+                fields.push(aggr_op.data_field(self.schema())?.into());
             }
 
             let schema = Arc::new(Schema::new(fields));
@@ -89,7 +89,7 @@ impl PhysicalPlan for PhysicalAggregatePlan {
 }
 
 pub trait AggregateOperator: Debug {
-    fn data_field(&self) -> NaiveField;
+    fn data_field(&self, schema: &NaiveSchema) -> Result<NaiveField>;
 
     fn update(&mut self, data: &RecordBatch) -> Result<()>;
 

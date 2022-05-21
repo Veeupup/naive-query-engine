@@ -16,14 +16,16 @@ use crate::physical_plan::PhysicalExprRef;
 
 #[derive(Debug, Clone)]
 pub struct ColumnExpr {
-    name: Option<String>,
-    idx: Option<usize>,
+    pub name: Option<String>,
+    pub idx: Option<usize>,
 }
 
 impl ColumnExpr {
     pub fn try_create(name: Option<String>, idx: Option<usize>) -> Result<PhysicalExprRef> {
         if name.is_none() && idx.is_none() {
-            return Err(ErrorCode::LogicalError);
+            return Err(ErrorCode::LogicalError(
+                "ColumnExpr must has name or idx".to_string(),
+            ));
         }
         Ok(Arc::new(Self { name, idx }))
     }
@@ -49,6 +51,8 @@ impl PhysicalExpr for ColumnExpr {
                 }
             }
         }
-        Err(ErrorCode::LogicalError)
+        Err(ErrorCode::LogicalError(
+            "ColumnExpr must has name or idx".to_string(),
+        ))
     }
 }

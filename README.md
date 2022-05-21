@@ -18,30 +18,32 @@ for now, we can use `NaiveDB` like below, we can use csv as table storage.
 
 ```rust
 use naive_db::print_result;
+use naive_db::CsvConfig;
 use naive_db::NaiveDB;
 use naive_db::Result;
 
 fn main() -> Result<()> {
     let mut db = NaiveDB::default();
 
-    db.create_csv_table("t1", "data/test_data.csv")?;
+    db.create_csv_table("t1", "data/test_data.csv", CsvConfig::default())?;
 
+    // select
     let ret = db.run_sql("select id, name, age + 100 from t1 where id < 6 limit 3")?;
-
     print_result(&ret)?;
 
-    // Join 
-    db.create_csv_table("employee", "data/employee.csv")?;
-    db.create_csv_table("rank", "data/rank.csv")?;
+    // Join
+    db.create_csv_table("employee", "data/employee.csv", CsvConfig::default())?;
+    db.create_csv_table("rank", "data/rank.csv", CsvConfig::default())?;
 
-    let ret = db.run_sql(
-        "select id, name, rank_name from employee innner join rank on employee.rank = rank.id",
-    )?;
+    let ret = db.run_sql("select * from employee innner join rank on employee.rank = rank.id")?;
+    print_result(&ret)?;
 
-    print_result(&ret);
+    // aggregate
+    let ret = db.run_sql("select sum(age), count(id) from t1")?;
+    print_result(&ret)?;
+
     Ok(())
 }
-
 ```
 
 output will be:
@@ -54,15 +56,20 @@ output will be:
 | 2  | alex    | 120       |
 | 4  | lynne   | 118       |
 +----+---------+-----------+
-+----+-------+-------------+
-| id | name  | rank_name   |
-+----+-------+-------------+
-| 1  | vee   | diamond     |
-| 2  | lynne | master      |
-| 3  | Alex  | master      |
-| 4  | jack  | diamond     |
-| 5  | mike  | grandmaster |
-+----+-------+-------------+
++----+-------+---------------+------+----+-------------+
+| id | name  | department_id | rank | id | rank_name   |
++----+-------+---------------+------+----+-------------+
+| 2  | lynne | 1             | 0    | 2  | master      |
+| 3  | Alex  | 2             | 0    | 3  | master      |
+| 1  | vee   | 1             | 1    | 1  | diamond     |
+| 4  | jack  | 2             | 1    | 4  | diamond     |
+| 5  | mike  | 3             | 2    | 5  | grandmaster |
++----+-------+---------------+------+----+-------------+
++----------+-----------+
+| sum(age) | count(id) |
++----------+-----------+
+| 166      | 8         |
++----------+-----------+
 ```
 
 ## architecture
@@ -110,7 +117,7 @@ impl NaiveDB {
     - [x] physical limit
     - [x] join
         - [x] (dumb😊) nested loop join
-        - [ ] hash join
+        - [x] hash join
         - [ ] sort-merge join
     - [ ] physical expression
         - [x] column expr
@@ -133,5 +140,6 @@ impl NaiveDB {
         - [x] selection
         - [x] limit
         - [x] join
-        - [ ] aggregate
+        - [x] aggregate
+            - [ ] group by
         - [ ] scalar function

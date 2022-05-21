@@ -10,8 +10,10 @@ use arrow::datatypes::DataType;
 use arrow::record_batch::RecordBatch;
 
 use super::AggregateOperator;
+use crate::error::ErrorCode;
 use crate::logical_plan::expression::ScalarValue;
 use crate::logical_plan::schema::NaiveField;
+use crate::physical_plan::aggregate::NaiveSchema;
 use crate::physical_plan::ColumnExpr;
 use crate::physical_plan::PhysicalExpr;
 use crate::Result;
@@ -29,8 +31,31 @@ impl Count {
 }
 
 impl AggregateOperator for Count {
-    fn data_field(&self) -> NaiveField {
-        NaiveField::new(None, "count(x)", DataType::UInt64, true)
+    fn data_field(&self, schema: &NaiveSchema) -> Result<NaiveField> {
+        // find by name
+        if let Some(name) = &self.col_expr.name {
+            let field = schema.field_with_unqualified_name(name)?;
+            return Ok(NaiveField::new(
+                None,
+                format!("count({})", field.name()).as_str(),
+                DataType::UInt64,
+                false,
+            ));
+        }
+
+        if let Some(idx) = &self.col_expr.idx {
+            let field = schema.field(*idx);
+            return Ok(NaiveField::new(
+                None,
+                format!("count({})", field.name()).as_str(),
+                DataType::UInt64,
+                false,
+            ));
+        }
+
+        Err(ErrorCode::LogicalError(
+            "ColumnExpr must has name or idx".to_string(),
+        ))
     }
 
     fn update(&mut self, data: &RecordBatch) -> Result<()> {

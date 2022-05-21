@@ -8,8 +8,8 @@ fn main() -> Result<()> {
 
     db.create_csv_table("t1", "data/test_data.csv", CsvConfig::default())?;
 
+    // select
     let ret = db.run_sql("select id, name, age + 100 from t1 where id < 6 limit 3")?;
-
     print_result(&ret)?;
 
     // Join
@@ -17,12 +17,10 @@ fn main() -> Result<()> {
     db.create_csv_table("rank", "data/rank.csv", CsvConfig::default())?;
 
     let ret = db.run_sql("select * from employee innner join rank on employee.rank = rank.id")?;
-
     print_result(&ret)?;
 
     // aggregate
     let ret = db.run_sql("select sum(age), count(id) from t1")?;
-
     print_result(&ret)?;
 
     Ok(())
