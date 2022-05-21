@@ -93,7 +93,8 @@ impl QueryPlanner {
                 for aggr_expr in &aggr.aggr_expr {
                     let aggr_op = match aggr_expr.fun {
                         AggregateFunc::Count => {
-                            let expr = Self::create_physical_expression(&aggr_expr.args, plan)?;
+                            let expr =
+                                Self::create_physical_expression(&aggr_expr.args, &aggr.input)?;
                             let col_expr = expr.as_any().downcast_ref::<ColumnExpr>();
                             if let Some(col_expr) = col_expr {
                                 Count::create(col_expr.clone())
@@ -104,7 +105,8 @@ impl QueryPlanner {
                             }
                         }
                         AggregateFunc::Sum => {
-                            let expr = Self::create_physical_expression(&aggr_expr.args, plan)?;
+                            let expr =
+                                Self::create_physical_expression(&aggr_expr.args, &aggr.input)?;
                             let col_expr = expr.as_any().downcast_ref::<ColumnExpr>();
                             if let Some(col_expr) = col_expr {
                                 Sum::create(col_expr.clone())
