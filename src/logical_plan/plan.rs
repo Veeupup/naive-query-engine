@@ -69,6 +69,84 @@ impl LogicalPlan {
     }
 }
 
+impl Display for LogicalPlan {
+    fn fmt(&self, f: &mut Formatter<'_>) -> Result {
+        do_pretty_print(self, f, 0)
+    }
+}
+
+#[derive(Debug, Clone)]
+pub struct Projection {
+    /// The list of expressions
+    pub exprs: Vec<LogicalExpr>,
+    /// The incoming logical plan
+    pub input: Arc<LogicalPlan>,
+    /// The schema description of the output
+    pub schema: NaiveSchema,
+}
+
+#[derive(Debug, Clone)]
+pub struct Filter {
+    /// The predicate expression, which must have Boolean type.
+    pub predicate: LogicalExpr,
+    /// The incoming logical plan
+    pub input: Arc<LogicalPlan>,
+}
+
+#[derive(Debug, Clone)]
+pub struct TableScan {
+    /// The source of the table
+    pub source: TableRef,
+    /// Optional column indices to use as a projection
+    pub projection: Option<Vec<usize>>,
+}
+
+/// Aggregates its input based on a set of grouping and aggregate
+/// expressions (e.g. SUM).
+#[derive(Debug, Clone)]
+pub struct Aggregate {
+    /// The incoming logical plan
+    pub input: Arc<LogicalPlan>,
+    /// Grouping expressions
+    pub group_expr: Vec<LogicalExpr>,
+    /// Aggregate expressions
+    pub aggr_expr: Vec<AggregateFunction>,
+    /// The schema description of the aggregate output
+    pub schema: NaiveSchema,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum JoinType {
+    Inner,
+    Left,
+    Right,
+}
+
+/// Join two logical plans on one or more join columns
+#[derive(Debug, Clone)]
+pub struct Join {
+    /// Left input
+    pub left: Arc<LogicalPlan>,
+    /// Right input
+    pub right: Arc<LogicalPlan>,
+    /// Equijoin clause expressed as pairs of (left, right) join columns
+    pub on: Vec<(Column, Column)>,
+    /// Join type
+    pub join_type: JoinType,
+    /// The output schema, containing fields from the left and right inputs
+    pub schema: NaiveSchema,
+}
+
+#[derive(Debug, Clone)]
+
+/// Produces the first `n` tuples from its input and discards the rest.
+pub struct Limit {
+    /// The limit
+    pub n: usize,
+    /// The logical plan
+    pub input: Arc<LogicalPlan>,
+}
+
 fn do_pretty_print(plan: &LogicalPlan, f: &mut Formatter<'_>, depth: usize) -> Result {
     write!(f, "{}", "  ".repeat(depth))?;
 
@@ -167,84 +245,6 @@ fn do_pretty_print(plan: &LogicalPlan, f: &mut Formatter<'_>, depth: usize) -> R
             writeln!(f, "projection: {:?}", projection)
         }
     }
-}
-
-impl Display for LogicalPlan {
-    fn fmt(&self, f: &mut Formatter<'_>) -> Result {
-        do_pretty_print(self, f, 0)
-    }
-}
-
-#[derive(Debug, Clone)]
-pub struct Projection {
-    /// The list of expressions
-    pub exprs: Vec<LogicalExpr>,
-    /// The incoming logical plan
-    pub input: Arc<LogicalPlan>,
-    /// The schema description of the output
-    pub schema: NaiveSchema,
-}
-
-#[derive(Debug, Clone)]
-pub struct Filter {
-    /// The predicate expression, which must have Boolean type.
-    pub predicate: LogicalExpr,
-    /// The incoming logical plan
-    pub input: Arc<LogicalPlan>,
-}
-
-#[derive(Debug, Clone)]
-pub struct TableScan {
-    /// The source of the table
-    pub source: TableRef,
-    /// Optional column indices to use as a projection
-    pub projection: Option<Vec<usize>>,
-}
-
-/// Aggregates its input based on a set of grouping and aggregate
-/// expressions (e.g. SUM).
-#[derive(Debug, Clone)]
-pub struct Aggregate {
-    /// The incoming logical plan
-    pub input: Arc<LogicalPlan>,
-    /// Grouping expressions
-    pub group_expr: Vec<LogicalExpr>,
-    /// Aggregate expressions
-    pub aggr_expr: Vec<AggregateFunction>,
-    /// The schema description of the aggregate output
-    pub schema: NaiveSchema,
-}
-
-#[derive(Debug, Clone, Copy, PartialEq)]
-pub enum JoinType {
-    Inner,
-    Left,
-    Right,
-}
-
-/// Join two logical plans on one or more join columns
-#[derive(Debug, Clone)]
-pub struct Join {
-    /// Left input
-    pub left: Arc<LogicalPlan>,
-    /// Right input
-    pub right: Arc<LogicalPlan>,
-    /// Equijoin clause expressed as pairs of (left, right) join columns
-    pub on: Vec<(Column, Column)>,
-    /// Join type
-    pub join_type: JoinType,
-    /// The output schema, containing fields from the left and right inputs
-    pub schema: NaiveSchema,
-}
-
-#[derive(Debug, Clone)]
-
-/// Produces the first `n` tuples from its input and discards the rest.
-pub struct Limit {
-    /// The limit
-    pub n: usize,
-    /// The logical plan
-    pub input: Arc<LogicalPlan>,
 }
 
 #[cfg(test)]
