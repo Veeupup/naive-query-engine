@@ -7,13 +7,13 @@
 use crate::datasource::TableRef;
 use crate::logical_plan::expression::{Column, LogicalExpr};
 
-use std::fmt::{Display, Formatter, Result};
+use std::fmt::{Debug, Display, Formatter, Result};
 use std::sync::Arc;
 
 use super::expression::AggregateFunction;
 use super::schema::NaiveSchema;
 
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 pub enum LogicalPlan {
     /// Evaluates an arbitrary list of expressions (essentially a
     /// SELECT with an expression list) on its input.
@@ -70,6 +70,12 @@ impl LogicalPlan {
 }
 
 impl Display for LogicalPlan {
+    fn fmt(&self, f: &mut Formatter<'_>) -> Result {
+        Debug::fmt(&self, f)
+    }
+}
+
+impl Debug for LogicalPlan {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result {
         do_pretty_print(self, f, 0)
     }
@@ -239,7 +245,7 @@ fn do_pretty_print(plan: &LogicalPlan, f: &mut Formatter<'_>, depth: usize) -> R
             writeln!(f, "TableScan:")?;
 
             write!(f, "{}", "  ".repeat(depth + 1))?;
-            writeln!(f, "source: {:?}", source)?;
+            writeln!(f, "source: {:?}", source.source_name())?;
 
             write!(f, "{}", "  ".repeat(depth + 1))?;
             writeln!(f, "projection: {:?}", projection)
@@ -302,7 +308,7 @@ mod tests {
 
         assert_eq!(
             "TableScan:\
-            \n  source: EmptyTable { schema: NaiveSchema { fields: [] } }\
+            \n  source: \"EmptyTable\"\
             \n  projection: None\n",
             format!("{}", scan)
         );
@@ -319,7 +325,7 @@ mod tests {
             \n  n: 233\
             \n  input:\
             \n    TableScan:\
-            \n      source: EmptyTable { schema: NaiveSchema { fields: [] } }\
+            \n      source: \"EmptyTable\"\
             \n      projection: None\n",
             format!("{}", limit)
         );
@@ -336,11 +342,11 @@ mod tests {
             "Join:\
             \n  left:\
             \n    TableScan:\
-            \n      source: EmptyTable { schema: NaiveSchema { fields: [] } }\
+            \n      source: \"EmptyTable\"\
             \n      projection: None\
             \n  right:\
             \n    TableScan:\
-            \n      source: EmptyTable { schema: NaiveSchema { fields: [] } }\
+            \n      source: \"EmptyTable\"\
             \n      projection: None\
             \n  on: []\
             \n  join_type: Inner\

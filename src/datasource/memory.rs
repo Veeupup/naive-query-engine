@@ -39,6 +39,10 @@ impl TableSource for MemTable {
         }
         Ok(self.batches.clone())
     }
+
+    fn source_name(&self) -> String {
+        "MemTable".into()
+    }
 }
 
 #[cfg(test)]

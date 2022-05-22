@@ -33,6 +33,10 @@ impl TableSource for EmptyTable {
     fn scan(&self, _projection: Option<Vec<usize>>) -> Result<Vec<RecordBatch>> {
         Ok(vec![])
     }
+
+    fn source_name(&self) -> String {
+        "EmptyTable".into()
+    }
 }
 
 #[cfg(test)]
