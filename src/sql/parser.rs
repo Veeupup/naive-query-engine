@@ -14,7 +14,7 @@ use sqlparser::{
 /// SQL Parser
 pub struct SQLParser;
 
-impl<'a> SQLParser {
+impl SQLParser {
     /// Parse the specified tokens and return statement
     pub fn parse(sql: &str) -> Result<Statement, ParserError> {
         let dialect = GenericDialect {};
