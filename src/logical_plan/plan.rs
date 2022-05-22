@@ -326,10 +326,10 @@ mod tests {
 
         let join = LogicalPlan::Join(Join {
             left: scan.clone(),
-            right: scan.clone(),
+            right: scan,
             on: vec![],
             join_type: JoinType::Inner,
-            schema: schema.clone(),
+            schema,
         });
 
         assert_eq!(
