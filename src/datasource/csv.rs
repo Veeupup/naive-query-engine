@@ -94,6 +94,10 @@ impl TableSource for CsvTable {
     fn scan(&self, _projection: Option<Vec<usize>>) -> Result<Vec<RecordBatch>> {
         Ok(self.batches.clone())
     }
+
+    fn source_name(&self) -> String {
+        "CsvTable".into()
+    }
 }
 
 #[cfg(test)]

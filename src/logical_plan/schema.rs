@@ -267,3 +267,9 @@ impl NaiveField {
         self.qualifier.as_ref()
     }
 }
+
+impl From<NaiveField> for Field {
+    fn from(field: NaiveField) -> Self {
+        Field::new(field.name(), field.data_type().clone(), field.is_nullable())
+    }
+}

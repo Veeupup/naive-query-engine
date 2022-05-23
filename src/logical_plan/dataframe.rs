@@ -9,7 +9,7 @@ use std::sync::Arc;
 use crate::logical_plan::expression::LogicalExpr;
 use crate::logical_plan::plan::{Aggregate, Filter, LogicalPlan, Projection};
 
-use super::expression::Column;
+use super::expression::{AggregateFunction, Column};
 use super::plan::{Join, JoinType, Limit};
 use super::schema::NaiveSchema;
 use crate::error::{ErrorCode, Result};
@@ -27,27 +27,14 @@ impl DataFrame {
     pub fn project(self, exprs: Vec<LogicalExpr>) -> Result<Self> {
         // TODO(veeupup): Ambiguous reference of field
         let mut fields = vec![];
-        let mut new_exprs = vec![];
         for expr in &exprs {
-            match expr {
-                LogicalExpr::Wildcard => {
-                    let schema = self.plan.schema();
-                    schema.fields().iter().for_each(|field| {
-                        fields.push(field.clone());
-                        new_exprs.push(LogicalExpr::column(None, field.name().clone()));
-                    });
-                }
-                _ => {
-                    fields.push(expr.data_field(&self.plan)?);
-                    new_exprs.push(expr.clone());
-                }
-            }
+            fields.push(expr.data_field(&self.plan)?);
         }
         let schema = NaiveSchema::new(fields);
         Ok(Self {
             plan: LogicalPlan::Projection(Projection {
                 input: Arc::new(self.plan),
-                exprs: new_exprs,
+                exprs,
                 schema,
             }),
         })
@@ -63,7 +50,11 @@ impl DataFrame {
     }
 
     #[allow(unused)]
-    pub fn aggregate(self, group_expr: Vec<LogicalExpr>, aggr_expr: Vec<LogicalExpr>) -> Self {
+    pub fn aggregate(
+        self,
+        group_expr: Vec<LogicalExpr>,
+        aggr_expr: Vec<AggregateFunction>,
+    ) -> Self {
         let mut group_fields = group_expr
             .iter()
             .map(|expr| expr.data_field(&self.plan).unwrap())

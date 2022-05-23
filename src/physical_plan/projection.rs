@@ -42,25 +42,31 @@ impl PhysicalPlan for ProjectionPlan {
 
     fn execute(&self) -> Result<Vec<RecordBatch>> {
         let input = self.input.execute()?;
-        let batches = input
-            .iter()
-            .map(|batch| {
-                let columns = self
-                    .expr
-                    .iter()
+
+        // when aggragating, we just output what input does
+        if self.schema.fields().is_empty() {
+            Ok(input)
+        } else {
+            let batches = input
+                .iter()
+                .map(|batch| {
+                    let columns = self
+                        .expr
+                        .iter()
+                        // TODO(veeupup): remove unwrap
+                        .map(|expr| expr.evaluate(batch).unwrap())
+                        .collect::<Vec<_>>();
+                    let columns = columns
+                        .iter()
+                        .map(|column| column.clone().into_array())
+                        .collect::<Vec<_>>();
                     // TODO(veeupup): remove unwrap
-                    .map(|expr| expr.evaluate(batch).unwrap())
-                    .collect::<Vec<_>>();
-                let columns = columns
-                    .iter()
-                    .map(|column| column.clone().into_array())
-                    .collect::<Vec<_>>();
-                // TODO(veeupup): remove unwrap
-                // let projection_schema = self.schema.into();
-                RecordBatch::try_new(SchemaRef::from(self.schema.clone()), columns).unwrap()
-            })
-            .collect::<Vec<_>>();
-        Ok(batches)
+                    // let projection_schema = self.schema.into();
+                    RecordBatch::try_new(SchemaRef::from(self.schema.clone()), columns).unwrap()
+                })
+                .collect::<Vec<_>>();
+            Ok(batches)
+        }
     }
 
     fn children(&self) -> Result<Vec<PhysicalPlanRef>> {

@@ -20,7 +20,7 @@ pub enum ErrorCode {
 
     ColumnNotExists(String),
 
-    LogicalError,
+    LogicalError(String),
 
     NoSuchTable(String),
 
@@ -31,6 +31,8 @@ pub enum ErrorCode {
     PlanError(String),
 
     NoMatchFunction(String),
+
+    NotSupported(String),
 
     NotImplemented,
     #[allow(unused)]

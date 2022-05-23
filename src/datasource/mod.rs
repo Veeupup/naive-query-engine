@@ -23,6 +23,8 @@ pub trait TableSource: Debug {
     // TODO(veeupup): return async stream record batch
     /// for scan
     fn scan(&self, projection: Option<Vec<usize>>) -> Result<Vec<RecordBatch>>;
+
+    fn source_name(&self) -> String;
 }
 
 pub use csv::CsvConfig;

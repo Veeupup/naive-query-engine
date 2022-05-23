@@ -7,6 +7,7 @@
 mod expression;
 mod plan;
 
+mod aggregate;
 mod hash_join;
 mod limit;
 mod nested_loop_join;
@@ -14,6 +15,7 @@ mod projection;
 mod scan;
 mod selection;
 
+pub use aggregate::*;
 pub use expression::*;
 pub use hash_join::*;
 pub use limit::*;

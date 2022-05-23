@@ -7,11 +7,13 @@
 use crate::datasource::TableRef;
 use crate::logical_plan::expression::{Column, LogicalExpr};
 
+use std::fmt::{Debug, Display, Formatter, Result};
 use std::sync::Arc;
 
+use super::expression::AggregateFunction;
 use super::schema::NaiveSchema;
 
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 pub enum LogicalPlan {
     /// Evaluates an arbitrary list of expressions (essentially a
     /// SELECT with an expression list) on its input.
@@ -67,6 +69,18 @@ impl LogicalPlan {
     }
 }
 
+impl Display for LogicalPlan {
+    fn fmt(&self, f: &mut Formatter<'_>) -> Result {
+        Debug::fmt(&self, f)
+    }
+}
+
+impl Debug for LogicalPlan {
+    fn fmt(&self, f: &mut Formatter<'_>) -> Result {
+        do_pretty_print(self, f, 0)
+    }
+}
+
 #[derive(Debug, Clone)]
 pub struct Projection {
     /// The list of expressions
@@ -102,7 +116,7 @@ pub struct Aggregate {
     /// Grouping expressions
     pub group_expr: Vec<LogicalExpr>,
     /// Aggregate expressions
-    pub aggr_expr: Vec<LogicalExpr>,
+    pub aggr_expr: Vec<AggregateFunction>,
     /// The schema description of the aggregate output
     pub schema: NaiveSchema,
 }
@@ -138,6 +152,106 @@ pub struct Limit {
     pub n: usize,
     /// The logical plan
     pub input: Arc<LogicalPlan>,
+}
+
+fn do_pretty_print(plan: &LogicalPlan, f: &mut Formatter<'_>, depth: usize) -> Result {
+    write!(f, "{}", "  ".repeat(depth))?;
+
+    match plan {
+        LogicalPlan::Projection(Projection {
+            exprs,
+            input,
+            schema,
+        }) => {
+            writeln!(f, "Projection:")?;
+
+            write!(f, "{}", "  ".repeat(depth + 1))?;
+            writeln!(f, "exprs: {:?}", exprs)?;
+
+            write!(f, "{}", "  ".repeat(depth + 1))?;
+            writeln!(f, "input:")?;
+            do_pretty_print(input.as_ref(), f, depth + 2)?;
+
+            write!(f, "{}", "  ".repeat(depth + 1))?;
+            writeln!(f, "schema: {:?}", schema)
+        }
+        LogicalPlan::Filter(Filter { predicate, input }) => {
+            writeln!(f, "Filter:")?;
+
+            write!(f, "{}", "  ".repeat(depth + 1))?;
+            writeln!(f, "predicate: {:?}", predicate)?;
+
+            write!(f, "{}", "  ".repeat(depth + 1))?;
+            writeln!(f, "input:")?;
+            do_pretty_print(input.as_ref(), f, depth + 2)
+        }
+        LogicalPlan::Aggregate(Aggregate {
+            input,
+            group_expr,
+            aggr_expr,
+            schema,
+        }) => {
+            writeln!(f, "Aggregate:")?;
+
+            write!(f, "{}", "  ".repeat(depth + 1))?;
+            writeln!(f, "input:")?;
+            do_pretty_print(input.as_ref(), f, depth + 2)?;
+
+            write!(f, "{}", "  ".repeat(depth + 1))?;
+            writeln!(f, "group_expr: {:?}", group_expr)?;
+
+            write!(f, "{}", "  ".repeat(depth + 1))?;
+            writeln!(f, "aggr_expr: {:?}", aggr_expr)?;
+
+            write!(f, "{}", "  ".repeat(depth + 1))?;
+            writeln!(f, "schema: {:?}", schema)
+        }
+        LogicalPlan::Join(Join {
+            left,
+            right,
+            on,
+            join_type,
+            schema,
+        }) => {
+            writeln!(f, "Join:")?;
+
+            write!(f, "{}", "  ".repeat(depth + 1))?;
+            writeln!(f, "left:")?;
+            do_pretty_print(left.as_ref(), f, depth + 2)?;
+
+            write!(f, "{}", "  ".repeat(depth + 1))?;
+            writeln!(f, "right:")?;
+            do_pretty_print(right.as_ref(), f, depth + 2)?;
+
+            write!(f, "{}", "  ".repeat(depth + 1))?;
+            writeln!(f, "on: {:?}", on)?;
+
+            write!(f, "{}", "  ".repeat(depth + 1))?;
+            writeln!(f, "join_type: {:?}", join_type)?;
+
+            write!(f, "{}", "  ".repeat(depth + 1))?;
+            writeln!(f, "schema: {:?}", schema)
+        }
+        LogicalPlan::Limit(Limit { n, input }) => {
+            writeln!(f, "Limit:")?;
+
+            write!(f, "{}", "  ".repeat(depth + 1))?;
+            writeln!(f, "n: {}", n)?;
+
+            write!(f, "{}", "  ".repeat(depth + 1))?;
+            writeln!(f, "input:")?;
+            do_pretty_print(input.as_ref(), f, depth + 2)
+        }
+        LogicalPlan::TableScan(TableScan { source, projection }) => {
+            writeln!(f, "TableScan:")?;
+
+            write!(f, "{}", "  ".repeat(depth + 1))?;
+            writeln!(f, "source: {:?}", source.source_name())?;
+
+            write!(f, "{}", "  ".repeat(depth + 1))?;
+            writeln!(f, "projection: {:?}", projection)
+        }
+    }
 }
 
 #[cfg(test)]
@@ -181,5 +295,64 @@ mod tests {
         ];
 
         Ok(())
+    }
+
+    #[test]
+    fn print_logical_plan() {
+        let schema = NaiveSchema::empty();
+        let source = EmptyTable::try_create(schema.clone()).unwrap();
+
+        let scan = LogicalPlan::TableScan(TableScan {
+            source,
+            projection: None,
+        });
+
+        assert_eq!(
+            "TableScan:\
+            \n  source: \"EmptyTable\"\
+            \n  projection: None\n",
+            format!("{}", scan)
+        );
+
+        let scan = Arc::new(scan);
+
+        let limit = LogicalPlan::Limit(Limit {
+            n: 233,
+            input: scan.clone(),
+        });
+
+        assert_eq!(
+            "Limit:\
+            \n  n: 233\
+            \n  input:\
+            \n    TableScan:\
+            \n      source: \"EmptyTable\"\
+            \n      projection: None\n",
+            format!("{}", limit)
+        );
+
+        let join = LogicalPlan::Join(Join {
+            left: scan.clone(),
+            right: scan,
+            on: vec![],
+            join_type: JoinType::Inner,
+            schema,
+        });
+
+        assert_eq!(
+            "Join:\
+            \n  left:\
+            \n    TableScan:\
+            \n      source: \"EmptyTable\"\
+            \n      projection: None\
+            \n  right:\
+            \n    TableScan:\
+            \n      source: \"EmptyTable\"\
+            \n      projection: None\
+            \n  on: []\
+            \n  join_type: Inner\
+            \n  schema: NaiveSchema { fields: [] }\n",
+            format!("{}", join)
+        );
     }
 }
