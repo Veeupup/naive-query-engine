@@ -77,7 +77,7 @@ impl PhysicalPlan for CrossJoin {
                                 .as_any()
                                 .downcast_ref::<PrimitiveArray<Int64Type>>()
                                 .unwrap();
-                            for j in 0..right_rows {
+                            for _ in 0..right_rows {
                                 for k in 0..left_col.len() {
                                     t_vec.push(left_col.value(k))
                                 }
@@ -90,7 +90,7 @@ impl PhysicalPlan for CrossJoin {
                                 .as_any()
                                 .downcast_ref::<PrimitiveArray<UInt64Type>>()
                                 .unwrap();
-                            for j in 0..right_rows {
+                            for _ in 0..right_rows {
                                 for k in 0..left_col.len() {
                                     t_vec.push(left_col.value(k))
                                 }
@@ -99,10 +99,11 @@ impl PhysicalPlan for CrossJoin {
                         }
                         DataType::Float64 => {
                             let mut t_vec = vec![];
-                            let left_col = array.as_any()
+                            let left_col = array
+                                .as_any()
                                 .downcast_ref::<PrimitiveArray<Float64Type>>()
                                 .unwrap();
-                            for j in 0..right_rows {
+                            for _j in 0..right_rows {
                                 for k in 0..left_col.len() {
                                     t_vec.push(left_col.value(k))
                                 }
@@ -111,10 +112,8 @@ impl PhysicalPlan for CrossJoin {
                         }
                         DataType::Utf8 => {
                             let mut t_vec = vec![];
-                            let left_col = array.as_any()
-                                .downcast_ref::<StringArray>()
-                                .unwrap();
-                            for j in 0..right_rows {
+                            let left_col = array.as_any().downcast_ref::<StringArray>().unwrap();
+                            for _ in 0..right_rows {
                                 for k in 0..left_col.len() {
                                     t_vec.push(left_col.value(k))
                                 }
@@ -134,7 +133,7 @@ impl PhysicalPlan for CrossJoin {
                                 .as_any()
                                 .downcast_ref::<PrimitiveArray<Int64Type>>()
                                 .unwrap();
-                            for j in 0..left_rows {
+                            for _ in 0..left_rows {
                                 for k in 0..left_col.len() {
                                     t_vec.push(left_col.value(k))
                                 }
@@ -147,7 +146,7 @@ impl PhysicalPlan for CrossJoin {
                                 .as_any()
                                 .downcast_ref::<PrimitiveArray<UInt64Type>>()
                                 .unwrap();
-                            for j in 0..left_rows {
+                            for _ in 0..left_rows {
                                 for k in 0..left_col.len() {
                                     t_vec.push(left_col.value(k))
                                 }
@@ -156,10 +155,11 @@ impl PhysicalPlan for CrossJoin {
                         }
                         DataType::Float64 => {
                             let mut t_vec = vec![];
-                            let left_col = array.as_any()
+                            let left_col = array
+                                .as_any()
                                 .downcast_ref::<PrimitiveArray<Float64Type>>()
                                 .unwrap();
-                            for j in 0..left_rows {
+                            for _ in 0..left_rows {
                                 for k in 0..left_col.len() {
                                     t_vec.push(left_col.value(k))
                                 }
@@ -168,10 +168,8 @@ impl PhysicalPlan for CrossJoin {
                         }
                         DataType::Utf8 => {
                             let mut t_vec = vec![];
-                            let left_col = array.as_any()
-                                .downcast_ref::<StringArray>()
-                                .unwrap();
-                            for j in 0..left_rows {
+                            let left_col = array.as_any().downcast_ref::<StringArray>().unwrap();
+                            for _ in 0..left_rows {
                                 for k in 0..left_col.len() {
                                     t_vec.push(left_col.value(k))
                                 }
