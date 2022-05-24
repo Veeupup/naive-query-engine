@@ -65,7 +65,6 @@ impl PhysicalPlan for CrossJoin {
                 let mut columns: Vec<Arc<dyn Array>> = vec![];
                 let left_rows = outer.num_rows();
                 let right_rows = inner.num_rows();
-                println!("{} {}", left_rows, right_rows);
                 for i in 0..self.left.schema().fields().len() {
                     let array = outer.column(i);
                     let dt = self.left.schema().field(i).data_type();

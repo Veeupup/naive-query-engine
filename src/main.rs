@@ -23,7 +23,8 @@ fn main() -> Result<()> {
     print_result(&ret)?;
 
     // aggregate
-    let ret = db.run_sql("select count(id), sum(age), sum(score) from t1 group by id % 3")?;
+    let ret =
+        db.run_sql("select count(id), sum(age), sum(score), avg(score) from t1 group by id % 3")?;
     print_result(&ret)?;
 
     Ok(())
