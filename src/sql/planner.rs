@@ -47,6 +47,7 @@ impl<'a> SQLPlanner<'a> {
             Statement::Query(query) => {
                 let plan = self.set_expr_to_plan(query.body)?;
                 let plan = self.order_by(plan, query.order_by)?;
+                // We should take offset before limit.
                 let plan = self.offset(plan, query.offset)?;
                 self.limit(plan, query.limit)
             }
@@ -175,8 +176,8 @@ impl<'a> SQLPlanner<'a> {
         }
     }
 
-    fn offset(&self, plan: LogicalPlan, n: Option<Offset>) -> Result<LogicalPlan> {
-        match n {
+    fn offset(&self, plan: LogicalPlan, offset: Option<Offset>) -> Result<LogicalPlan> {
+        match offset {
             Some(offset) => {
                 let n = match self.sql_to_expr(&offset.value)? {
                     LogicalExpr::Literal(ScalarValue::Int64(Some(n))) => Ok(n as usize),

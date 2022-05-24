@@ -165,9 +165,9 @@ pub struct Limit {
 /// Adjusts the starting point at which the rest of the expressions begin to effect.
 #[derive(Debug, Clone)]
 pub struct Offset {
-    /// The offset
+    /// The offset.
     pub n: usize,
-    /// The logical plan
+    /// The logical plan.
     pub input: Arc<LogicalPlan>,
 }
 
