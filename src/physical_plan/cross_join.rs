@@ -8,8 +8,6 @@ use crate::logical_plan::plan::JoinType;
 use crate::logical_plan::schema::NaiveSchema;
 
 use crate::Result;
-use arrow::array::Array;
-use arrow::datatypes::SchemaRef;
 use arrow::record_batch::RecordBatch;
 use std::sync::Arc;
 
@@ -45,23 +43,36 @@ impl PhysicalPlan for CrossJoin {
     }
 
     fn execute(&self) -> Result<Vec<RecordBatch>> {
-        let outer_table = self.left.execute()?;
-        let inner_table = self.right.execute()?;
+        // TODO(ywq)
+        let _outer_table = self.left.execute()?;
+        let _inner_table = self.right.execute()?;
 
-        let mut batches: Vec<RecordBatch> = vec![];
+        let batches: Vec<RecordBatch> = vec![];
 
-        let left_rows = outer_table[0].num_rows();
-        let right_rows = inner_table[0].num_rows();
+        // let left_rows = outer_table[0].num_rows();
+        // let right_rows = inner_table[0].num_rows();
+        // let mut columns = vec![];
+        // for outer in &outer_table {
+        //     let data_vec = vec![];
+        //     for i in 0..self.left.schema().fields().len() {
+        //         let array = outer.column(i);
+        //         for j in 0..right_rows {
+        //             // push to vector
+        //         }
+        //     }
+        // }
 
-        println!("left rows: {}", left_rows);
-        for i in 0..left_rows {
-            for j in 0..right_rows {
-                for fi in 0..self.left.schema().fields().len() {
-                }
-                for fj in 0..self.left.schema().fields().len() {
-                }
-            }
-        }
+        // for inner in &inner_table {
+        //     let data_vec = vec![];
+        //     for i in 0..self.right.schema().fields().len() {
+        //         let array = inner.column(i);
+        //         for j in 0..left_rows {
+        //             // push to vector
+        //         }
+        //     }
+        //     // data_vec to column
+        //     // push column into columns
+        // }
         Ok(batches)
     }
 

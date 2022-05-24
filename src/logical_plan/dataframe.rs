@@ -103,7 +103,6 @@ impl DataFrame {
         let join_schema = left_schema.join(right.schema());
         // TODO(ywq) test on it.
         if on.is_empty() {
-            println!("ywq test reach here");
             return Ok(Self::new(LogicalPlan::CrossJoin(Join {
                 left: Arc::new(self.plan.clone()),
                 right: Arc::new(right.clone()),

@@ -258,7 +258,7 @@ fn do_pretty_print(plan: &LogicalPlan, f: &mut Formatter<'_>, depth: usize) -> R
         LogicalPlan::CrossJoin(Join {
             left,
             right,
-            on,
+            on: _,
             join_type,
             schema,
         }) => {
