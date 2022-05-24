@@ -19,6 +19,9 @@ fn main() -> Result<()> {
     let ret = db.run_sql("select * from employee innner join rank on employee.rank = rank.id")?;
     print_result(&ret)?;
 
+    let ret = db.run_sql("select * from employee join rank")?;
+    print_result(&ret)?;
+
     // aggregate
     let ret = db.run_sql("select count(id), sum(age), sum(score) from t1 group by id % 3")?;
     print_result(&ret)?;

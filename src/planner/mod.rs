@@ -9,6 +9,7 @@
 
 use crate::logical_plan::expression::AggregateFunc;
 use crate::logical_plan::schema::NaiveSchema;
+use crate::physical_plan::CrossJoin;
 use crate::physical_plan::HashJoin;
 
 use crate::physical_plan::count::Count;
@@ -125,6 +126,16 @@ impl QueryPlanner {
 
                 let input = Self::create_physical_plan(&aggr.input)?;
                 Ok(PhysicalAggregatePlan::create(group_exprs, aggr_ops, input))
+            }
+            LogicalPlan::CrossJoin(join) => {
+                let left = Self::create_physical_plan(&join.left)?;
+                let right = Self::create_physical_plan(&join.right)?;
+                Ok(CrossJoin::create(
+                    left,
+                    right,
+                    join.join_type,
+                    join.schema.clone(),
+                ))
             }
         }
     }
