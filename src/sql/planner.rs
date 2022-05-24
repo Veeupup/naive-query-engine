@@ -10,11 +10,11 @@
 use std::collections::HashSet;
 
 use arrow::datatypes::DataType;
-use sqlparser::ast::DataType as SQLDataType;
 use sqlparser::ast::{
     BinaryOperator, Expr, FunctionArg, Join, JoinConstraint, JoinOperator, OrderByExpr, SetExpr,
     Statement, TableWithJoins, UnaryOperator,
 };
+use sqlparser::ast::{DataType as SQLDataType, Offset};
 use sqlparser::ast::{Ident, ObjectName, SelectItem, TableFactor, Value};
 
 use crate::error::ErrorCode;
@@ -47,6 +47,7 @@ impl<'a> SQLPlanner<'a> {
             Statement::Query(query) => {
                 let plan = self.set_expr_to_plan(query.body)?;
                 let plan = self.order_by(plan, query.order_by)?;
+                let plan = self.offset(plan, query.offset)?;
                 self.limit(plan, query.limit)
             }
             _ => unimplemented!(),
@@ -169,6 +170,21 @@ impl<'a> SQLPlanner<'a> {
                     )),
                 }?;
                 Ok(DataFrame { plan }.limit(n).logical_plan())
+            }
+            None => Ok(plan),
+        }
+    }
+
+    fn offset(&self, plan: LogicalPlan, n: Option<Offset>) -> Result<LogicalPlan> {
+        match n {
+            Some(offset) => {
+                let n = match self.sql_to_expr(&offset.value)? {
+                    LogicalExpr::Literal(ScalarValue::Int64(Some(n))) => Ok(n as usize),
+                    _ => Err(ErrorCode::PlanError(
+                        "Unexpected expression for Offset clause".to_string(),
+                    )),
+                }?;
+                Ok(DataFrame { plan }.offset(n).logical_plan())
             }
             None => Ok(plan),
         }

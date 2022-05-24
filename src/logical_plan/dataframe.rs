@@ -10,7 +10,7 @@ use crate::logical_plan::expression::LogicalExpr;
 use crate::logical_plan::plan::{Aggregate, Filter, LogicalPlan, Projection};
 
 use super::expression::{AggregateFunction, Column};
-use super::plan::{Join, JoinType, Limit};
+use super::plan::{Join, JoinType, Limit, Offset};
 use super::schema::NaiveSchema;
 use crate::error::{ErrorCode, Result};
 
@@ -78,6 +78,15 @@ impl DataFrame {
     pub fn limit(self, n: usize) -> DataFrame {
         Self {
             plan: LogicalPlan::Limit(Limit {
+                input: Arc::new(self.plan),
+                n,
+            }),
+        }
+    }
+
+    pub fn offset(self, n: usize) -> DataFrame {
+        Self {
+            plan: LogicalPlan::Offset(Offset {
                 input: Arc::new(self.plan),
                 n,
             }),

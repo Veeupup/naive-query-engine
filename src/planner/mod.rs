@@ -20,6 +20,7 @@ use crate::physical_plan::PhysicalCastExpr;
 use crate::physical_plan::PhysicalExprRef;
 use crate::physical_plan::PhysicalLimitPlan;
 use crate::physical_plan::PhysicalLiteralExpr;
+use crate::physical_plan::PhysicalOffsetPlan;
 use crate::physical_plan::PhysicalPlanRef;
 use crate::physical_plan::PhysicalUnaryExpr;
 use crate::physical_plan::SelectionPlan;
@@ -59,6 +60,10 @@ impl QueryPlanner {
             LogicalPlan::Limit(limit) => {
                 let plan = Self::create_physical_plan(&limit.input)?;
                 Ok(PhysicalLimitPlan::create(plan, limit.n))
+            }
+            LogicalPlan::Offset(offset) => {
+                let plan = Self::create_physical_plan(&offset.input)?;
+                Ok(PhysicalOffsetPlan::create(plan, offset.n))
             }
             LogicalPlan::Join(join) => {
                 let left = Self::create_physical_plan(&join.left)?;
