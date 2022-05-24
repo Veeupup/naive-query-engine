@@ -5,7 +5,10 @@
  * @Last Modified time: 2022-05-20 21:24:37
  */
 
+pub mod avg;
 pub mod count;
+pub mod max;
+pub mod min;
 pub mod sum;
 
 use std::collections::HashMap;
