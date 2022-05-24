@@ -1,8 +1,6 @@
 /*
- * @Author: Veeupup
- * @Date: 2022-05-17 11:27:29
- * @Last Modified by: Veeupup
- * @Last Modified time: 2022-05-18 14:45:03
+ * @Author: GanZiheng
+ * @Date: 2022-05-25
  */
 
 use super::{PhysicalPlan, PhysicalPlanRef};
@@ -13,18 +11,18 @@ use arrow::record_batch::RecordBatch;
 use std::sync::Arc;
 
 #[derive(Debug, Clone)]
-pub struct PhysicalLimitPlan {
+pub struct PhysicalOffsetPlan {
     input: PhysicalPlanRef,
     n: usize,
 }
 
-impl PhysicalLimitPlan {
+impl PhysicalOffsetPlan {
     pub fn create(input: PhysicalPlanRef, n: usize) -> PhysicalPlanRef {
         Arc::new(Self { input, n })
     }
 }
 
-impl PhysicalPlan for PhysicalLimitPlan {
+impl PhysicalPlan for PhysicalOffsetPlan {
     fn schema(&self) -> &NaiveSchema {
         self.input.schema()
     }
@@ -33,17 +31,21 @@ impl PhysicalPlan for PhysicalLimitPlan {
         let batches = self.input.execute()?;
         let mut n = self.n;
         let mut ret = vec![];
+
         for batch in &batches {
             if n == 0 {
-                break;
-            }
-            if batch.num_rows() <= n {
                 ret.push(batch.clone());
+                continue;
+            }
+
+            if n >= batch.num_rows() {
                 n -= batch.num_rows();
-            } else {
-                ret.push(batch.slice(0, n));
-                n = 0;
-            };
+                continue;
+            }
+
+            let remain = batch.num_rows() - n;
+            ret.push(batch.slice(n, remain));
+            n = 0;
         }
         Ok(ret)
     }
@@ -64,22 +66,22 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_physical_limit() -> Result<()> {
+    fn test_physical_offset() -> Result<()> {
         let source = CsvTable::try_create("data/test_data.csv", CsvConfig::default())?;
 
         let scan_plan = ScanPlan::create(source, None);
-        let limit_plan = PhysicalLimitPlan::create(scan_plan, 2);
+        let offset_plan = PhysicalOffsetPlan::create(scan_plan, 5);
 
-        let result = limit_plan.execute()?;
+        let result = offset_plan.execute()?;
 
         assert_eq!(result.len(), 1);
         let record_batch = &result[0];
         assert_eq!(record_batch.columns().len(), 4);
 
-        let id_excepted: ArrayRef = Arc::new(Int64Array::from(vec![1, 2]));
-        let name_excepted: ArrayRef = Arc::new(StringArray::from(vec!["veeupup", "alex"]));
-        let age_excepted: ArrayRef = Arc::new(Int64Array::from(vec![23, 20]));
-        let score_excepted: ArrayRef = Arc::new(Float64Array::from(vec![60.0, 90.1]));
+        let id_excepted: ArrayRef = Arc::new(Int64Array::from(vec![7, 8, 9]));
+        let name_excepted: ArrayRef = Arc::new(StringArray::from(vec!["jack", "cock", "primer"]));
+        let age_excepted: ArrayRef = Arc::new(Int64Array::from(vec![21, 22, 23]));
+        let score_excepted: ArrayRef = Arc::new(Float64Array::from(vec![83.3, 84.4, 85.5]));
 
         assert_eq!(record_batch.column(0), &id_excepted);
         assert_eq!(record_batch.column(1), &name_excepted);
