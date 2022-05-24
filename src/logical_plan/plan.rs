@@ -37,6 +37,8 @@ pub enum LogicalPlan {
     /// Join two logical plans on one or more join columns
     Join(Join),
 
+    CrossJoin(Join),
+
     /// Produces the first `n` tuples from its input and discards the rest.
     Limit(Limit),
 
@@ -53,6 +55,7 @@ impl LogicalPlan {
             LogicalPlan::Join(Join { schema, .. }) => schema,
             LogicalPlan::Limit(Limit { input, .. }) => input.schema(),
             LogicalPlan::TableScan(TableScan { source, .. }) => source.schema(),
+            LogicalPlan::CrossJoin(Join { schema, .. }) => schema,
         }
     }
 
@@ -65,6 +68,7 @@ impl LogicalPlan {
             LogicalPlan::Join(Join { left, right, .. }) => vec![left.clone(), right.clone()],
             LogicalPlan::Limit(Limit { input, .. }) => vec![input.clone()],
             LogicalPlan::TableScan(_) => vec![],
+            LogicalPlan::CrossJoin(Join { left, right, .. }) => vec![left.clone(), right.clone()],
         }
     }
 }
@@ -126,7 +130,7 @@ pub enum JoinType {
     Inner,
     Left,
     Right,
-    Cross
+    Cross,
 }
 
 /// Join two logical plans on one or more join columns
@@ -250,6 +254,29 @@ fn do_pretty_print(plan: &LogicalPlan, f: &mut Formatter<'_>, depth: usize) -> R
 
             write!(f, "{}", "  ".repeat(depth + 1))?;
             writeln!(f, "projection: {:?}", projection)
+        }
+        LogicalPlan::CrossJoin(Join {
+            left,
+            right,
+            on,
+            join_type,
+            schema,
+        }) => {
+            writeln!(f, "Join:")?;
+
+            write!(f, "{}", "  ".repeat(depth + 1))?;
+            writeln!(f, "left:")?;
+            do_pretty_print(left.as_ref(), f, depth + 2)?;
+
+            write!(f, "{}", "  ".repeat(depth + 1))?;
+            writeln!(f, "right:")?;
+            do_pretty_print(right.as_ref(), f, depth + 2)?;
+
+            write!(f, "{}", "  ".repeat(depth + 1))?;
+            writeln!(f, "join_type: {:?}", join_type)?;
+
+            write!(f, "{}", "  ".repeat(depth + 1))?;
+            writeln!(f, "schema: {:?}", schema)
         }
     }
 }
