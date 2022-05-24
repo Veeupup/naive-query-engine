@@ -14,6 +14,8 @@ use crate::physical_plan::HashJoin;
 
 use crate::physical_plan::avg::Avg;
 use crate::physical_plan::count::Count;
+use crate::physical_plan::max::Max;
+use crate::physical_plan::min::Min;
 use crate::physical_plan::sum::Sum;
 use crate::physical_plan::PhysicalAggregatePlan;
 use crate::physical_plan::PhysicalBinaryExpr;
@@ -130,8 +132,30 @@ impl QueryPlanner {
                                 ));
                             }
                         }
-                        AggregateFunc::Min => todo!(),
-                        AggregateFunc::Max => todo!(),
+                        AggregateFunc::Min => {
+                            let expr =
+                                Self::create_physical_expression(&aggr_expr.args, &aggr.input)?;
+                            let col_expr = expr.as_any().downcast_ref::<ColumnExpr>();
+                            if let Some(col_expr) = col_expr {
+                                Min::create(col_expr.clone())
+                            } else {
+                                return Err(ErrorCode::PlanError(
+                                    "Aggregate Func should have a column in it".to_string(),
+                                ));
+                            }
+                        }
+                        AggregateFunc::Max => {
+                            let expr =
+                                Self::create_physical_expression(&aggr_expr.args, &aggr.input)?;
+                            let col_expr = expr.as_any().downcast_ref::<ColumnExpr>();
+                            if let Some(col_expr) = col_expr {
+                                Max::create(col_expr.clone())
+                            } else {
+                                return Err(ErrorCode::PlanError(
+                                    "Aggregate Func should have a column in it".to_string(),
+                                ));
+                            }
+                        }
                     };
                     aggr_ops.push(aggr_op);
                 }
