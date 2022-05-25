@@ -16,6 +16,7 @@ mod offset;
 mod projection;
 mod scan;
 mod selection;
+mod visitor;
 
 pub use aggregate::*;
 pub use cross_join::*;
