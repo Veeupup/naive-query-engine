@@ -28,18 +28,36 @@ fn main() -> Result<()> {
     db.create_csv_table("t1", "data/test_data.csv", CsvConfig::default())?;
 
     // select
-    let ret = db.run_sql("select id, name, age + 100 from t1 where id < 6 limit 3")?;
+    let ret = db.run_sql("select id, name, age + 100 from t1 where id < 9 limit 3 offset 2")?;
     print_result(&ret)?;
 
-    // Join
+    // Inner Join
     db.create_csv_table("employee", "data/employee.csv", CsvConfig::default())?;
     db.create_csv_table("rank", "data/rank.csv", CsvConfig::default())?;
+    db.create_csv_table("department", "data/department.csv", CsvConfig::default())?;
 
-    let ret = db.run_sql("select * from employee innner join rank on employee.rank = rank.id")?;
+    let ret = db.run_sql(
+        "
+        select id, name, rank_name, department_name
+        from employee
+        join rank on 
+            employee.rank = rank.id  
+        join department on
+            employee.department_id = department.id
+    ",
+    )?;
+    print_result(&ret)?;
+
+    // cross join
+    let ret = db.run_sql("select * from employee join rank")?;
     print_result(&ret)?;
 
     // aggregate
-    let ret = db.run_sql("select count(id), sum(age), sum(score) from t1 group by id % 3")?;
+    let ret = db.run_sql(
+        "
+        select count(id), sum(age), sum(score), avg(score), max(score), min(score) 
+        from t1 group by id % 3",
+    )?;
     print_result(&ret)?;
 
     Ok(())
@@ -49,29 +67,48 @@ fn main() -> Result<()> {
 output will be:
 
 ```
-+----+---------+-----------+
-| id | name    | age + 100 |
-+----+---------+-----------+
-| 1  | veeupup | 123       |
-| 2  | alex    | 120       |
-| 4  | lynne   | 118       |
-+----+---------+-----------+
++----+-------+-----------+
+| id | name  | age + 100 |
++----+-------+-----------+
+| 4  | lynne | 118       |
+| 5  | alice | 119       |
+| 6  | bob   | 120       |
++----+-------+-----------+
++----+-------+-------------+-----------------+
+| id | name  | rank_name   | department_name |
++----+-------+-------------+-----------------+
+| 2  | lynne | master      | IT              |
+| 1  | vee   | diamond     | IT              |
+| 3  | Alex  | master      | Marketing       |
+| 4  | jack  | diamond     | Marketing       |
+| 5  | mike  | grandmaster | Human Resource  |
++----+-------+-------------+-----------------+
 +----+-------+---------------+------+----+-------------+
 | id | name  | department_id | rank | id | rank_name   |
 +----+-------+---------------+------+----+-------------+
+| 1  | vee   | 1             | 1    | 1  | master      |
+| 2  | lynne | 1             | 0    | 2  | diamond     |
+| 3  | Alex  | 2             | 0    | 3  | grandmaster |
+| 4  | jack  | 2             | 1    | 4  | master      |
+| 5  | mike  | 3             | 2    | 5  | diamond     |
+| 1  | vee   | 1             | 1    | 1  | grandmaster |
 | 2  | lynne | 1             | 0    | 2  | master      |
-| 3  | Alex  | 2             | 0    | 3  | master      |
+| 3  | Alex  | 2             | 0    | 3  | diamond     |
+| 4  | jack  | 2             | 1    | 4  | grandmaster |
+| 5  | mike  | 3             | 2    | 5  | master      |
 | 1  | vee   | 1             | 1    | 1  | diamond     |
+| 2  | lynne | 1             | 0    | 2  | grandmaster |
+| 3  | Alex  | 2             | 0    | 3  | master      |
 | 4  | jack  | 2             | 1    | 4  | diamond     |
 | 5  | mike  | 3             | 2    | 5  | grandmaster |
 +----+-------+---------------+------+----+-------------+
-+-----------+----------+--------------------+
-| count(id) | sum(age) | sum(score)         |
-+-----------+----------+--------------------+
-| 2         | 43       | 167.7              |
-| 3         | 62       | 243.29000000000002 |
-| 3         | 61       | 255.6              |
-+-----------+----------+--------------------+
++-----------+----------+--------------------+-------------------+------------+------------+
+| count(id) | sum(age) | sum(score)         | avg(score)        | max(score) | min(score) |
++-----------+----------+--------------------+-------------------+------------+------------+
+| 3         | 61       | 255.6              | 85.2              | 90.1       | 81.1       |
+| 3         | 62       | 243.29000000000002 | 81.09666666666668 | 99.99      | 60         |
+| 2         | 43       | 167.7              | 83.85             | 85.5       | 82.2       |
++-----------+----------+--------------------+-------------------+------------+------------+
 ```
 
 ## architecture
