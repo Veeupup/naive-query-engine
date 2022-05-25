@@ -102,7 +102,7 @@ impl PhysicalPlan for CrossJoin {
                                 .as_any()
                                 .downcast_ref::<PrimitiveArray<Float64Type>>()
                                 .unwrap();
-                            for _j in 0..right_rows {
+                            for _ in 0..right_rows {
                                 for k in 0..left_col.len() {
                                     t_vec.push(left_col.value(k))
                                 }
