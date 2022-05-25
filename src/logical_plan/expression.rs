@@ -140,7 +140,7 @@ impl LogicalExpr {
                 args: Box::new(exprs[0].clone()),
             })),
             "max" => Ok(LogicalExpr::AggregateFunction(AggregateFunction {
-                fun: AggregateFunc::Min,
+                fun: AggregateFunc::Max,
                 args: Box::new(exprs[0].clone()),
             })),
             _ => {

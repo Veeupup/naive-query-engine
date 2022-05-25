@@ -118,9 +118,12 @@ impl NaiveDB {
     - [x] physical filter
     - [x] physical limit
     - [x] join
-        - [x] (dumb😊) nested loop join
-        - [x] hash join
-        - [ ] sort-merge join
+        - algorithms
+            - [x] (dumb😊) nested loop join
+            - [x] hash join
+            - [ ] sort-merge join
+        - [x] inner join
+        - [x] cross join
     - [ ] physical expression
         - [x] column expr
         - [x] binary operation expr(add/sub/mul/div/and/or...)

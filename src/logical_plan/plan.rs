@@ -42,6 +42,9 @@ pub enum LogicalPlan {
     /// Produces the first `n` tuples from its input and discards the rest.
     Limit(Limit),
 
+    /// Adjusts the starting point at which the rest of the expressions begin to effect.
+    Offset(Offset),
+
     /// Produces rows from a table provider by reference or from the context
     TableScan(TableScan),
 }
@@ -54,6 +57,7 @@ impl LogicalPlan {
             LogicalPlan::Aggregate(Aggregate { schema, .. }) => schema,
             LogicalPlan::Join(Join { schema, .. }) => schema,
             LogicalPlan::Limit(Limit { input, .. }) => input.schema(),
+            LogicalPlan::Offset(Offset { input, .. }) => input.schema(),
             LogicalPlan::TableScan(TableScan { source, .. }) => source.schema(),
             LogicalPlan::CrossJoin(Join { schema, .. }) => schema,
         }
@@ -67,6 +71,7 @@ impl LogicalPlan {
             LogicalPlan::Aggregate(Aggregate { input, .. }) => vec![input.clone()],
             LogicalPlan::Join(Join { left, right, .. }) => vec![left.clone(), right.clone()],
             LogicalPlan::Limit(Limit { input, .. }) => vec![input.clone()],
+            LogicalPlan::Offset(Offset { input, .. }) => vec![input.clone()],
             LogicalPlan::TableScan(_) => vec![],
             LogicalPlan::CrossJoin(Join { left, right, .. }) => vec![left.clone(), right.clone()],
         }
@@ -125,7 +130,7 @@ pub struct Aggregate {
     pub schema: NaiveSchema,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Debug, Clone, Copy, Eq, PartialEq)]
 pub enum JoinType {
     Inner,
     Left,
@@ -148,13 +153,21 @@ pub struct Join {
     pub schema: NaiveSchema,
 }
 
-#[derive(Debug, Clone)]
-
 /// Produces the first `n` tuples from its input and discards the rest.
+#[derive(Debug, Clone)]
 pub struct Limit {
     /// The limit
     pub n: usize,
     /// The logical plan
+    pub input: Arc<LogicalPlan>,
+}
+
+/// Adjusts the starting point at which the rest of the expressions begin to effect.
+#[derive(Debug, Clone)]
+pub struct Offset {
+    /// The offset.
+    pub n: usize,
+    /// The logical plan.
     pub input: Arc<LogicalPlan>,
 }
 
@@ -238,6 +251,16 @@ fn do_pretty_print(plan: &LogicalPlan, f: &mut Formatter<'_>, depth: usize) -> R
         }
         LogicalPlan::Limit(Limit { n, input }) => {
             writeln!(f, "Limit:")?;
+
+            write!(f, "{}", "  ".repeat(depth + 1))?;
+            writeln!(f, "n: {}", n)?;
+
+            write!(f, "{}", "  ".repeat(depth + 1))?;
+            writeln!(f, "input:")?;
+            do_pretty_print(input.as_ref(), f, depth + 2)
+        }
+        LogicalPlan::Offset(Offset { n, input }) => {
+            writeln!(f, "Offset:")?;
 
             write!(f, "{}", "  ".repeat(depth + 1))?;
             writeln!(f, "n: {}", n)?;
