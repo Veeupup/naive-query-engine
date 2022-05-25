@@ -15,8 +15,18 @@ fn main() -> Result<()> {
     // Join
     db.create_csv_table("employee", "data/employee.csv", CsvConfig::default())?;
     db.create_csv_table("rank", "data/rank.csv", CsvConfig::default())?;
+    db.create_csv_table("department", "data/department.csv", CsvConfig::default())?;
 
-    let ret = db.run_sql("select * from employee innner join rank on employee.rank = rank.id")?;
+    let ret = db.run_sql(
+        "
+        select id, name, rank_name, department_name
+        from employee
+        join rank on 
+            employee.rank = rank.id  
+        join department on
+                employee.department_id = department.id
+    ",
+    )?;
     print_result(&ret)?;
 
     let ret = db.run_sql("select * from employee join rank")?;
@@ -24,7 +34,9 @@ fn main() -> Result<()> {
 
     // aggregate
     let ret = db.run_sql(
-        "select count(id), sum(age), sum(score), avg(score), max(score), min(score) from t1 group by id % 3",
+        "
+        select count(id), sum(age), sum(score), avg(score), max(score), min(score) 
+        from t1 group by id % 3",
     )?;
     print_result(&ret)?;
 
