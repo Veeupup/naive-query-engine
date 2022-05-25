@@ -15,6 +15,7 @@ use std::collections::HashMap;
 use std::fmt::Debug;
 use std::sync::{Arc, Mutex};
 
+use crate::error::ErrorCode;
 use crate::logical_plan::schema::NaiveField;
 use crate::logical_plan::{expression::ScalarValue, schema::NaiveSchema};
 
@@ -22,8 +23,8 @@ use super::{concat_batches, PhysicalPlan, PhysicalPlanRef};
 
 use crate::physical_plan::PhysicalExprRef;
 use crate::Result;
-use arrow::array::PrimitiveArray;
-use arrow::datatypes::{DataType, Field, Int64Type, Schema};
+use arrow::array::{PrimitiveArray, StringArray};
+use arrow::datatypes::{DataType, Field, Int64Type, Schema, UInt64Type};
 use arrow::record_batch::RecordBatch;
 
 #[derive(Debug)]
@@ -48,6 +49,56 @@ impl PhysicalAggregatePlan {
             schema,
         })
     }
+}
+
+macro_rules! group_by_datatype {
+    ($VAL: expr, $DT: ty, $GROUP_DT: ty, $GROUP_IDXS: expr, $AGGR_OPS: expr, $SINGLE_BATCH: expr, $SCHEMA: expr, $LEN: expr) => {{
+        let group_val = $VAL.as_any().downcast_ref::<PrimitiveArray<$DT>>().unwrap();
+        // group val -> Vec<index>
+        // such as group by number % 3, then we will have group_idxs like
+        // 0 -> [0,3,6], 1 -> [1,2,5] ...
+        let mut group_idxs = HashMap::<$GROUP_DT, Vec<usize>>::new();
+
+        // split into different groups
+        for (idx, val) in group_val.iter().enumerate() {
+            if let Some(val) = val {
+                if let Some(idxs) = group_idxs.get_mut(&val) {
+                    idxs.push(idx);
+                } else {
+                    group_idxs.insert(val, vec![idx]);
+                }
+            }
+        }
+
+        // for each group, calculate aggregating value
+        let mut batches = vec![];
+
+        for group_idx in group_idxs.values() {
+            for idx in group_idx {
+                for i in 0..$LEN {
+                    $AGGR_OPS.get_mut(i).unwrap().update(&$SINGLE_BATCH, *idx)?;
+                }
+            }
+
+            let mut arrays = vec![];
+            // let aggr_ops = self.aggr_ops.lock().unwrap();
+            for aggr_op in $AGGR_OPS.iter() {
+                let x = aggr_op.evaluate()?;
+                arrays.push(x.into_array(1));
+            }
+
+            let record_batch = RecordBatch::try_new($SCHEMA.clone(), arrays)?;
+            batches.push(record_batch);
+
+            // for next group aggregate usage
+            for i in 0..$LEN {
+                $AGGR_OPS.get_mut(i).unwrap().clear_state();
+            }
+        }
+
+        let single_batch = concat_batches(&$SCHEMA, &batches)?;
+        Ok(vec![single_batch])
+    }};
 }
 
 impl PhysicalPlan for PhysicalAggregatePlan {
@@ -96,23 +147,40 @@ impl PhysicalPlan for PhysicalAggregatePlan {
 
             let val = group_by_expr.evaluate(&single_batch)?.into_array();
             match val.data_type() {
-                DataType::Int64 => {
-                    let group_val = val
-                        .as_any()
-                        .downcast_ref::<PrimitiveArray<Int64Type>>()
-                        .unwrap();
+                DataType::Int64 => group_by_datatype!(
+                    val,
+                    Int64Type,
+                    i64,
+                    group_idxs,
+                    aggr_ops,
+                    single_batch,
+                    schema,
+                    len
+                ),
+                DataType::UInt64 => group_by_datatype!(
+                    val,
+                    UInt64Type,
+                    u64,
+                    group_idxs,
+                    aggr_ops,
+                    single_batch,
+                    schema,
+                    len
+                ),
+                DataType::Utf8 => {
+                    let group_val = val.as_any().downcast_ref::<StringArray>().unwrap();
                     // group val -> Vec<index>
                     // such as group by number % 3, then we will have group_idxs like
                     // 0 -> [0,3,6], 1 -> [1,2,5] ...
-                    let mut group_idxs = HashMap::<i64, Vec<usize>>::new();
+                    let mut group_idxs = HashMap::<String, Vec<usize>>::new();
 
                     // split into different groups
                     for (idx, val) in group_val.iter().enumerate() {
                         if let Some(val) = val {
-                            if let Some(idxs) = group_idxs.get_mut(&val) {
+                            if let Some(idxs) = group_idxs.get_mut(val) {
                                 idxs.push(idx);
                             } else {
-                                group_idxs.insert(val, vec![idx]);
+                                group_idxs.insert(val.to_string(), vec![idx]);
                             }
                         }
                     }
@@ -146,11 +214,9 @@ impl PhysicalPlan for PhysicalAggregatePlan {
                     let single_batch = concat_batches(&schema, &batches)?;
                     Ok(vec![single_batch])
                 }
-                // TODO: support more group by datatypes
-                DataType::UInt64 => todo!(),
-                DataType::Float64 => todo!(),
-                DataType::Utf8 => todo!(),
-                _ => unimplemented!(),
+                _ => Err(ErrorCode::NotSupported(
+                    "group by only support by `Int64`, `UInt64`, `String`".to_string(),
+                )),
             }
         }
     }
